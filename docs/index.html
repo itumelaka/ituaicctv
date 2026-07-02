@@ -1,0 +1,77 @@
+@'
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>AI CCTV Detection</title>
+
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="stylesheet" href="./style.css" />
+  <meta name="theme-color" content="#0f172a" />
+</head>
+
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="brand-row">
+        <img src="./icons/logo-source.png" alt="AI CCTV Logo" class="brand-logo" />
+
+        <div>
+          <p class="eyebrow">Institute AI Surveillance</p>
+          <h1>CCTV Powered by A.I.</h1>
+          <p class="subtitle">Smarter Vision. Safer Environment.</p>
+        </div>
+      </div>
+
+      <div class="status-pill online">Pilot Ready</div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Camera Pilot</h2>
+        <p class="muted">CCTV F1</p>
+        <div class="big">192.168.40.21</div>
+        <p class="small">RTSP Substream: Channels/102</p>
+      </div>
+
+      <div class="card">
+        <h2>Detection Mode</h2>
+        <p class="muted">Current target</p>
+        <div class="big">Person Detection</div>
+        <p class="small">Vehicle, intrusion dan alert sebenar akan ditambah kemudian.</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Notification Test</h2>
+      <p class="muted">
+        Test notification ini untuk pastikan PWA boleh trigger alert pada device.
+      </p>
+
+      <div class="actions">
+        <button id="enableNotifyBtn">Enable Notification</button>
+        <button id="testAlertBtn" class="secondary">Test AI Alert</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Latest AI Events</h2>
+
+      <div id="events" class="events">
+        <div class="event">
+          <span class="dot"></span>
+          <div>
+            <strong>System ready</strong>
+            <p>Waiting for AI detection event.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+
