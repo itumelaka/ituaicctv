@@ -88,7 +88,7 @@ Planned features:
 
 ## Phase 6 - Dashboard
 
-Status: Planned
+Status: In progress
 
 Goal:
 
@@ -192,10 +192,11 @@ Dashboard data now available:
 - Credential-safe camera list from backend/config/cameras.json
 - Latest event log entries from backend/data/events.jsonl
 - Per-camera latest event and event stats
+- Lightweight browser dashboard at /dashboard-ui
 
 Next dashboard work:
 
-- Frontend dashboard UI
+- Dashboard filters and search
 
 ## Roadmap Update - Per-Camera Dashboard APIs
 
@@ -215,6 +216,32 @@ Dashboard camera detail data now available:
 - Per-camera person event count
 - Latest event timestamp
 - Latest evidence link when available
+
+## Roadmap Update - Lightweight Dashboard UI
+
+Status: Completed
+
+A simple mobile-friendly browser dashboard has been added:
+
+- GET /dashboard-ui
+
+The page consumes existing dashboard API endpoints only and does not run YOLO detection.
+
+Dashboard UI currently includes:
+
+- camera totals
+- disabled camera list
+- latest event summary
+- latest 10 events
+- evidence thumbnails and links
+- camera enabled or disabled badges
+- per-camera total and person event counts
+
+Next dashboard work:
+
+- Search and filters
+- Per-camera detail view
+- Retention and cleanup controls
 
 ## Roadmap Update - Dashboard Summary
 

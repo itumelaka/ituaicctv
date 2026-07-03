@@ -64,9 +64,9 @@ Camera list currently added:
 
 ## Dashboard TODO
 
-- [ ] Camera status page
-- [ ] Latest events page
-- [ ] Evidence image viewer
+- [x] Camera status page
+- [x] Latest events page
+- [x] Evidence image viewer
 - [ ] Search by camera
 - [ ] Search by date
 - [ ] Search by event type
@@ -145,7 +145,20 @@ Camera list currently added:
 - [x] Add GET /dashboard/events/latest
 - [x] Add per-camera latest event endpoint
 - [x] Add per-camera stats endpoint
-- [ ] Add simple frontend dashboard page later
+- [x] Add simple frontend dashboard page later
+
+## Completed on 2026-07-03 - Lightweight Dashboard UI
+
+- [x] Add GET /dashboard-ui
+- [x] Show camera totals, enabled count, and disabled count
+- [x] Show disabled camera list
+- [x] Show latest event summary
+- [x] Show latest 10 events
+- [x] Show evidence thumbnails and links
+- [x] Show camera list with enabled or disabled badge
+- [x] Show per-camera total and person event counts
+- [x] Use existing dashboard API endpoints only
+- [x] Keep UI lightweight with no external build tools
 
 ## Completed on 2026-07-03 - Lightweight Dashboard Endpoints
 
@@ -184,4 +197,4 @@ Camera list currently added:
 - [x] Add GET /dashboard/events/latest
 - [x] Add per-camera latest event endpoint
 - [x] Add per-camera stats endpoint
-- [ ] Add simple frontend dashboard page later
+- [x] Add simple frontend dashboard page later

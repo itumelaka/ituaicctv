@@ -283,6 +283,34 @@ Dashboard per-camera stats response includes:
 - latest_event_time
 - latest_evidence_url
 
+## Latest Milestone - Lightweight Dashboard UI
+
+Updated: 2026-07-03
+
+A simple browser dashboard UI has been added:
+
+- GET /dashboard-ui
+
+The page is mobile-friendly and uses the existing dashboard API endpoints only:
+
+- /dashboard/summary
+- /dashboard/cameras
+- /dashboard/events/latest
+- /dashboard/evidence
+- /dashboard/cameras/{camera_id}/stats
+
+The dashboard UI shows:
+
+- camera total, enabled, and disabled counts
+- disabled camera list
+- latest event summary
+- latest 10 events
+- evidence thumbnails and links
+- camera list with enabled or disabled badges
+- per-camera total and person event counts
+
+The UI does not run YOLO detection, does not open CCTV streams, and does not expose credentials or RTSP URLs.
+
 ## Latest Milestone - Dashboard Summary Endpoint
 
 Updated: 2026-07-03

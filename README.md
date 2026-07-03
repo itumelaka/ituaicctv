@@ -21,6 +21,7 @@ Completed:
 - Evidence snapshot logic for person events
 - Lightweight dashboard API endpoints for cameras, latest events, and evidence
 - Per-camera dashboard endpoints for latest event and event stats
+- Simple browser dashboard UI
 - CCTV sub-stream configured to H.264 for OpenCV compatibility
 - YOLOv8n running in CPU mode
 
@@ -65,6 +66,7 @@ GET /events/evidence/{filename}
 
 Dashboard:
 
+GET /dashboard-ui
 GET /dashboard/summary
 GET /dashboard/evidence
 GET /dashboard/evidence?limit=20
@@ -75,6 +77,14 @@ GET /dashboard/events/latest
 GET /dashboard/events/latest?limit=10
 
 Dashboard endpoints are lightweight read-only endpoints. They read existing camera configuration, event logs, and evidence image metadata only. They do not run YOLO detection. Per-camera dashboard endpoints validate camera_id against the configured camera list.
+
+Dashboard UI:
+
+Open this URL after starting the backend:
+
+http://127.0.0.1:8000/dashboard-ui
+
+The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, evidence thumbnails, camera status badges, and per-camera event counts.
 
 ## Event Flow
 
@@ -161,7 +171,7 @@ This is lighter and more suitable for AI detection.
 1. Add configurable confidence threshold
 2. Add retention cleanup for evidence images
 3. Add alert integration such as Telegram
-4. Add dashboard preview
+4. Add dashboard filters and search
 
 ## Repository
 
