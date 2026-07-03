@@ -233,9 +233,12 @@ Dashboard UI currently includes:
 - disabled camera list
 - latest event summary
 - latest 10 events
-- evidence thumbnails and links
+- clickable evidence thumbnails and links
 - camera enabled or disabled badges
 - per-camera total and person event counts
+- last updated time and next refresh countdown
+- 30-second auto-refresh
+- quick links to refresh, summary, cameras, latest events, and evidence
 
 Next dashboard work:
 

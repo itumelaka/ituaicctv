@@ -305,9 +305,12 @@ The dashboard UI shows:
 - disabled camera list
 - latest event summary
 - latest 10 events
-- evidence thumbnails and links
+- clickable evidence thumbnails and links
 - camera list with enabled or disabled badges
 - per-camera total and person event counts
+- last updated time
+- 30-second auto-refresh countdown
+- quick links to summary, cameras, latest events, and evidence APIs
 
 The UI does not run YOLO detection, does not open CCTV streams, and does not expose credentials or RTSP URLs.
 

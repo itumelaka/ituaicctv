@@ -154,9 +154,13 @@ Camera list currently added:
 - [x] Show disabled camera list
 - [x] Show latest event summary
 - [x] Show latest 10 events
-- [x] Show evidence thumbnails and links
+- [x] Show clickable evidence thumbnails and links
 - [x] Show camera list with enabled or disabled badge
 - [x] Show per-camera total and person event counts
+- [x] Add 30-second auto-refresh
+- [x] Show last updated time and next refresh countdown
+- [x] Add quick links for refresh, summary, cameras, latest events, and evidence
+- [x] Use danger badge style for person events and success badge style for no-person events
 - [x] Use existing dashboard API endpoints only
 - [x] Keep UI lightweight with no external build tools
 

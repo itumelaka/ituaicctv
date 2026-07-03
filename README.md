@@ -84,7 +84,15 @@ Open this URL after starting the backend:
 
 http://127.0.0.1:8000/dashboard-ui
 
-The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, evidence thumbnails, camera status badges, and per-camera event counts.
+The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, clickable evidence thumbnails, camera status badges, per-camera event counts, last updated time, and a 30-second auto-refresh countdown.
+
+The page also includes quick links for:
+
+- Refresh now
+- /dashboard/summary
+- /dashboard/cameras
+- /dashboard/events/latest
+- /dashboard/evidence
 
 ## Event Flow
 

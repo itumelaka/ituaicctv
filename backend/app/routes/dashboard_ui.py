@@ -89,7 +89,19 @@ def dashboard_ui():
       font-size: 14px;
     }
 
-    button {
+    .status-copy {
+      display: grid;
+      gap: 2px;
+    }
+
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    button, .quick-link {
       min-height: 38px;
       border: 1px solid var(--accent);
       border-radius: 6px;
@@ -98,9 +110,21 @@ def dashboard_ui():
       padding: 8px 12px;
       cursor: pointer;
       font-weight: 700;
+      line-height: 1.2;
     }
 
-    button:focus {
+    .quick-link {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+
+    button:hover, .quick-link:hover {
+      background: #0b5f59;
+      color: #ffffff;
+    }
+
+    button:focus, .quick-link:focus {
       outline: 3px solid rgba(15, 118, 110, 0.25);
       outline-offset: 2px;
     }
@@ -238,6 +262,16 @@ def dashboard_ui():
       background: #eef2f6;
     }
 
+    .thumb-link {
+      display: inline-flex;
+      border-radius: 6px;
+    }
+
+    .thumb-link:focus {
+      outline: 3px solid rgba(15, 118, 110, 0.25);
+      outline-offset: 2px;
+    }
+
     .camera-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -274,6 +308,19 @@ def dashboard_ui():
         grid-template-columns: 1fr;
       }
 
+      .status-row {
+        align-items: stretch;
+      }
+
+      .quick-links {
+        justify-content: stretch;
+      }
+
+      .quick-links > * {
+        flex: 1 1 145px;
+        justify-content: center;
+      }
+
       .event-row {
         grid-template-columns: 1fr;
       }
@@ -296,8 +343,17 @@ def dashboard_ui():
   <main>
     <div class="wrap">
       <div class="status-row">
-        <div id="loadStatus" class="status-text">Loading dashboard...</div>
-        <button type="button" id="refreshButton">Refresh</button>
+        <div class="status-copy">
+          <div id="loadStatus" class="status-text">Loading dashboard...</div>
+          <div id="refreshStatus" class="status-text">Next refresh in 30s</div>
+        </div>
+        <nav class="quick-links" aria-label="Dashboard quick links">
+          <button type="button" id="refreshButton">Refresh now</button>
+          <a class="quick-link" href="/dashboard/summary" target="_blank" rel="noopener">Summary</a>
+          <a class="quick-link" href="/dashboard/cameras" target="_blank" rel="noopener">Cameras</a>
+          <a class="quick-link" href="/dashboard/events/latest" target="_blank" rel="noopener">Latest events</a>
+          <a class="quick-link" href="/dashboard/evidence" target="_blank" rel="noopener">Evidence</a>
+        </nav>
       </div>
 
       <section class="grid metrics" aria-label="Dashboard totals">
@@ -370,6 +426,9 @@ def dashboard_ui():
       latestEvents: "/dashboard/events/latest?limit=10",
       evidence: "/dashboard/evidence?limit=8"
     };
+    const refreshIntervalSeconds = 30;
+    let nextRefreshAt = Date.now() + refreshIntervalSeconds * 1000;
+    let isLoading = false;
 
     const el = (id) => document.getElementById(id);
 
@@ -407,8 +466,58 @@ def dashboard_ui():
       return badge;
     }
 
+    function eventTone(event) {
+      const type = String(event?.event_type || "").toLowerCase();
+
+      if (event?.person_detected || type === "person" || type === "person_detected") {
+        return "danger";
+      }
+
+      if (type === "no_person") {
+        return "ok";
+      }
+
+      return "neutral";
+    }
+
+    function eventLabel(event) {
+      const type = text(event?.event_type, event?.person_detected ? "person" : "no_person");
+
+      if (event?.person_detected || type === "person_detected" || type === "person") {
+        return "person";
+      }
+
+      if (type === "no_person") {
+        return "clear";
+      }
+
+      return type;
+    }
+
     function cameraIdFromEvent(event) {
       return event?.camera?.id || event?.camera_id || "unknown_camera";
+    }
+
+    function evidenceUrlFromImage(image) {
+      if (image?.url) {
+        return image.url;
+      }
+
+      if (image?.filename) {
+        return `/events/evidence/${encodeURIComponent(image.filename)}`;
+      }
+
+      return "";
+    }
+
+    function resetRefreshCountdown() {
+      nextRefreshAt = Date.now() + refreshIntervalSeconds * 1000;
+      updateRefreshStatus();
+    }
+
+    function updateRefreshStatus() {
+      const remaining = Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000));
+      el("refreshStatus").textContent = `Next refresh in ${remaining}s`;
     }
 
     function renderEmpty(container, message) {
@@ -434,6 +543,7 @@ def dashboard_ui():
       const box = el("latestEventSummary");
       const badge = el("latestEventBadge");
       clearNode(box);
+      box.className = "empty";
       badge.className = "badge neutral";
       badge.textContent = "No event";
 
@@ -442,7 +552,7 @@ def dashboard_ui():
         return;
       }
 
-      badge.className = latest.person_detected ? "badge warn" : "badge ok";
+      badge.className = `badge ${eventTone(latest)}`;
       badge.textContent = latest.event_type || "event";
 
       const title = document.createElement("div");
@@ -471,9 +581,14 @@ def dashboard_ui():
         const item = document.createElement("div");
         item.className = "item";
 
+        const head = document.createElement("div");
+        head.className = "item-head";
+
         const title = document.createElement("div");
         title.className = "item-title";
         title.textContent = text(camera.camera_name || camera.camera_id);
+
+        head.append(title, makeBadge("disabled", "warn"));
 
         const meta = document.createElement("div");
         meta.className = "meta";
@@ -483,7 +598,7 @@ def dashboard_ui():
         notes.className = "meta";
         notes.textContent = text(camera.notes, "");
 
-        item.append(title, meta, notes);
+        item.append(head, meta, notes);
         list.appendChild(item);
       });
     }
@@ -511,7 +626,7 @@ def dashboard_ui():
         title.className = "item-title";
         title.textContent = text(event.event_type, "event");
 
-        const badge = makeBadge(event.person_detected ? "person" : "clear", event.person_detected ? "warn" : "ok");
+        const badge = makeBadge(eventLabel(event), eventTone(event));
         head.append(title, badge);
 
         const meta = document.createElement("div");
@@ -527,9 +642,11 @@ def dashboard_ui():
 
         if (event.evidence_url) {
           const link = document.createElement("a");
+          link.className = "thumb-link";
           link.href = event.evidence_url;
           link.target = "_blank";
           link.rel = "noopener";
+          link.setAttribute("aria-label", "Open evidence image");
           const img = document.createElement("img");
           img.className = "thumb";
           img.alt = "Evidence image";
@@ -568,15 +685,18 @@ def dashboard_ui():
         details.append(title, meta);
         item.appendChild(details);
 
-        if (image.url) {
+        const imageUrl = evidenceUrlFromImage(image);
+        if (imageUrl) {
           const link = document.createElement("a");
-          link.href = image.url;
+          link.className = "thumb-link";
+          link.href = imageUrl;
           link.target = "_blank";
           link.rel = "noopener";
+          link.setAttribute("aria-label", `Open evidence ${text(image.filename)}`);
           const img = document.createElement("img");
           img.className = "thumb";
           img.alt = "Evidence thumbnail";
-          img.src = image.url;
+          img.src = imageUrl;
           link.appendChild(img);
           item.appendChild(link);
         }
@@ -635,7 +755,7 @@ def dashboard_ui():
         statsRow.className = "camera-stats";
         statsRow.append(
           makeBadge(`events ${text(stats?.total_events, "0")}`, "neutral"),
-          makeBadge(`person ${text(stats?.person_events, "0")}`, "warn")
+          makeBadge(`person ${text(stats?.person_events, "0")}`, "danger")
         );
 
         if (stats?.latest_evidence_url) {
@@ -653,6 +773,11 @@ def dashboard_ui():
     }
 
     async function loadDashboard() {
+      if (isLoading) {
+        return;
+      }
+
+      isLoading = true;
       const status = el("loadStatus");
       status.className = "status-text";
       status.textContent = "Loading dashboard...";
@@ -671,14 +796,24 @@ def dashboard_ui():
         renderEvidence(evidence);
         await renderCameras(cameras);
 
-        status.textContent = `Updated ${new Date().toLocaleString()}`;
+        status.textContent = `Last updated ${new Date().toLocaleString()}`;
       } catch (error) {
         status.className = "status-text error";
         status.textContent = `Dashboard load failed: ${error.message}`;
+      } finally {
+        resetRefreshCountdown();
+        isLoading = false;
       }
     }
 
     el("refreshButton").addEventListener("click", loadDashboard);
+    setInterval(() => {
+      updateRefreshStatus();
+
+      if (Date.now() >= nextRefreshAt) {
+        loadDashboard();
+      }
+    }, 1000);
     loadDashboard();
   </script>
 </body>
