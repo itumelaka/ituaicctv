@@ -53,3 +53,13 @@ def save_evidence_image(image_bytes: bytes, filename: str) -> str:
         file.write(image_bytes)
 
     return str(file_path.relative_to(BASE_DIR))
+
+
+def get_evidence_image_path(filename: str) -> Path:
+    safe_filename = Path(filename).name
+    file_path = EVIDENCE_DIR / safe_filename
+
+    if not file_path.exists() or not file_path.is_file():
+        raise FileNotFoundError("Evidence image not found.")
+
+    return file_path
