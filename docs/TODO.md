@@ -108,3 +108,21 @@ Camera list currently added:
 - [ ] Add dashboard-ready API endpoint
 - [ ] Prepare face detection planning notes
 - [ ] Prepare number plate recognition planning notes
+
+## Completed on 2026-07-03 - Dashboard Summary
+
+- [x] Add dashboard-ready API endpoint
+- [x] Add GET /monitor/person/summary
+- [x] Return compact per-camera monitor status
+- [x] Return attention_cameras list
+- [x] Return failed_cameras list
+
+## Next TODO After Dashboard Summary
+
+- [ ] Create dashboard API for latest events summary
+- [ ] Create dashboard API for evidence summary
+- [ ] Add per-camera latest event endpoint
+- [ ] Add per-camera stats endpoint
+- [ ] Add event cooldown test with real person detection
+- [ ] Add face detection planning notes
+- [ ] Add number plate recognition planning notes

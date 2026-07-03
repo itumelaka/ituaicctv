@@ -121,3 +121,30 @@ Planned features:
 - Backup strategy
 - Access control
 - Documentation
+
+## Roadmap Update - Dashboard API Foundation
+
+Status: In progress
+
+A dashboard-ready monitor summary endpoint has been added:
+
+- GET /monitor/person/summary
+
+This is the first backend endpoint designed specifically for future dashboard use.
+
+Planned next dashboard APIs:
+
+- Latest events summary
+- Evidence summary
+- Per-camera latest event
+- Per-camera statistics
+- Camera health overview
+
+Future dashboard pages:
+
+- Camera status page
+- Latest detection events
+- Evidence viewer
+- Person detection summary
+- Future face recognition summary
+- Future number plate recognition summary

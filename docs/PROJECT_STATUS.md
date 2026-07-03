@@ -142,3 +142,52 @@ Camera registry
 ? evidence snapshot if person detected
 ? task log
 
+
+## Latest Milestone - Dashboard-Ready Monitor Summary
+
+Updated: 2026-07-03
+
+Dashboard-ready person monitor summary endpoint has been added:
+
+- GET /monitor/person/summary
+
+This endpoint runs multi-camera person monitoring and returns a compact response suitable for a future dashboard.
+
+Current summary output includes:
+
+- enabled_cameras_count
+- attention_required_count
+- no_action_count
+- failed_count
+- attention_cameras
+- failed_cameras
+- cameras summary list
+
+Confirmed test result:
+
+- enabled_cameras_count: 9
+- attention_required_count: 0
+- no_action_count: 9
+- failed_count: 0
+
+Current enabled cameras:
+
+- block_e_cam_1
+- block_e_cam_2
+- block_e_cam_3
+- block_e_cam_4
+- block_e_cam_5
+- block_f_cam_6
+- block_f_cam_7
+- block_f_cam_9
+- block_f_cam_10
+
+Disabled camera:
+
+- block_f_cam_8
+- IP: 192.168.40.20
+- Reason: not reachable by ping or RTSP port 554
+
+Dashboard endpoint example:
+
+GET /monitor/person/summary
