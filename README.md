@@ -8,7 +8,7 @@ The project is currently focused on local backend development, RTSP camera acces
 
 Latest confirmed commit:
 
-8352f37
+60d241c
 
 Confirmed at this checkpoint:
 
@@ -31,6 +31,14 @@ Confirmed at this checkpoint:
 - Unit tests pass with: python -m unittest discover -s tests -p "test_*.py" -v
 - Compile check passes with: python -m compileall backend/app
 - sambung.txt is a private local handoff note and should not be committed.
+
+First production deployment (2026-07-03):
+
+- Backend deployed on the Windows Server as a Windows Service (ITUAICCTVBackend) via NSSM, auto-start enabled, confirmed Running.
+- Firewall opens port 8000 on the LAN (Private) profile only; the GOVNET (Public) NIC is intentionally not exposed.
+- Person Monitor scheduled task registered but left disabled pending go-live.
+- Dashboard confirmed reachable across the LAN (GET /health returns ok from another PC).
+- Server setup PowerShell scripts fixed for Windows PowerShell 5.1 (project-root path, PS7-only null-conditional operator, non-ASCII em-dash) and SETUP_GUIDE.txt rewritten for a clean-server install.
 
 Next recommended work:
 

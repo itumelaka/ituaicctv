@@ -10,8 +10,9 @@ ITU AI CCTV Person Monitor
 
 Current state:
 
+- Registered on the Windows Server on 2026-07-03 via scripts/server/setup_task_scheduler.ps1
 - Intentionally Disabled
-- Enable only when operational testing is ready
+- Enable only when operational testing is ready (Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor")
 - Uses the multi-camera hidden VBS launcher
 - Checks enabled cameras from backend/config/cameras.json
 - BAT launcher returns 0 to Task Scheduler so person detection or camera check results do not appear as Task Scheduler failures

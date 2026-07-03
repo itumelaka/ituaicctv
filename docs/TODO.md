@@ -4,9 +4,11 @@
 
 Latest confirmed commit:
 
-8352f37
+60d241c
 
 Checkpoint notes:
+
+- First production deployment done on 2026-07-03: backend running as Windows Service, firewall (LAN-only) set, monitor task registered but disabled, dashboard reachable on LAN, setup scripts fixed for PowerShell 5.1.
 
 - GET /dashboard-ui is usable.
 - GET /dashboard/health is usable.

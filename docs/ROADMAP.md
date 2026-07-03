@@ -4,9 +4,11 @@
 
 Latest confirmed commit:
 
-8352f37
+60d241c
 
 Checkpoint summary:
+
+- First production deployment done on 2026-07-03: backend live as a Windows Service, LAN-only firewall, monitor task registered (disabled), dashboard reachable on LAN.
 
 - Backend FastAPI works.
 - Hikvision RTSP works.

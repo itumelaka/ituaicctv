@@ -2,11 +2,23 @@
 
 Last updated: 2026-07-03
 
+## Deployment Status
+
+First production deployment on 2026-07-03:
+
+- Deployed on the Windows Server (dual-NIC: LAN 192.168.1.x, GOVNET 10.65.28.x).
+- Backend runs as a Windows Service (ITUAICCTVBackend) via NSSM, auto-start enabled, confirmed Running.
+- Health confirmed: GET /health returns {"status":"ok","service":"ituaicctv-backend"} locally and across the LAN.
+- Firewall opens port 8000 on the LAN (Private) profile only; GOVNET (Public) NIC not exposed.
+- Person Monitor scheduled task registered, currently disabled pending go-live.
+- Dashboard (GitHub Pages PWA) confirmed reachable; backend reachable at http://<server-lan-ip>:8000.
+- Setup scripts fixed for Windows PowerShell 5.1 and SETUP_GUIDE.txt rewritten (commit 60d241c).
+
 ## Current Checkpoint
 
 Latest confirmed commit:
 
-8352f37
+60d241c
 
 Confirmed at this checkpoint:
 
