@@ -15,29 +15,32 @@ def append_event_log(event: dict[str, Any]) -> None:
         file.write(json.dumps(event, ensure_ascii=False) + "\n")
 
 
-def read_latest_event_logs(limit: int = 20) -> list[dict[str, Any]]:
+def read_all_event_logs() -> list[dict[str, Any]]:
     if not EVENT_LOG_FILE.exists():
         return []
 
-    with EVENT_LOG_FILE.open("r", encoding="utf-8") as file:
-        lines = file.readlines()
-
-    latest_lines = lines[-limit:]
     events = []
 
-    for line in latest_lines:
-        line = line.strip()
+    with EVENT_LOG_FILE.open("r", encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()
 
-        if not line:
-            continue
+            if not line:
+                continue
 
-        try:
-            events.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
 
-    events.reverse()
     return events
+
+
+def read_latest_event_logs(limit: int = 20) -> list[dict[str, Any]]:
+    events = read_all_event_logs()
+    latest_events = events[-limit:]
+    latest_events.reverse()
+    return latest_events
 
 
 def save_evidence_image(image_bytes: bytes, filename: str) -> str:

@@ -1,7 +1,12 @@
 from datetime import datetime, timezone
 from app.config import settings
 from app.detection import run_person_detection, run_person_snapshot_jpeg
-from app.event_log import append_event_log, read_latest_event_logs, save_evidence_image
+from app.event_log import (
+    append_event_log,
+    read_latest_event_logs,
+    read_all_event_logs,
+    save_evidence_image,
+)
 
 
 def evaluate_person_event() -> dict:
@@ -63,4 +68,39 @@ def get_latest_events(limit: int = 20) -> dict:
         "limit": limit,
         "events_count": len(events),
         "events": events
+    }
+
+
+def get_event_stats() -> dict:
+    events = read_all_event_logs()
+
+    total_events = len(events)
+    person_detected_count = 0
+    no_person_count = 0
+    evidence_count = 0
+
+    for event in events:
+        if event.get("person_detected") is True:
+            person_detected_count += 1
+
+        if event.get("event_type") == "no_person":
+            no_person_count += 1
+
+        if event.get("evidence_path"):
+            evidence_count += 1
+
+    latest_event = events[-1] if events else None
+
+    return {
+        "status": "ok",
+        "total_events": total_events,
+        "person_detected_count": person_detected_count,
+        "no_person_count": no_person_count,
+        "evidence_count": evidence_count,
+        "latest_event": {
+            "timestamp": latest_event.get("timestamp"),
+            "event_type": latest_event.get("event_type"),
+            "severity": latest_event.get("severity"),
+            "person_detected": latest_event.get("person_detected")
+        } if latest_event else None
     }
