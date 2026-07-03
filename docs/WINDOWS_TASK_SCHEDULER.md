@@ -66,6 +66,25 @@ The BAT launcher returns 0 to Windows Task Scheduler. This is intentional becaus
 
 Review backend/data/task-logs/monitor_person_all.log for actual monitor results.
 
+## Dashboard Scheduler Health
+
+GET /dashboard/health reads backend/data/task-logs/monitor_person_all.log and returns a lightweight scheduler summary when the log is available.
+
+Scheduler health fields:
+
+- status
+- latest_run_time
+- latest_summary
+- failed_count
+- person_detected_count
+- no_person_count
+- log_path
+- recent_lines
+
+The dashboard parser reads existing log text only. It does not run YOLO detection, open RTSP streams, or expose credentials. If a value cannot be found in the log, the API returns null or unknown.
+
+The /dashboard-ui Health card shows the latest scheduler run and summary.
+
 ## PowerShell Commands
 
 Enable the task:

@@ -19,8 +19,8 @@ Checkpoint notes:
 ## Immediate TODO
 
 - [ ] Improve block_f_cam_8 metadata if not already committed
-- [ ] Add camera health from scheduler log
-- [ ] Enhance dashboard health card
+- [x] Add camera health from scheduler log
+- [x] Enhance dashboard health card
 - [ ] Investigate block_f_cam_8 network/IP issue
 - [ ] Prepare face detection planning notes later
 - [ ] Prepare number plate recognition planning notes later
@@ -94,6 +94,8 @@ Camera list:
 - [x] Camera health/offline summary
 - [x] Dashboard health card
 - [x] Per-camera health badges
+- [x] Scheduler log summary in dashboard health
+- [x] Scheduler latest run and summary in dashboard UI Health card
 - [ ] Improve latest successful check tracking per camera
 - [ ] Search by camera
 - [ ] Search by date
@@ -128,8 +130,8 @@ Camera list:
 ## Next TODO
 
 - [ ] Improve block_f_cam_8 metadata if not already committed
-- [ ] Add camera health from scheduler log
-- [ ] Enhance dashboard health card
+- [x] Add camera health from scheduler log
+- [x] Enhance dashboard health card
 - [ ] Investigate block_f_cam_8 network/IP issue
 - [ ] Add event cooldown to avoid repeated evidence spam
 - [ ] Add per-camera confidence threshold
@@ -154,6 +156,8 @@ Camera list:
 - [x] Add GET /dashboard/health
 - [x] Add camera health/offline summary
 - [x] Add dashboard health card
+- [x] Add scheduler log summary to dashboard health
+- [x] Show scheduler latest run and summary in dashboard Health card
 - [ ] Improve latest successful check tracking per camera
 - [ ] Investigate block_f_cam_8 network/RTSP issue
 - [ ] Add event cooldown test with real person detection
@@ -196,6 +200,16 @@ Camera list:
 - [x] Use danger badge style for person events and success badge style for no-person events
 - [x] Use existing dashboard API endpoints only
 - [x] Keep UI lightweight with no external build tools
+
+## Completed on 2026-07-03 - Scheduler Log Health Summary
+
+- [x] Parse backend/data/task-logs/monitor_person_all.log safely
+- [x] Add scheduler status to GET /dashboard/health
+- [x] Add scheduler latest run time to GET /dashboard/health
+- [x] Add scheduler summary and counts to GET /dashboard/health
+- [x] Add recent safe scheduler log lines to GET /dashboard/health
+- [x] Show scheduler latest run and summary in /dashboard-ui Health card
+- [x] Keep scheduler health lightweight with no YOLO or RTSP access
 
 ## Completed on 2026-07-03 - Lightweight Dashboard Endpoints
 

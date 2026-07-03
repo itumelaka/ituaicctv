@@ -413,6 +413,34 @@ The dashboard UI shows:
 
 The UI does not run YOLO detection, does not open CCTV streams, and does not expose credentials or RTSP URLs.
 
+## Latest Milestone - Scheduler Log Health Summary
+
+Updated: 2026-07-03
+
+GET /dashboard/health now includes a lightweight scheduler summary from:
+
+- backend/data/task-logs/monitor_person_all.log
+
+The scheduler block includes:
+
+- status
+- latest_run_time
+- latest_summary
+- failed_count
+- person_detected_count
+- no_person_count
+- log_path
+- recent_lines
+
+The parser reads existing log text only. If the log format is unclear or a value is missing, the dashboard returns null or unknown instead of inventing data.
+
+The /dashboard-ui Health card now shows:
+
+- scheduler latest run
+- scheduler summary
+
+This keeps scheduler visibility in the dashboard without running YOLO detection or opening RTSP streams.
+
 ## Latest Milestone - Dashboard Summary Endpoint
 
 Updated: 2026-07-03

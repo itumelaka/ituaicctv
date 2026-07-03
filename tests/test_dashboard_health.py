@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -7,7 +8,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 BACKEND_DIR = ROOT_DIR / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
-from app.dashboard_health import build_dashboard_health
+from app.dashboard_health import build_dashboard_health, parse_scheduler_log_summary
 
 
 class DashboardHealthTests(unittest.TestCase):
@@ -91,6 +92,61 @@ class DashboardHealthTests(unittest.TestCase):
             "RTSP port 554",
             health["cameras"]["disabled_cameras"][0]["health_note"],
         )
+        self.assertIn("scheduler", health)
+        self.assertIn("recent_lines", health["scheduler"])
+
+    def test_parses_scheduler_log_summary(self):
+        log_text = """Run started: Fri 03/07/2026 10:35:34.23
+ITU AI CCTV - Multi-Camera Person Monitor
+==================================================
+Status              : ok
+Mode                : check_all
+Enabled cameras     : 9
+Attention required  : 0
+No action           : 9
+Failed              : 0
+
+Compact JSON:
+{
+  "status": "ok",
+  "mode": "check_all",
+  "enabled_cameras_count": 9,
+  "attention_required_count": 0,
+  "no_action_count": 9,
+  "failed_count": 0
+}
+Exit code: 0
+Run ended: Fri 03/07/2026 10:35:52.27
+"""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_path = Path(temp_dir) / "monitor_person_all.log"
+            log_path.write_text(log_text, encoding="utf-8")
+
+            scheduler = parse_scheduler_log_summary(log_path=log_path)
+
+        self.assertEqual(scheduler["status"], "ok")
+        self.assertEqual(scheduler["latest_run_time"], "Fri 03/07/2026 10:35:34.23")
+        self.assertEqual(scheduler["failed_count"], 0)
+        self.assertEqual(scheduler["person_detected_count"], 0)
+        self.assertEqual(scheduler["no_person_count"], 9)
+        self.assertEqual(scheduler["log_path"], "data/task-logs/monitor_person_all.log")
+        self.assertIn("status=ok", scheduler["latest_summary"])
+        self.assertIn("failed=0", scheduler["latest_summary"])
+        self.assertLessEqual(len(scheduler["recent_lines"]), 8)
+
+    def test_missing_scheduler_log_returns_unknown_values(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            log_path = Path(temp_dir) / "missing.log"
+            scheduler = parse_scheduler_log_summary(log_path=log_path)
+
+        self.assertEqual(scheduler["status"], "missing")
+        self.assertIsNone(scheduler["latest_run_time"])
+        self.assertIsNone(scheduler["latest_summary"])
+        self.assertIsNone(scheduler["failed_count"])
+        self.assertIsNone(scheduler["person_detected_count"])
+        self.assertIsNone(scheduler["no_person_count"])
+        self.assertEqual(scheduler["recent_lines"], [])
 
 
 if __name__ == "__main__":

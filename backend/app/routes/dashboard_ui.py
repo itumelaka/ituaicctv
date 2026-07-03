@@ -423,6 +423,14 @@ def dashboard_ui():
             <div class="label">Latest event</div>
             <div id="healthLatestEventTime" class="value">-</div>
           </div>
+          <div class="health-stat">
+            <div class="label">Scheduler latest run</div>
+            <div id="schedulerLatestRunTime" class="value">-</div>
+          </div>
+          <div class="health-stat">
+            <div class="label">Scheduler summary</div>
+            <div id="schedulerLatestSummary" class="value">-</div>
+          </div>
         </div>
       </section>
 
@@ -730,12 +738,15 @@ def dashboard_ui():
     function renderHealth(healthData) {
       const cameras = healthData?.cameras || {};
       const events = healthData?.events || {};
+      const scheduler = healthData?.scheduler || {};
       const badge = el("healthBadge");
 
       el("healthTotalCameras").textContent = text(cameras.total);
       el("healthEnabledCameras").textContent = text(cameras.enabled);
       el("healthDisabledCameras").textContent = text(cameras.disabled);
       el("healthLatestEventTime").textContent = formatTime(events.latest_event_time);
+      el("schedulerLatestRunTime").textContent = text(scheduler.latest_run_time);
+      el("schedulerLatestSummary").textContent = text(scheduler.latest_summary);
 
       badge.className = cameras.disabled ? "badge warn" : "badge ok";
       badge.textContent = cameras.disabled ? `${cameras.disabled} disabled` : "ok";

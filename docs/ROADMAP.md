@@ -16,17 +16,16 @@ Checkpoint summary:
 - GET /dashboard-ui is usable.
 - GET /dashboard/health is usable.
 - Dashboard UI includes auto-refresh, status timing, quick links, improved badges, clickable evidence thumbnails, Health card, and per-camera health badges.
+- Dashboard health includes scheduler log summary when backend/data/task-logs/monitor_person_all.log is available.
 - Unit tests and compile checks passed at this checkpoint.
 - sambung.txt is a private local handoff note and should not be committed.
 
 Next recommended work:
 
 1. Improve block_f_cam_8 metadata if not already committed
-2. Add camera health from scheduler log
-3. Enhance dashboard health card
-4. Investigate block_f_cam_8 network/IP issue
-5. Later: face detection planning
-6. Later: number plate recognition planning
+2. Investigate block_f_cam_8 network/IP issue
+3. Later: face detection planning
+4. Later: number plate recognition planning
 
 ## Phase 1 - Backend Foundation
 
@@ -142,6 +141,7 @@ Planned features:
 - Dashboard auto-refresh/status UI polish - completed
 - Camera health status - completed
 - Dashboard health card - completed
+- Scheduler log health summary - completed
 - Search and filter
 - Future face recognition view
 - Future plate recognition view
@@ -295,15 +295,36 @@ Dashboard UI currently includes:
 - last updated time and next refresh countdown
 - 30-second auto-refresh
 - quick links to refresh, summary, cameras, latest events, and evidence
+- scheduler latest run and summary in the Health card
 
 Next dashboard work:
 
 - Improve block_f_cam_8 metadata if not already committed
-- Add camera health from scheduler log
-- Enhance dashboard health card
 - Investigate block_f_cam_8 network/IP issue
 - Later: face detection planning
 - Later: number plate recognition planning
+
+## Roadmap Update - Scheduler Log Health Summary
+
+Status: Completed
+
+GET /dashboard/health now includes a scheduler block based on:
+
+- backend/data/task-logs/monitor_person_all.log
+
+The scheduler summary reads existing log files only and returns unknown or null when values are not available.
+
+Dashboard health now includes:
+
+- scheduler status
+- latest scheduler run time
+- latest scheduler summary
+- failed count
+- person detected count
+- no-person count
+- recent safe scheduler log lines
+
+The /dashboard-ui Health card now shows the latest scheduler run and summary without running YOLO detection or opening RTSP streams.
 
 ## Roadmap Update - Dashboard Summary
 

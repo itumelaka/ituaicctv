@@ -21,6 +21,7 @@ Confirmed at this checkpoint:
 - GET /dashboard-ui is usable.
 - GET /dashboard/health is usable.
 - Dashboard UI includes auto-refresh, last updated time, next refresh countdown, quick links, improved badges, clickable evidence thumbnails, Health card, and per-camera health badges.
+- GET /dashboard/health includes a scheduler log summary from backend/data/task-logs/monitor_person_all.log when available.
 - backend/app/dashboard_health.py exists.
 - tests/test_dashboard_health.py exists.
 - Unit tests pass with: python -m unittest discover -s tests -p "test_*.py" -v
@@ -60,6 +61,7 @@ Completed:
 - Check-all monitor endpoint
 - Dashboard summary API
 - Dashboard health API
+- Scheduler-log health summary in GET /dashboard/health
 - Lightweight dashboard API endpoints for cameras, latest events, and evidence
 - Per-camera dashboard endpoints for latest event and event stats
 - Simple browser dashboard UI
@@ -150,7 +152,7 @@ Open this URL after starting the backend:
 
 http://127.0.0.1:8000/dashboard-ui
 
-The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, clickable evidence thumbnails, camera status badges, per-camera event counts, a health card, per-camera health badges, last updated time, and a 30-second auto-refresh countdown.
+The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, clickable evidence thumbnails, camera status badges, per-camera event counts, a health card, scheduler latest run and summary, per-camera health badges, last updated time, and a 30-second auto-refresh countdown.
 
 The page also includes quick links for:
 
@@ -182,6 +184,17 @@ Scheduler script paths:
 Scheduler log path:
 
 backend/data/task-logs/monitor_person_all.log
+
+GET /dashboard/health reads this log lightly and returns a scheduler block with:
+
+- status
+- latest_run_time
+- latest_summary
+- failed_count
+- person_detected_count
+- no_person_count
+- log_path
+- recent_lines
 
 ## Event Flow
 
@@ -273,11 +286,9 @@ This is lighter and more suitable for AI detection.
 ## Next Milestones
 
 1. Improve block_f_cam_8 metadata if not already committed
-2. Add camera health from scheduler log
-3. Enhance dashboard health card
-4. Investigate block_f_cam_8 network/IP issue
-5. Later: face detection planning
-6. Later: number plate recognition planning
+2. Investigate block_f_cam_8 network/IP issue
+3. Later: face detection planning
+4. Later: number plate recognition planning
 
 ## Repository
 
