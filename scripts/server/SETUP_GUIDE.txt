@@ -1,0 +1,220 @@
+======================================================
+  ITU AI CCTV - Windows Server Setup Guide
+  https://itumelaka.github.io/ituaicctv/
+======================================================
+
+Baca dulu sebelum start:
+- Semua langkah ni mesti dibuat dalam Windows Server (bilik server)
+- Guna PowerShell sebagai Administrator
+- Kena ada internet untuk download
+
+======================================================
+LANGKAH 1 — BUKA POWERSHELL SEBAGAI ADMINISTRATOR
+======================================================
+
+1. Klik Start
+2. Taip "PowerShell"
+3. Klik kanan > "Run as Administrator"
+4. Klik Yes
+
+======================================================
+LANGKAH 2 — INSTALL PYTHON 3.12
+======================================================
+
+Dalam PowerShell, copy paste arahan ni satu persatu:
+
+  winget install Python.Python.3.12
+
+Tunggu sampai habis. Kemudian semak:
+
+  python --version
+
+Kena nampak: Python 3.12.x
+
+Kalau winget tak ada, download manual:
+  https://www.python.org/downloads/
+  Pilih Python 3.12.x (Windows installer 64-bit)
+  PENTING: Tick "Add Python to PATH" masa install
+
+======================================================
+LANGKAH 3 — INSTALL GIT
+======================================================
+
+  winget install Git.Git
+
+Atau download manual: https://git-scm.com/download/win
+
+Semak:
+  git --version
+
+======================================================
+LANGKAH 4 — DOWNLOAD NSSM (untuk run backend sebagai service)
+======================================================
+
+1. Pergi ke: https://nssm.cc/download
+2. Download versi terbaru (contoh: nssm-2.24.zip)
+3. Extract zip
+4. Masuk folder win64
+5. Copy fail nssm.exe
+6. Paste kat: C:\nssm\nssm.exe
+   (Buat folder C:\nssm kalau belum ada)
+
+Semak dalam PowerShell:
+  C:\nssm\nssm.exe version
+
+======================================================
+LANGKAH 5 — CLONE REPO PROJEK
+======================================================
+
+  git clone https://github.com/itumelaka/ituaicctv.git C:\ituaicctv
+
+Tunggu siap. Kemudian masuk folder:
+
+  cd C:\ituaicctv
+
+======================================================
+LANGKAH 6 — SETUP PYTHON ENVIRONMENT
+======================================================
+
+  python -m venv .venv312
+
+  .\.venv312\Scripts\Activate.ps1
+
+Kalau ada error "Execution Policy":
+  Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+  (tekan Y, Enter)
+  Kemudian cuba lagi: .\.venv312\Scripts\Activate.ps1
+
+Install pakej:
+  pip install -r backend\requirements.txt
+
+Proses ini ambil masa 5-15 minit. Tunggu habis.
+
+======================================================
+LANGKAH 7 — SETUP FAIL .ENV (KONFIGURASI)
+======================================================
+
+  Copy-Item backend\.env.example backend\.env
+  notepad backend\.env
+
+Isi maklumat berikut dalam Notepad yang terbuka:
+
+  APP_NAME=ITU AI CCTV Backend
+  APP_ENV=production
+
+  CCTV_HOST=192.168.40.21
+  CCTV_PORT=554
+  CCTV_USERNAME=<username kamera>
+  CCTV_PASSWORD=<password kamera>
+  CCTV_CHANNEL=102
+
+  YOLO_CONFIDENCE=0.35
+  PERSON_EVENT_COOLDOWN_SECONDS=300
+
+  TELEGRAM_BOT_TOKEN=<token bot telegram>
+  TELEGRAM_CHAT_ID=<chat id telegram>
+
+Simpan (Ctrl+S) dan tutup Notepad.
+
+======================================================
+LANGKAH 8 — TEST BACKEND DULU (OPTIONAL TAPI DISYORKAN)
+======================================================
+
+  cd backend
+  python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+Buka browser dalam server: http://localhost:8000/health
+Kena nampak: {"status":"ok"}
+
+Kalau OK, tekan Ctrl+C untuk stop. Teruskan ke langkah 9.
+Kalau error, semak semula fail .env.
+
+  cd C:\ituaicctv
+
+======================================================
+LANGKAH 9 — INSTALL BACKEND SEBAGAI WINDOWS SERVICE
+======================================================
+
+  .\scripts\server\install_backend_service.ps1
+
+Tunggu siap. Patut nampak "Service is running."
+
+======================================================
+LANGKAH 10 — SETUP FIREWALL (BUKA PORT 8000 UNTUK LAN)
+======================================================
+
+  .\scripts\server\setup_firewall.ps1
+
+Script ni akan tunjuk IP server. Catat IP tu, contoh: 192.168.1.x
+
+======================================================
+LANGKAH 11 — SETUP TASK SCHEDULER (MONITOR AUTOMATIK)
+======================================================
+
+  .\scripts\server\setup_task_scheduler.ps1
+
+======================================================
+LANGKAH 12 — SEMAK SEMUA BERJALAN DENGAN BAIK
+======================================================
+
+  .\scripts\server\check_server.ps1
+
+Kena nampak semua "Running" atau "OK" dengan warna hijau.
+
+======================================================
+LANGKAH 13 — ENABLE MONITORING (BILA READY)
+======================================================
+
+  Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+
+======================================================
+LANGKAH 14 — BUKA DASHBOARD
+======================================================
+
+Dari mana-mana browser dalam LAN:
+
+  https://itumelaka.github.io/ituaicctv/
+
+Set "Backend URL" kepada IP server yang dicatat tadi:
+
+  http://192.168.x.x:8000
+
+Klik "Save & Connect".
+
+Dashboard akan load data dari server secara automatik.
+
+======================================================
+SIAP!
+======================================================
+
+Selepas ini berjalan:
+- Backend run sendiri bila server start semula
+- Monitor kamera berjalan setiap 5 minit secara automatik
+- Alert Telegram akan dihantar bila person detected
+- Dashboard boleh dibuka dari mana-mana browser dalam LAN
+
+======================================================
+TROUBLESHOOTING
+======================================================
+
+Backend tak start?
+  Get-Service -Name ITUAICCTVBackend
+  Semak log: C:\ituaicctv\backend\data\service-logs\
+
+Dashboard tak boleh connect?
+  Pastikan port 8000 terbuka: Test-NetConnection <ip-server> -Port 8000
+  Jalankan semula: .\scripts\server\setup_firewall.ps1
+
+Python tak jumpa?
+  Restart PowerShell selepas install Python
+
+pip install lambat atau gagal?
+  Cuba: pip install -r backend\requirements.txt --timeout 60
+
+======================================================
+HUBUNGI ADMIN PROJEK
+======================================================
+
+Repo    : https://github.com/itumelaka/ituaicctv
+Dashboard: https://itumelaka.github.io/ituaicctv/
+======================================================
