@@ -24,3 +24,6 @@ Thumbs.db
 
 # YOLO model weights
 *.pt
+
+# Runtime data logs
+backend/data/*.jsonl
