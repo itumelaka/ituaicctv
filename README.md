@@ -1,145 +1,8 @@
-# Hikvision AI CCTV Detection Project
-
-Projek ini bertujuan membina sistem **AI CCTV Detection** menggunakan kamera/NVR Hikvision sedia ada di institut. Sistem ini akan mengambil video stream daripada CCTV melalui RTSP/ONVIF, memproses video menggunakan model AI detection, dan menghasilkan alert/event log apabila objek atau situasi tertentu dikesan.
-
-## Objektif Projek
-
-1. Menggunakan infrastruktur CCTV Hikvision sedia ada tanpa perlu menukar semua kamera.
-2. Menambah fungsi AI detection seperti manusia, kenderaan, haiwan, PPE, intrusion, line crossing dan aktiviti mencurigakan.
-3. Menyediakan sistem alert untuk notifikasi kepada PIC melalui Telegram, email atau dashboard dalaman.
-4. Menyimpan snapshot dan log event sebagai rujukan keselamatan.
-5. Melaksanakan projek secara berperingkat bermula dengan pilot satu kamera dahulu.
-
-## Skop Awal
-
-Fasa awal projek akan fokus kepada:
-
-- Sambungan ke satu kamera/NVR Hikvision melalui RTSP.
-- Ujian live stream menggunakan VLC atau FFmpeg.
-- AI detection asas menggunakan YOLO/OpenCV/Frigate.
-- Detection manusia dan kenderaan.
-- Simpan snapshot apabila detection berlaku.
-- Paparan log ringkas melalui dashboard atau folder event.
-- Alert asas melalui Telegram atau email.
-
-## Cadangan Architecture
-
-```text
-Hikvision CCTV / NVR
-        ↓ RTSP / ONVIF
-Mini PC / Server / NVIDIA Jetson
-        ↓
-AI Detection Engine
-        ↓
-Event Processor
-        ↓
-Alert + Snapshot + Dashboard + Log
-```
-
-## Contoh Use Case
-
-- Kesan orang masuk kawasan larangan.
-- Kesan pergerakan selepas waktu pejabat.
-- Kira jumlah orang dalam kawasan tertentu.
-- Kesan kenderaan masuk/keluar.
-- Kesan haiwan masuk kawasan kandang/lab.
-- Kesan pemakaian PPE seperti helmet, vest atau kasut keselamatan.
-- Simpan snapshot apabila event berlaku.
-- Hantar alert kepada pegawai bertanggungjawab.
-
-## Keperluan Minimum
-
-### Hardware
-
-- Hikvision IP Camera atau NVR yang support RTSP/ONVIF.
-- Mini PC / server / workstation.
-- Network LAN yang stabil.
-- Storage untuk snapshot dan log.
-- Optional: NVIDIA GPU, NVIDIA Jetson, Google Coral TPU.
-
-### Software
-
-- Windows atau Linux.
-- Python 3.10+.
-- OpenCV.
-- YOLO / Ultralytics atau Frigate.
-- FFmpeg atau VLC untuk test stream.
-- Telegram Bot API atau SMTP untuk alert.
-
-## Contoh RTSP Hikvision
-
-```text
-rtsp://username:password@IP_ADDRESS:554/Streaming/channels/101
-```
-
-Contoh channel:
-
-```text
-101 = Channel 1 main stream
-102 = Channel 1 sub stream
-201 = Channel 2 main stream
-202 = Channel 2 sub stream
-```
-
-> Nota: Jangan expose RTSP stream ke internet. Gunakan LAN/VPN sahaja.
-
-## Status Projek
-
-Status semasa: **Planning / Documentation Stage**
-
-Belum ada production deployment. Projek akan dimulakan dengan pilot satu kamera terlebih dahulu.
-
-## Struktur Cadangan Repo
-
-```text
-hikvision-ai-cctv/
-├── README.md
-├── SECURITY.md
-├── REQUIREMENTS.md
-├── ARCHITECTURE.md
-├── ROADMAP.md
-├── docs/
-│   ├── rtsp-test.md
-│   ├── camera-inventory.md
-│   └── detection-use-cases.md
-├── src/
-│   ├── main.py
-│   ├── config.py
-│   ├── detector.py
-│   ├── stream.py
-│   └── alerts.py
-├── config/
-│   └── cameras.example.json
-├── events/
-│   └── .gitkeep
-└── requirements.txt
-```
-
-## Prinsip Pelaksanaan
-
-- Mula kecil dengan satu kamera dahulu.
-- Gunakan user read-only untuk akses CCTV stream.
-- Jangan simpan password sebenar dalam GitHub.
-- Semua credential perlu disimpan dalam `.env` atau config tempatan yang tidak di-commit.
-- Utamakan penggunaan LAN/VPN, bukan public internet.
-- Pastikan penggunaan CCTV mematuhi polisi organisasi dan privasi.
-
-## Next Step
-
-1. Senaraikan model NVR dan kamera Hikvision.
-2. Kenal pasti IP NVR/kamera.
-3. Test RTSP satu kamera menggunakan VLC.
-4. Pilih detection use case pertama.
-5. Bina prototype AI detection.
-6. Tambah alert dan event log.
-7. Review performance sebelum tambah kamera lain.
-
-
 # ITU AI CCTV
 
 Backend AI CCTV detection project for ITU Melaka using existing Hikvision CCTV infrastructure.
 
-This project focuses on building a safe backend foundation first before adding AI detection models.
+The project is currently focused on local backend development, RTSP camera access, YOLO detection, person-only detection, event decision, event logging, and evidence snapshot preparation.
 
 ## Current Status
 
@@ -149,64 +12,143 @@ Completed:
 - Health check endpoint
 - RTSP camera test endpoint
 - CCTV snapshot endpoint
-- Local `.env` configuration
-- RTSP stream tested successfully
-- Snapshot image tested successfully
+- YOLO detection endpoint
+- YOLO snapshot endpoint with bounding boxes
+- Person-only detection endpoint
+- Person-only snapshot endpoint
+- Person event decision endpoint
+- Local event logging using JSONL
+- Evidence snapshot logic for person events
 - CCTV sub-stream configured to H.264 for OpenCV compatibility
+- YOLOv8n running in CPU mode
 
-## Current Working Camera Test
+## Current Working Camera
 
-Camera Host : 192.168.40.21  
-Channel     : 102  
-Stream      : Sub-stream  
-Codec       : H.264  
-Resolution  : 640x360  
-RTSP Port   : 554  
+Camera Host : 192.168.40.21
+RTSP Port   : 554
+Channel     : 102
+Stream      : Sub-stream
+Codec       : H.264
+Resolution  : 640x360
+Bitrate     : 512 Kbps
 
-Real CCTV usernames and passwords must never be committed to GitHub.
+Do not use the high-resolution H.265 main stream for backend AI processing because OpenCV may fail to decode it reliably on Windows.
 
 ## Backend Endpoints
 
-### Health Check
+Health:
 
 GET /health
 
-Returns backend health status.
-
-### Camera RTSP Test
+Camera:
 
 GET /cameras/test
-
-Tests whether the backend can connect to the configured RTSP stream and read a frame.
-
-### Camera Snapshot
-
 GET /cameras/snapshot
 
-Captures one CCTV frame and returns it as a JPEG image.
+Detection:
 
-## Important CCTV Notes
+GET /detections/test
+GET /detections/yolo
+GET /detections/yolo/snapshot
+GET /detections/person
+GET /detections/person/snapshot
 
-The camera main stream originally used H.265 / HEVC at high resolution. OpenCV on Windows produced HEVC decode errors such as:
+Events:
 
-- PPS id out of range
-- VPS does not exist
-- SPS does not exist
-- Stream timeout triggered
+GET /events/person
+GET /events/logs
+GET /events/logs?limit=5
 
-The stable configuration is to use the CCTV sub-stream:
+## Event Flow
 
-Video Encoding : H.264  
-Resolution     : 640x360  
-Bitrate        : 512 Kbps  
-Channel        : 102  
+Current event flow:
 
-This is more suitable for AI detection because it is lighter, faster, and more stable.
+CCTV RTSP stream
+? Capture frame
+? Run YOLO person detection
+? Decide event type
+? Save event log
+? Save evidence snapshot only when person_detected is true
+
+Event log file:
+
+backend/data/events.jsonl
+
+Evidence folder:
+
+backend/data/evidence/
+
+Runtime logs and evidence images are ignored from Git.
+
+## Environment File
+
+Create local environment file:
+
+Copy-Item backend\.env.example backend\.env
+
+Example backend/.env:
+
+APP_NAME=ITU AI CCTV Backend
+APP_ENV=development
+
+CCTV_HOST=192.168.40.21
+CCTV_PORT=554
+CCTV_USERNAME=your_username
+CCTV_PASSWORD=your_password
+CCTV_CHANNEL=102
+
+Never commit real CCTV usernames or passwords.
 
 ## Local Development
 
-Create and activate virtual environment:
+Create virtual environment:
 
-```powershell
 python -m venv .venv
+
+Activate virtual environment:
+
 .\.venv\Scripts\Activate.ps1
+
+Install dependencies:
+
+python -m pip install -r backend\requirements.txt
+
+Run backend:
+
+cd backend
+python -m uvicorn app.main:app --reload
+
+Open API docs:
+
+http://127.0.0.1:8000/docs
+
+## Important Notes
+
+The original camera main stream used H.265 / HEVC at high resolution. OpenCV produced HEVC decode errors such as:
+
+PPS id out of range
+VPS does not exist
+SPS does not exist
+Stream timeout triggered
+
+Stable backend configuration:
+
+Video Encoding : H.264
+Resolution     : 640x360
+Channel        : 102
+
+This is lighter and more suitable for AI detection.
+
+## Next Milestones
+
+1. Add event stats endpoint
+2. Add evidence image viewer endpoint
+3. Add configurable confidence threshold
+4. Add multi-camera configuration
+5. Add scheduled monitoring loop
+6. Add alert integration such as Telegram
+7. Add dashboard preview
+
+## Repository
+
+https://github.com/itumelaka/ituaicctv
