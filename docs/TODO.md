@@ -2,40 +2,44 @@
 
 ## Immediate TODO
 
-- [ ] Audit all 10 CCTV cameras
-- [ ] Confirm each camera RTSP stream works
-- [ ] Confirm each camera sub-stream is H.264
-- [ ] Confirm each camera uses channel 102
-- [ ] Mark unstable cameras as enabled: false
-- [ ] Add GET /cameras/audit
-- [ ] Add GET /monitor/person/check-all
-- [ ] Create script to monitor all enabled cameras
-- [ ] Update Windows Task Scheduler to use multi-camera script
-- [ ] Keep scheduler disabled until multi-camera check is stable
+- [ ] Add GET /dashboard/health
+- [ ] Add camera health/offline summary
+- [ ] Track latest successful check per camera
+- [ ] Add dashboard health card
+- [ ] Investigate block_f_cam_8 network/RTSP issue
+- [ ] Prepare face detection planning notes later
+- [ ] Prepare number plate recognition planning notes later
 
 ## Camera Configuration TODO
 
-Camera list currently added:
+Camera registry current summary:
 
-- [ ] block_e_cam_1 - 192.168.40.13
+- [x] Total cameras configured: 10
+- [x] Enabled cameras: 9
+- [x] Disabled cameras: 1
+- [x] block_f_cam_8 / 192.168.40.20 is disabled because ping and RTSP port 554 are not reachable
+
+Camera list:
+
+- [x] block_e_cam_1 - 192.168.40.13
 - [x] block_e_cam_2 - 192.168.40.14
-- [ ] block_e_cam_3 - 192.168.40.15
-- [ ] block_e_cam_4 - 192.168.40.16
-- [ ] block_e_cam_5 - 192.168.40.17
-- [ ] block_f_cam_6 - 192.168.40.18
-- [ ] block_f_cam_7 - 192.168.40.19
-- [ ] block_f_cam_8 - 192.168.40.20
+- [x] block_e_cam_3 - 192.168.40.15
+- [x] block_e_cam_4 - 192.168.40.16
+- [x] block_e_cam_5 - 192.168.40.17
+- [x] block_f_cam_6 - 192.168.40.18
+- [x] block_f_cam_7 - 192.168.40.19
+- [x] block_f_cam_8 - 192.168.40.20 disabled
 - [x] block_f_cam_9 - 192.168.40.21
-- [ ] block_f_cam_10 - 192.168.40.22
+- [x] block_f_cam_10 - 192.168.40.22
 
 ## Backend TODO
 
-- [ ] Add camera audit summary endpoint
+- [x] Add camera audit summary endpoint
 - [ ] Add camera readiness status
 - [ ] Add ready_for_ai field in cameras.json
-- [ ] Add monitor all enabled cameras endpoint
+- [x] Add monitor all enabled cameras endpoint
 - [x] Add per-camera event stats
-- [ ] Add per-camera latest evidence endpoint
+- [x] Add per-camera latest event endpoint
 - [ ] Add duplicate detection filtering
 - [ ] Add configurable detection classes
 - [ ] Add configurable monitoring interval
@@ -67,6 +71,14 @@ Camera list currently added:
 - [x] Camera status page
 - [x] Latest events page
 - [x] Evidence image viewer
+- [x] Dashboard summary API
+- [x] Per-camera dashboard event endpoints
+- [x] Lightweight browser dashboard
+- [x] Dashboard auto-refresh/status UI polish
+- [ ] GET /dashboard/health
+- [ ] Camera health/offline summary
+- [ ] Latest successful check per camera
+- [ ] Dashboard health card
 - [ ] Search by camera
 - [ ] Search by date
 - [ ] Search by event type
@@ -99,15 +111,16 @@ Camera list currently added:
 
 ## Next TODO
 
-- [ ] Update Windows Task Scheduler documentation
-- [ ] Add summary-friendly monitor output
+- [ ] Add GET /dashboard/health
+- [ ] Add camera health/offline summary
+- [ ] Track latest successful check per camera
+- [ ] Add dashboard health card
+- [ ] Investigate block_f_cam_8 network/RTSP issue
 - [ ] Add event cooldown to avoid repeated evidence spam
 - [ ] Add per-camera confidence threshold
-- [ ] Investigate block_f_cam_8 network issue
 - [ ] Lower block_e_cam_1 sub-stream from 1280x720 to 640x360 if CPU usage is high
-- [ ] Add dashboard-ready API endpoint
-- [ ] Prepare face detection planning notes
-- [ ] Prepare number plate recognition planning notes
+- [ ] Later: prepare face detection planning notes
+- [ ] Later: prepare number plate recognition planning notes
 
 ## Completed on 2026-07-03 - Dashboard Summary
 
@@ -117,15 +130,20 @@ Camera list currently added:
 - [x] Return attention_cameras list
 - [x] Return failed_cameras list
 
-## Next TODO After Dashboard Summary
+## Remaining TODO After Dashboard Foundation
 
-- [ ] Create dashboard API for latest events summary
-- [ ] Create dashboard API for evidence summary
-- [ ] Add per-camera latest event endpoint
-- [ ] Add per-camera stats endpoint
+- [x] Create dashboard API for latest events summary
+- [x] Create dashboard API for evidence summary
+- [x] Add per-camera latest event endpoint
+- [x] Add per-camera stats endpoint
+- [ ] Add GET /dashboard/health
+- [ ] Add camera health/offline summary
+- [ ] Track latest successful check per camera
+- [ ] Add dashboard health card
+- [ ] Investigate block_f_cam_8 network/RTSP issue
 - [ ] Add event cooldown test with real person detection
-- [ ] Add face detection planning notes
-- [ ] Add number plate recognition planning notes
+- [ ] Later: add face detection planning notes
+- [ ] Later: add number plate recognition planning notes
 
 ## Completed on 2026-07-03 - Dashboard Summary Endpoint
 

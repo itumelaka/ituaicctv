@@ -20,6 +20,52 @@ The long-term target is to create a self-managed AI CCTV system with:
 
 The backend is currently running on FastAPI and has been tested locally using a Hikvision CCTV RTSP stream.
 
+## Current Status Snapshot
+
+Completed foundation and dashboard features:
+
+- RTSP frame capture
+- YOLOv8n person detection
+- Person snapshot endpoint
+- Event logging
+- Evidence image save and view
+- Event stats
+- Multi-camera registry
+- Camera audit
+- Check-all monitor
+- Dashboard summary API
+- Per-camera dashboard event endpoints
+- Lightweight browser dashboard
+- Dashboard auto-refresh and status UI polish
+
+Current camera status:
+
+- Total cameras: 10
+- Enabled cameras: 9
+- Disabled cameras: 1
+- Disabled camera: block_f_cam_8 / 192.168.40.20
+- Reason: ping and RTSP port 554 are not reachable
+
+Important dashboard URLs:
+
+- /dashboard-ui
+- /dashboard/summary
+- /dashboard/cameras
+- /dashboard/events/latest
+- /dashboard/evidence
+- /dashboard/cameras/{camera_id}/latest-event
+- /dashboard/cameras/{camera_id}/stats
+
+Current scheduler status:
+
+- Task name: ITU AI CCTV Person Monitor
+- State: intentionally Disabled
+- BAT launcher returns 0 to Task Scheduler
+- Main script: backend/scripts/monitor_person_all_once.py
+- BAT launcher: backend/scripts/run_monitor_person_all_once.bat
+- Hidden VBS launcher: backend/scripts/run_monitor_person_all_once_hidden.vbs
+- Runtime log: backend/data/task-logs/monitor_person_all.log
+
 ## Confirmed Working Camera
 
 | Camera ID | Name | IP Address | Channel | Status |
@@ -72,6 +118,17 @@ Avoid H.265 / HEVC for backend AI processing because OpenCV may timeout or fail 
 
 - GET /monitor/person/check
 - GET /monitor/{camera_id}/person/check
+- GET /monitor/person/check-all
+
+### Dashboard
+
+- GET /dashboard-ui
+- GET /dashboard/summary
+- GET /dashboard/cameras
+- GET /dashboard/events/latest
+- GET /dashboard/evidence
+- GET /dashboard/cameras/{camera_id}/latest-event
+- GET /dashboard/cameras/{camera_id}/stats
 
 ## Local Scheduler Status
 
@@ -83,10 +140,12 @@ ITU AI CCTV Person Monitor
 
 Current behaviour:
 
-- Runs person monitor check automatically
-- Writes output to backend/data/task-logs/monitor_person.log
+- Uses the multi-camera monitor launcher
+- Checks enabled cameras from the camera registry
+- Writes output to backend/data/task-logs/monitor_person_all.log
 - Uses hidden VBS launcher to avoid CMD popup
-- Currently should remain disabled while multi-camera development continues
+- BAT launcher returns 0 to Task Scheduler
+- Currently intentionally Disabled until operational testing is ready
 
 ## Runtime Data
 
@@ -101,15 +160,17 @@ Ignored runtime paths:
 
 ## Current Development Focus
 
-The project is currently moving from single-camera monitoring to multi-camera monitoring.
+The project has moved beyond the first multi-camera dashboard foundation. The next recommended work is dashboard health and camera status visibility.
 
 Next technical focus:
 
-1. Camera audit endpoint
-2. Monitor all enabled cameras
-3. Multi-camera scheduler script
-4. Evidence snapshot per camera
-5. Dashboard-ready API response
+1. GET /dashboard/health
+2. Camera health/offline summary
+3. Latest successful check per camera
+4. Dashboard health card
+5. Investigate block_f_cam_8 network/RTSP issue
+6. Later: face detection planning
+7. Later: number plate recognition planning
 
 ## Latest Milestone - Multi-Camera Scheduler
 

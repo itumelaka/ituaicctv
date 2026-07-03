@@ -4,13 +4,27 @@
 
 Never commit real CCTV usernames or passwords.
 
+backend/.env is local only. It must stay on the deployment machine and must not be committed, copied into documentation, pasted into chat, or included in screenshots.
+
 Do not commit:
 
 - backend/.env
 - .env
 - Any screenshot showing CCTV credentials
+- RTSP URLs that contain a username or password
 
 Use backend/.env.example for placeholders only.
+
+## Dashboard Security
+
+Dashboard endpoints and the browser dashboard must remain credential-safe.
+
+Rules:
+
+- Do not expose RTSP usernames, passwords, or credential-bearing RTSP URLs in dashboard responses.
+- Do not show backend/.env values in the dashboard.
+- Keep dashboard endpoints lightweight and read-only unless a future change explicitly adds protected controls.
+- Evidence links should use the local evidence-serving endpoint, such as /events/evidence/{filename}, not direct camera URLs.
 
 ## CCTV User Account
 
@@ -33,6 +47,13 @@ Ignored paths:
 - backend/data/events.jsonl
 - backend/data/task-logs/
 - backend/data/evidence/
+
+Evidence images may contain real CCTV footage. Handle them carefully:
+
+- Do not commit evidence images.
+- Share evidence only with authorised staff.
+- Avoid posting evidence images in public chats, issue trackers, or documentation.
+- Apply a retention policy before production use.
 
 ## Face Recognition
 

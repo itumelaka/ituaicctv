@@ -1,88 +1,81 @@
+# ITU AI CCTV - Windows Task Scheduler
 
-## Multi-Camera Scheduler Update
+Last updated: 2026-07-03
 
-The original scheduler pilot was created for single-camera monitoring.
+## Current Scheduler Status
 
-The scheduler has now been updated to use the multi-camera hidden VBS launcher:
+Task name:
 
-backend/scripts/run_monitor_person_all_once_hidden.vbs
+ITU AI CCTV Person Monitor
 
-The VBS launcher runs:
+Current state:
 
-backend/scripts/run_monitor_person_all_once.bat
+- Intentionally Disabled
+- Enable only when operational testing is ready
+- Uses the multi-camera hidden VBS launcher
+- Checks enabled cameras from backend/config/cameras.json
+- BAT launcher returns 0 to Task Scheduler so person detection or camera check results do not appear as Task Scheduler failures
 
-The BAT launcher runs:
+## Scheduler Scripts
+
+Main monitor script:
 
 backend/scripts/monitor_person_all_once.py
 
-The Python script checks all enabled cameras from:
+BAT launcher:
 
-backend/config/cameras.json
+backend/scripts/run_monitor_person_all_once.bat
+
+Hidden VBS launcher:
+
+backend/scripts/run_monitor_person_all_once_hidden.vbs
 
 Runtime log:
 
 backend/data/task-logs/monitor_person_all.log
 
-Exit code meaning:
+## Launcher Flow
 
-0 = no person detected
-1 = one or more camera checks failed
-2 = person detected
+Windows Task Scheduler
+-> backend/scripts/run_monitor_person_all_once_hidden.vbs
+-> backend/scripts/run_monitor_person_all_once.bat
+-> backend/scripts/monitor_person_all_once.py
+-> backend/data/task-logs/monitor_person_all.log
 
-The BAT file returns success to Windows Task Scheduler to avoid marking person detection as a task failure.
+## Monitor Scope
 
-Current scheduler status:
+The multi-camera script checks all enabled cameras from the camera registry.
 
-Disabled intentionally
+Current camera summary:
 
-Enable only when operational testing is ready.
+- Total cameras: 10
+- Enabled cameras: 9
+- Disabled cameras: 1
+- Disabled camera: block_f_cam_8 / 192.168.40.20
+- Reason: ping and RTSP port 554 are not reachable
 
-PowerShell commands:
+## Script Exit Meaning
 
-Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
-Disable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
-Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+The Python monitor script can report:
 
-## Multi-Camera Scheduler Update
+- 0 = no person detected
+- 1 = one or more camera checks failed
+- 2 = person detected
 
-The original scheduler pilot was created for single-camera monitoring.
+The BAT launcher returns 0 to Windows Task Scheduler. This is intentional because person detection is an operational event, not a failed scheduled task.
 
-The scheduler has now been updated to use the multi-camera hidden VBS launcher:
+Review backend/data/task-logs/monitor_person_all.log for actual monitor results.
 
-backend/scripts/run_monitor_person_all_once_hidden.vbs
+## PowerShell Commands
 
-The VBS launcher runs:
-
-backend/scripts/run_monitor_person_all_once.bat
-
-The BAT launcher runs:
-
-backend/scripts/monitor_person_all_once.py
-
-The Python script checks all enabled cameras from:
-
-backend/config/cameras.json
-
-Runtime log:
-
-backend/data/task-logs/monitor_person_all.log
-
-Exit code meaning:
-
-0 = no person detected
-1 = one or more camera checks failed
-2 = person detected
-
-The BAT file returns success to Windows Task Scheduler to avoid marking person detection as a task failure.
-
-Current scheduler status:
-
-Disabled intentionally
-
-Enable only when operational testing is ready.
-
-PowerShell commands:
+Enable the task:
 
 Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+
+Disable the task:
+
 Disable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+
+Check task state:
+
 Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State

@@ -16,13 +16,13 @@ Status: Completed
 
 ## Phase 2 - Multi-Camera Monitoring
 
-Status: In progress
+Status: Completed foundation
 
 Goal:
 
 Support all Block E and Block F CCTV cameras using a camera registry.
 
-Planned features:
+Completed features:
 
 - Camera registry using backend/config/cameras.json
 - Camera audit endpoint
@@ -30,6 +30,13 @@ Planned features:
 - Camera-specific monitor check
 - Monitor all enabled cameras
 - Per-camera event log and evidence path
+
+Current camera summary:
+
+- Total cameras: 10
+- Enabled cameras: 9
+- Disabled cameras: 1
+- block_f_cam_8 / 192.168.40.20 is disabled because ping and RTSP port 554 are not reachable
 
 ## Phase 3 - Stable Local Monitoring
 
@@ -96,14 +103,28 @@ Provide a clean web dashboard for monitoring and review.
 
 Planned features:
 
-- Camera list
-- Camera health status
-- Latest events
-- Event statistics
-- Evidence viewer
+- Camera list - completed
+- Latest events - completed
+- Event statistics - completed
+- Evidence viewer - completed
+- Dashboard summary API - completed
+- Per-camera dashboard event endpoints - completed
+- Lightweight browser dashboard - completed
+- Dashboard auto-refresh/status UI polish - completed
+- Camera health status - next
 - Search and filter
 - Future face recognition view
 - Future plate recognition view
+
+Important dashboard URLs:
+
+- /dashboard-ui
+- /dashboard/summary
+- /dashboard/cameras
+- /dashboard/events/latest
+- /dashboard/evidence
+- /dashboard/cameras/{camera_id}/latest-event
+- /dashboard/cameras/{camera_id}/stats
 
 ## Phase 7 - Production Deployment
 
@@ -196,7 +217,11 @@ Dashboard data now available:
 
 Next dashboard work:
 
-- Dashboard filters and search
+- GET /dashboard/health
+- Camera health/offline summary
+- Latest successful check per camera
+- Dashboard health card
+- Investigate block_f_cam_8
 
 ## Roadmap Update - Per-Camera Dashboard APIs
 
@@ -242,9 +267,13 @@ Dashboard UI currently includes:
 
 Next dashboard work:
 
-- Search and filters
-- Per-camera detail view
-- Retention and cleanup controls
+- GET /dashboard/health
+- Camera health/offline summary
+- Latest successful check per camera
+- Dashboard health card
+- Investigate block_f_cam_8
+- Later: face detection planning
+- Later: number plate recognition planning
 
 ## Roadmap Update - Dashboard Summary
 
@@ -267,8 +296,10 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- Evidence summary endpoint
-- Camera health dashboard endpoint
-- Latest events endpoint
-- Per-camera detail endpoint
-- Frontend dashboard UI
+- GET /dashboard/health
+- Camera health/offline summary
+- Latest successful check per camera
+- Dashboard health card
+- Investigate block_f_cam_8
+- Later: face detection planning
+- Later: number plate recognition planning

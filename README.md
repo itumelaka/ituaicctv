@@ -10,20 +10,39 @@ Completed:
 
 - FastAPI backend setup
 - Health check endpoint
+- RTSP frame capture
 - RTSP camera test endpoint
 - CCTV snapshot endpoint
+- YOLOv8n person detection
 - YOLO detection endpoint
 - YOLO snapshot endpoint with bounding boxes
 - Person-only detection endpoint
-- Person-only snapshot endpoint
+- Person-only snapshot endpoint / person snapshot
 - Person event decision endpoint
 - Local event logging using JSONL
 - Evidence snapshot logic for person events
+- Evidence image save and view endpoint
+- Event stats endpoint
+- Multi-camera registry
+- Camera audit endpoint
+- Check-all monitor endpoint
+- Dashboard summary API
 - Lightweight dashboard API endpoints for cameras, latest events, and evidence
 - Per-camera dashboard endpoints for latest event and event stats
 - Simple browser dashboard UI
+- Dashboard auto-refresh and status UI polish
 - CCTV sub-stream configured to H.264 for OpenCV compatibility
 - YOLOv8n running in CPU mode
+
+## Camera Status Summary
+
+Current configured camera status:
+
+- Total cameras: 10
+- Enabled cameras: 9
+- Disabled cameras: 1
+- Disabled camera: block_f_cam_8 / 192.168.40.20
+- Reason: ping and RTSP port 554 are not reachable
 
 ## Current Working Camera
 
@@ -78,6 +97,16 @@ GET /dashboard/events/latest?limit=10
 
 Dashboard endpoints are lightweight read-only endpoints. They read existing camera configuration, event logs, and evidence image metadata only. They do not run YOLO detection. Per-camera dashboard endpoints validate camera_id against the configured camera list.
 
+Important dashboard URLs:
+
+- /dashboard-ui
+- /dashboard/summary
+- /dashboard/cameras
+- /dashboard/events/latest
+- /dashboard/evidence
+- /dashboard/cameras/{camera_id}/latest-event
+- /dashboard/cameras/{camera_id}/stats
+
 Dashboard UI:
 
 Open this URL after starting the backend:
@@ -93,6 +122,28 @@ The page also includes quick links for:
 - /dashboard/cameras
 - /dashboard/events/latest
 - /dashboard/evidence
+
+## Scheduler Status
+
+Windows Task Scheduler task:
+
+ITU AI CCTV Person Monitor
+
+Current status:
+
+- Intentionally Disabled
+- Uses the multi-camera monitor launcher
+- BAT launcher returns 0 to Task Scheduler so attention events are not marked as task failures
+
+Scheduler script paths:
+
+- backend/scripts/monitor_person_all_once.py
+- backend/scripts/run_monitor_person_all_once.bat
+- backend/scripts/run_monitor_person_all_once_hidden.vbs
+
+Scheduler log path:
+
+backend/data/task-logs/monitor_person_all.log
 
 ## Event Flow
 
@@ -133,6 +184,13 @@ CCTV_PASSWORD=your_password
 CCTV_CHANNEL=102
 
 Never commit real CCTV usernames or passwords.
+
+Security reminders:
+
+- backend/.env is local only
+- Never commit camera passwords
+- Dashboard responses must not expose RTSP credentials
+- Evidence images may contain real CCTV footage and must be handled carefully
 
 ## Local Development
 
@@ -176,10 +234,13 @@ This is lighter and more suitable for AI detection.
 
 ## Next Milestones
 
-1. Add configurable confidence threshold
-2. Add retention cleanup for evidence images
-3. Add alert integration such as Telegram
-4. Add dashboard filters and search
+1. Add GET /dashboard/health
+2. Add camera health/offline summary
+3. Track latest successful check per camera
+4. Add dashboard health card
+5. Investigate block_f_cam_8 network/RTSP issue
+6. Later: face detection planning
+7. Later: number plate recognition planning
 
 ## Repository
 
