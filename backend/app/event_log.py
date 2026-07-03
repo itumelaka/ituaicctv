@@ -5,6 +5,7 @@ from typing import Any
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 EVENT_LOG_FILE = DATA_DIR / "events.jsonl"
+EVIDENCE_DIR = DATA_DIR / "evidence"
 
 
 def append_event_log(event: dict[str, Any]) -> None:
@@ -37,3 +38,15 @@ def read_latest_event_logs(limit: int = 20) -> list[dict[str, Any]]:
 
     events.reverse()
     return events
+
+
+def save_evidence_image(image_bytes: bytes, filename: str) -> str:
+    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+
+    safe_filename = filename.replace(":", "-").replace("/", "-").replace("\\", "-")
+    file_path = EVIDENCE_DIR / safe_filename
+
+    with file_path.open("wb") as file:
+        file.write(image_bytes)
+
+    return str(file_path.relative_to(BASE_DIR))

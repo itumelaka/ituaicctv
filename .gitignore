@@ -27,3 +27,6 @@ Thumbs.db
 
 # Runtime data logs
 backend/data/*.jsonl
+
+# Runtime evidence images
+backend/data/evidence/

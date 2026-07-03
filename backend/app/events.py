@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from app.config import settings
-from app.detection import run_person_detection
-from app.event_log import append_event_log, read_latest_event_logs
+from app.detection import run_person_detection, run_person_snapshot_jpeg
+from app.event_log import append_event_log, read_latest_event_logs, save_evidence_image
 
 
 def evaluate_person_event() -> dict:
@@ -9,11 +9,18 @@ def evaluate_person_event() -> dict:
 
     detections_count = detection_result["detections_count"]
     person_detected = detection_result["person_detected"]
+    timestamp = datetime.now(timezone.utc).isoformat()
+
+    evidence_path = None
 
     if person_detected:
         event_type = "person_detected"
         severity = "medium"
         message = "Person detected in CCTV frame."
+
+        image_bytes = run_person_snapshot_jpeg()
+        filename = f"person_detected_{timestamp}.jpg"
+        evidence_path = save_evidence_image(image_bytes, filename)
     else:
         event_type = "no_person"
         severity = "none"
@@ -24,7 +31,7 @@ def evaluate_person_event() -> dict:
         "event_type": event_type,
         "severity": severity,
         "message": message,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": timestamp,
         "camera": {
             "host": settings.cctv_host,
             "channel": settings.cctv_channel,
@@ -33,7 +40,8 @@ def evaluate_person_event() -> dict:
         },
         "person_detected": person_detected,
         "detections_count": detections_count,
-        "detections": detection_result["detections"]
+        "detections": detection_result["detections"],
+        "evidence_path": evidence_path
     }
 
     append_event_log(event)
