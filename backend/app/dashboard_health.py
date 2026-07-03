@@ -105,6 +105,8 @@ def build_dashboard_health(
             "total_events": len(events_for_camera),
             "person_events": person_events,
             "notes": camera.get("notes"),
+            "status": camera.get("status"),
+            "health_note": camera.get("health_note"),
         })
 
     return {
@@ -121,6 +123,7 @@ def build_dashboard_health(
                     "health_status": "disabled",
                     "notes": camera.get("notes"),
                     "status": camera.get("status"),
+                    "health_note": camera.get("health_note"),
                 }
                 for camera in disabled_cameras
             ],

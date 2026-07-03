@@ -29,6 +29,8 @@ class DashboardHealthTests(unittest.TestCase):
                 "id": "block_f_cam_8",
                 "name": "ITU BLOCK F CAM8",
                 "enabled": False,
+                "status": "offline",
+                "health_note": "Ping and RTSP port 554 are not reachable.",
                 "notes": "Ping and RTSP port 554 not reachable.",
             },
         ]
@@ -73,11 +75,21 @@ class DashboardHealthTests(unittest.TestCase):
         self.assertIsNone(per_camera["cam_new"]["last_event_time"])
 
         self.assertEqual(per_camera["block_f_cam_8"]["health_status"], "disabled")
+        self.assertEqual(per_camera["block_f_cam_8"]["status"], "offline")
+        self.assertIn("RTSP port 554", per_camera["block_f_cam_8"]["health_note"])
         self.assertFalse(per_camera["block_f_cam_8"]["enabled"])
         self.assertIn("not reachable", per_camera["block_f_cam_8"]["notes"])
         self.assertEqual(
             health["cameras"]["disabled_cameras"][0]["camera_id"],
             "block_f_cam_8",
+        )
+        self.assertEqual(
+            health["cameras"]["disabled_cameras"][0]["status"],
+            "offline",
+        )
+        self.assertIn(
+            "RTSP port 554",
+            health["cameras"]["disabled_cameras"][0]["health_note"],
         )
 
 

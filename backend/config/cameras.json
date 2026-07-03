@@ -69,7 +69,9 @@
     "port": 554,
     "channel": "102",
     "enabled": false,
-    "notes": "Direct IP camera. Sub-stream channel 102."
+    "status": "offline",
+    "health_note": "Ping and RTSP port 554 are not reachable.",
+    "notes": "Disabled because ping and RTSP port 554 are not reachable. Direct IP camera sub-stream channel 102."
   },
   {
     "id": "block_f_cam_9",

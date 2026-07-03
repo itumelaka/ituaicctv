@@ -1,11 +1,27 @@
 # ITU AI CCTV - TODO List
 
+## Current Checkpoint
+
+Latest confirmed commit:
+
+d18747e feat: add dashboard health endpoint
+
+Checkpoint notes:
+
+- GET /dashboard-ui is usable.
+- GET /dashboard/health is usable.
+- Dashboard UI has auto-refresh, status timing, quick links, improved badges, clickable evidence thumbnails, Health card, and per-camera health badges.
+- Unit tests pass with: python -m unittest discover -s tests -p "test_*.py" -v
+- Compile passes with: python -m compileall backend/app
+- block_f_cam_8 / 192.168.40.20 remains disabled because ping and RTSP port 554 are not reachable.
+- sambung.txt is a private local handoff note and should not be committed.
+
 ## Immediate TODO
 
-- [ ] Improve latest successful check tracking per camera
-- [ ] Investigate block_f_cam_8 network/RTSP issue
-- [ ] Add dashboard filters and search
-- [ ] Add evidence retention cleanup
+- [ ] Improve block_f_cam_8 metadata if not already committed
+- [ ] Add camera health from scheduler log
+- [ ] Enhance dashboard health card
+- [ ] Investigate block_f_cam_8 network/IP issue
 - [ ] Prepare face detection planning notes later
 - [ ] Prepare number plate recognition planning notes later
 
@@ -16,7 +32,7 @@ Camera registry current summary:
 - [x] Total cameras configured: 10
 - [x] Enabled cameras: 9
 - [x] Disabled cameras: 1
-- [x] block_f_cam_8 / 192.168.40.20 is disabled because ping and RTSP port 554 are not reachable
+- [x] block_f_cam_8 / 192.168.40.20 is disabled/offline because ping and RTSP port 554 are not reachable
 
 Camera list:
 
@@ -27,7 +43,7 @@ Camera list:
 - [x] block_e_cam_5 - 192.168.40.17
 - [x] block_f_cam_6 - 192.168.40.18
 - [x] block_f_cam_7 - 192.168.40.19
-- [x] block_f_cam_8 - 192.168.40.20 disabled
+- [x] block_f_cam_8 - 192.168.40.20 disabled/offline
 - [x] block_f_cam_9 - 192.168.40.21
 - [x] block_f_cam_10 - 192.168.40.22
 
@@ -111,10 +127,10 @@ Camera list:
 
 ## Next TODO
 
-- [ ] Improve latest successful check tracking per camera
-- [ ] Investigate block_f_cam_8 network/RTSP issue
-- [ ] Add dashboard filters and search
-- [ ] Add evidence retention cleanup
+- [ ] Improve block_f_cam_8 metadata if not already committed
+- [ ] Add camera health from scheduler log
+- [ ] Enhance dashboard health card
+- [ ] Investigate block_f_cam_8 network/IP issue
 - [ ] Add event cooldown to avoid repeated evidence spam
 - [ ] Add per-camera confidence threshold
 - [ ] Lower block_e_cam_1 sub-stream from 1280x720 to 640x360 if CPU usage is high

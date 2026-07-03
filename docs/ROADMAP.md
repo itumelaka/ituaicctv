@@ -1,5 +1,33 @@
 # ITU AI CCTV - Roadmap
 
+## Current Checkpoint
+
+Latest confirmed commit:
+
+d18747e feat: add dashboard health endpoint
+
+Checkpoint summary:
+
+- Backend FastAPI works.
+- Hikvision RTSP works.
+- Multi-camera config has 10 cameras: 9 enabled and 1 disabled.
+- Disabled camera: block_f_cam_8 / 192.168.40.20.
+- Disabled camera reason: ping and RTSP port 554 are not reachable.
+- GET /dashboard-ui is usable.
+- GET /dashboard/health is usable.
+- Dashboard UI includes auto-refresh, status timing, quick links, improved badges, clickable evidence thumbnails, Health card, and per-camera health badges.
+- Unit tests and compile checks passed at this checkpoint.
+- sambung.txt is a private local handoff note and should not be committed.
+
+Next recommended work:
+
+1. Improve block_f_cam_8 metadata if not already committed
+2. Add camera health from scheduler log
+3. Enhance dashboard health card
+4. Investigate block_f_cam_8 network/IP issue
+5. Later: face detection planning
+6. Later: number plate recognition planning
+
 ## Phase 1 - Backend Foundation
 
 Status: Completed
@@ -194,9 +222,10 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- Improve latest successful check tracking per camera
-- Investigate block_f_cam_8
-- Dashboard filters and search
+- Improve block_f_cam_8 metadata if not already committed
+- Add camera health from scheduler log
+- Enhance dashboard health card
+- Investigate block_f_cam_8 network/IP issue
 
 ## Roadmap Update - Lightweight Dashboard Data APIs
 
@@ -220,10 +249,10 @@ Dashboard data now available:
 
 Next dashboard work:
 
-- Improve latest successful check tracking per camera
-- Investigate block_f_cam_8
-- Dashboard filters and search
-- Evidence retention cleanup
+- Improve block_f_cam_8 metadata if not already committed
+- Add camera health from scheduler log
+- Enhance dashboard health card
+- Investigate block_f_cam_8 network/IP issue
 
 ## Roadmap Update - Per-Camera Dashboard APIs
 
@@ -269,10 +298,10 @@ Dashboard UI currently includes:
 
 Next dashboard work:
 
-- Improve latest successful check tracking per camera
-- Investigate block_f_cam_8
-- Dashboard filters and search
-- Evidence retention cleanup
+- Improve block_f_cam_8 metadata if not already committed
+- Add camera health from scheduler log
+- Enhance dashboard health card
+- Investigate block_f_cam_8 network/IP issue
 - Later: face detection planning
 - Later: number plate recognition planning
 
@@ -297,9 +326,9 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- Improve latest successful check tracking per camera
-- Investigate block_f_cam_8
-- Dashboard filters and search
-- Evidence retention cleanup
+- Improve block_f_cam_8 metadata if not already committed
+- Add camera health from scheduler log
+- Enhance dashboard health card
+- Investigate block_f_cam_8 network/IP issue
 - Later: face detection planning
 - Later: number plate recognition planning

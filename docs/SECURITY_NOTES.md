@@ -15,6 +15,10 @@ Do not commit:
 
 Use backend/.env.example for placeholders only.
 
+## Local Handoff Notes
+
+Private local handoff notes, including sambung.txt, are for local continuity only and should not be committed.
+
 ## Dashboard Security
 
 Dashboard endpoints and the browser dashboard must remain credential-safe.

@@ -4,6 +4,38 @@ Backend AI CCTV detection project for ITU Melaka using existing Hikvision CCTV i
 
 The project is currently focused on local backend development, RTSP camera access, YOLO detection, person-only detection, event decision, event logging, and evidence snapshot preparation.
 
+## Current Checkpoint
+
+Latest confirmed commit:
+
+d18747e feat: add dashboard health endpoint
+
+Confirmed at this checkpoint:
+
+- Backend FastAPI works.
+- Hikvision RTSP works.
+- Multi-camera config has 10 cameras.
+- 9 cameras are enabled.
+- 1 camera is disabled: block_f_cam_8 / 192.168.40.20.
+- Disabled camera reason: ping and RTSP port 554 are not reachable.
+- GET /dashboard-ui is usable.
+- GET /dashboard/health is usable.
+- Dashboard UI includes auto-refresh, last updated time, next refresh countdown, quick links, improved badges, clickable evidence thumbnails, Health card, and per-camera health badges.
+- backend/app/dashboard_health.py exists.
+- tests/test_dashboard_health.py exists.
+- Unit tests pass with: python -m unittest discover -s tests -p "test_*.py" -v
+- Compile check passes with: python -m compileall backend/app
+- sambung.txt is a private local handoff note and should not be committed.
+
+Next recommended work:
+
+1. Improve block_f_cam_8 metadata if not already committed
+2. Add camera health from scheduler log
+3. Enhance dashboard health card
+4. Investigate block_f_cam_8 network/IP issue
+5. Later: face detection planning
+6. Later: number plate recognition planning
+
 ## Current Status
 
 Completed:
@@ -44,6 +76,7 @@ Current configured camera status:
 - Enabled cameras: 9
 - Disabled cameras: 1
 - Disabled camera: block_f_cam_8 / 192.168.40.20
+- Status: offline
 - Reason: ping and RTSP port 554 are not reachable
 
 ## Current Working Camera
@@ -239,10 +272,10 @@ This is lighter and more suitable for AI detection.
 
 ## Next Milestones
 
-1. Improve latest successful check tracking per camera
-2. Investigate block_f_cam_8 network/RTSP issue
-3. Add dashboard filters and search
-4. Add evidence retention cleanup
+1. Improve block_f_cam_8 metadata if not already committed
+2. Add camera health from scheduler log
+3. Enhance dashboard health card
+4. Investigate block_f_cam_8 network/IP issue
 5. Later: face detection planning
 6. Later: number plate recognition planning
 
