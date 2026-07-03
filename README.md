@@ -62,6 +62,7 @@ Completed:
 - Dashboard summary API
 - Dashboard health API
 - Scheduler-log health summary in GET /dashboard/health
+- Stale camera health logic in GET /dashboard/health
 - Lightweight dashboard API endpoints for cameras, latest events, and evidence
 - Per-camera dashboard endpoints for latest event and event stats
 - Simple browser dashboard UI
@@ -135,6 +136,8 @@ GET /dashboard/events/latest?limit=10
 
 Dashboard endpoints are lightweight read-only endpoints. They read existing camera configuration, event logs, and evidence image metadata only. They do not run YOLO detection. Per-camera dashboard endpoints validate camera_id against the configured camera list.
 
+GET /dashboard/health also marks enabled cameras as active, stale, or no_recent_event based on the latest event/check time in backend/data/events.jsonl. The default stale threshold is 120 minutes. Disabled cameras with status offline are reported as offline.
+
 Important dashboard URLs:
 
 - /dashboard-ui
@@ -195,6 +198,14 @@ GET /dashboard/health reads this log lightly and returns a scheduler block with:
 - no_person_count
 - log_path
 - recent_lines
+
+Per-camera dashboard health includes:
+
+- health_status
+- last_event_time
+- stale_minutes
+- stale_threshold_minutes
+- last_seen_source
 
 ## Event Flow
 

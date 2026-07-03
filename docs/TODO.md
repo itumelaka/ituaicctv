@@ -21,6 +21,7 @@ Checkpoint notes:
 - [ ] Improve block_f_cam_8 metadata if not already committed
 - [x] Add camera health from scheduler log
 - [x] Enhance dashboard health card
+- [x] Add stale camera health logic
 - [ ] Investigate block_f_cam_8 network/IP issue
 - [ ] Prepare face detection planning notes later
 - [ ] Prepare number plate recognition planning notes later
@@ -96,7 +97,8 @@ Camera list:
 - [x] Per-camera health badges
 - [x] Scheduler log summary in dashboard health
 - [x] Scheduler latest run and summary in dashboard UI Health card
-- [ ] Improve latest successful check tracking per camera
+- [x] Improve latest successful check tracking per camera
+- [x] Add stale health badge support
 - [ ] Search by camera
 - [ ] Search by date
 - [ ] Search by event type
@@ -158,7 +160,7 @@ Camera list:
 - [x] Add dashboard health card
 - [x] Add scheduler log summary to dashboard health
 - [x] Show scheduler latest run and summary in dashboard Health card
-- [ ] Improve latest successful check tracking per camera
+- [x] Improve latest successful check tracking per camera
 - [ ] Investigate block_f_cam_8 network/RTSP issue
 - [ ] Add event cooldown test with real person detection
 - [ ] Later: add face detection planning notes
@@ -210,6 +212,15 @@ Camera list:
 - [x] Add recent safe scheduler log lines to GET /dashboard/health
 - [x] Show scheduler latest run and summary in /dashboard-ui Health card
 - [x] Keep scheduler health lightweight with no YOLO or RTSP access
+
+## Completed on 2026-07-03 - Stale Camera Health
+
+- [x] Add stale camera health logic to GET /dashboard/health
+- [x] Use backend/data/events.jsonl latest event/check time where available
+- [x] Add 120-minute default stale threshold
+- [x] Return stale_minutes, stale_threshold_minutes, and last_seen_source per camera
+- [x] Return offline for disabled cameras marked offline
+- [x] Show stale health badge style in /dashboard-ui
 
 ## Completed on 2026-07-03 - Lightweight Dashboard Endpoints
 

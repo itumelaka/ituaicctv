@@ -1,10 +1,12 @@
 import json
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 SCHEDULER_LOG_FILE = BASE_DIR / "data" / "task-logs" / "monitor_person_all.log"
+STALE_THRESHOLD_MINUTES = 120
 
 
 def _empty_scheduler_summary(status: str) -> dict[str, Any]:
@@ -231,11 +233,48 @@ def _is_failed_event(event: dict[str, Any]) -> bool:
     )
 
 
+def _parse_event_time(timestamp: str | None) -> datetime | None:
+    if not timestamp:
+        return None
+
+    try:
+        parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+
+    return parsed.astimezone(timezone.utc)
+
+
+def _get_stale_minutes(
+    timestamp: str | None,
+    current_time: datetime,
+) -> int | None:
+    parsed_time = _parse_event_time(timestamp)
+
+    if parsed_time is None:
+        return None
+
+    elapsed_seconds = (current_time - parsed_time).total_seconds()
+    return max(0, int(elapsed_seconds // 60))
+
+
 def build_dashboard_health(
     cameras: list[dict[str, Any]],
     events: list[dict[str, Any]],
+    stale_threshold_minutes: int = STALE_THRESHOLD_MINUTES,
+    now: datetime | None = None,
 ) -> dict[str, Any]:
     scheduler = parse_scheduler_log_summary()
+    current_time = now or datetime.now(timezone.utc)
+
+    if current_time.tzinfo is None:
+        current_time = current_time.replace(tzinfo=timezone.utc)
+    else:
+        current_time = current_time.astimezone(timezone.utc)
+
     enabled_cameras = [
         camera for camera in cameras
         if camera.get("enabled", True)
@@ -278,10 +317,12 @@ def build_dashboard_health(
         last_person_event_time = None
         person_events = 0
         has_failed_event = False
+        last_seen_source = None
 
         for event in events_for_camera:
             if event.get("timestamp"):
                 last_event_time = event.get("timestamp")
+                last_seen_source = "events_jsonl"
 
             if _is_person_event(event):
                 person_events += 1
@@ -291,12 +332,22 @@ def build_dashboard_health(
             if _is_failed_event(event):
                 has_failed_event = True
 
-        if not enabled:
+        stale_minutes = _get_stale_minutes(
+            timestamp=last_event_time,
+            current_time=current_time,
+        )
+        configured_status = str(camera.get("status") or "").lower()
+
+        if not enabled and configured_status == "offline":
+            health_status = "offline"
+        elif not enabled:
             health_status = "disabled"
         elif has_failed_event:
             health_status = "warning"
-        elif last_event_time:
+        elif stale_minutes is not None and stale_minutes <= stale_threshold_minutes:
             health_status = "active"
+        elif stale_minutes is not None:
+            health_status = "stale"
         else:
             health_status = "no_recent_event"
 
@@ -306,6 +357,9 @@ def build_dashboard_health(
             "enabled": enabled,
             "health_status": health_status,
             "last_event_time": last_event_time,
+            "stale_minutes": stale_minutes,
+            "stale_threshold_minutes": stale_threshold_minutes,
+            "last_seen_source": last_seen_source,
             "last_person_event_time": last_person_event_time,
             "total_events": len(events_for_camera),
             "person_events": person_events,
@@ -325,7 +379,9 @@ def build_dashboard_health(
                     "camera_id": camera.get("id"),
                     "name": camera.get("name"),
                     "enabled": camera.get("enabled", True),
-                    "health_status": "disabled",
+                    "health_status": "offline"
+                    if str(camera.get("status") or "").lower() == "offline"
+                    else "disabled",
                     "notes": camera.get("notes"),
                     "status": camera.get("status"),
                     "health_note": camera.get("health_note"),

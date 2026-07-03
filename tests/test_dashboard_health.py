@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -21,6 +22,12 @@ class DashboardHealthTests(unittest.TestCase):
                 "notes": "Working camera.",
             },
             {
+                "id": "cam_stale",
+                "name": "Stale Camera",
+                "enabled": True,
+                "notes": "Old check.",
+            },
+            {
                 "id": "cam_new",
                 "name": "New Camera",
                 "enabled": True,
@@ -37,6 +44,12 @@ class DashboardHealthTests(unittest.TestCase):
         ]
         events = [
             {
+                "timestamp": "2026-07-02T22:00:00+00:00",
+                "event_type": "no_person",
+                "person_detected": False,
+                "camera": {"id": "cam_stale"},
+            },
+            {
                 "timestamp": "2026-07-03T01:00:00+00:00",
                 "event_type": "no_person",
                 "person_detected": False,
@@ -50,13 +63,18 @@ class DashboardHealthTests(unittest.TestCase):
             },
         ]
 
-        health = build_dashboard_health(cameras, events)
+        health = build_dashboard_health(
+            cameras,
+            events,
+            stale_threshold_minutes=120,
+            now=datetime(2026, 7, 3, 1, 30, tzinfo=timezone.utc),
+        )
 
         self.assertEqual(health["status"], "ok")
-        self.assertEqual(health["cameras"]["total"], 3)
-        self.assertEqual(health["cameras"]["enabled"], 2)
+        self.assertEqual(health["cameras"]["total"], 4)
+        self.assertEqual(health["cameras"]["enabled"], 3)
         self.assertEqual(health["cameras"]["disabled"], 1)
-        self.assertEqual(health["events"]["total_events"], 2)
+        self.assertEqual(health["events"]["total_events"], 3)
         self.assertEqual(health["events"]["latest_event_time"], "2026-07-03T01:05:00+00:00")
         self.assertEqual(health["events"]["latest_event_camera_id"], "cam_active")
         self.assertEqual(health["events"]["latest_person_event_time"], "2026-07-03T01:05:00+00:00")
@@ -70,12 +88,23 @@ class DashboardHealthTests(unittest.TestCase):
         self.assertEqual(per_camera["cam_active"]["total_events"], 2)
         self.assertEqual(per_camera["cam_active"]["person_events"], 1)
         self.assertEqual(per_camera["cam_active"]["last_event_time"], "2026-07-03T01:05:00+00:00")
+        self.assertEqual(per_camera["cam_active"]["stale_minutes"], 25)
+        self.assertEqual(per_camera["cam_active"]["stale_threshold_minutes"], 120)
+        self.assertEqual(per_camera["cam_active"]["last_seen_source"], "events_jsonl")
         self.assertEqual(per_camera["cam_active"]["last_person_event_time"], "2026-07-03T01:05:00+00:00")
+
+        self.assertEqual(per_camera["cam_stale"]["health_status"], "stale")
+        self.assertEqual(per_camera["cam_stale"]["stale_minutes"], 210)
+        self.assertEqual(per_camera["cam_stale"]["stale_threshold_minutes"], 120)
+        self.assertEqual(per_camera["cam_stale"]["last_seen_source"], "events_jsonl")
 
         self.assertEqual(per_camera["cam_new"]["health_status"], "no_recent_event")
         self.assertIsNone(per_camera["cam_new"]["last_event_time"])
+        self.assertIsNone(per_camera["cam_new"]["stale_minutes"])
+        self.assertEqual(per_camera["cam_new"]["stale_threshold_minutes"], 120)
+        self.assertIsNone(per_camera["cam_new"]["last_seen_source"])
 
-        self.assertEqual(per_camera["block_f_cam_8"]["health_status"], "disabled")
+        self.assertEqual(per_camera["block_f_cam_8"]["health_status"], "offline")
         self.assertEqual(per_camera["block_f_cam_8"]["status"], "offline")
         self.assertIn("RTSP port 554", per_camera["block_f_cam_8"]["health_note"])
         self.assertFalse(per_camera["block_f_cam_8"]["enabled"])
@@ -86,6 +115,10 @@ class DashboardHealthTests(unittest.TestCase):
         )
         self.assertEqual(
             health["cameras"]["disabled_cameras"][0]["status"],
+            "offline",
+        )
+        self.assertEqual(
+            health["cameras"]["disabled_cameras"][0]["health_status"],
             "offline",
         )
         self.assertIn(

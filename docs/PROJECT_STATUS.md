@@ -441,6 +441,38 @@ The /dashboard-ui Health card now shows:
 
 This keeps scheduler visibility in the dashboard without running YOLO detection or opening RTSP streams.
 
+## Latest Milestone - Stale Camera Health
+
+Updated: 2026-07-03
+
+GET /dashboard/health now includes stale camera health logic for enabled cameras.
+
+The health check reads existing event data from:
+
+- backend/data/events.jsonl
+
+Per-camera health now includes:
+
+- health_status
+- last_event_time
+- stale_minutes
+- stale_threshold_minutes
+- last_seen_source
+
+Default stale threshold:
+
+- 120 minutes
+
+Current status behavior:
+
+- offline for disabled cameras marked offline
+- disabled for disabled cameras without offline status
+- active for enabled cameras with a recent event/check
+- stale for enabled cameras with an old event/check
+- no_recent_event for enabled cameras with no event yet
+
+The /dashboard-ui camera cards show stale health using the warning badge style.
+
 ## Latest Milestone - Dashboard Summary Endpoint
 
 Updated: 2026-07-03

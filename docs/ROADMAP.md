@@ -142,6 +142,7 @@ Planned features:
 - Camera health status - completed
 - Dashboard health card - completed
 - Scheduler log health summary - completed
+- Stale camera health logic - completed
 - Search and filter
 - Future face recognition view
 - Future plate recognition view
@@ -296,6 +297,7 @@ Dashboard UI currently includes:
 - 30-second auto-refresh
 - quick links to refresh, summary, cameras, latest events, and evidence
 - scheduler latest run and summary in the Health card
+- stale camera badges based on latest event/check age
 
 Next dashboard work:
 
@@ -325,6 +327,34 @@ Dashboard health now includes:
 - recent safe scheduler log lines
 
 The /dashboard-ui Health card now shows the latest scheduler run and summary without running YOLO detection or opening RTSP streams.
+
+## Roadmap Update - Stale Camera Health
+
+Status: Completed
+
+GET /dashboard/health now classifies enabled cameras using the latest event/check time from backend/data/events.jsonl.
+
+Default stale threshold:
+
+- 120 minutes
+
+Per-camera health now includes:
+
+- health_status
+- last_event_time
+- stale_minutes
+- stale_threshold_minutes
+- last_seen_source
+
+Supported camera health statuses now include:
+
+- active
+- stale
+- no_recent_event
+- disabled
+- offline
+
+The /dashboard-ui camera cards now show stale cameras with the warning badge style.
 
 ## Roadmap Update - Dashboard Summary
 

@@ -531,11 +531,11 @@ def dashboard_ui():
         return "ok";
       }
 
-      if (status === "disabled" || status === "warning" || status === "failing") {
+      if (status === "disabled" || status === "stale" || status === "warning" || status === "failing") {
         return "warn";
       }
 
-      if (status === "failed") {
+      if (status === "failed" || status === "offline") {
         return "danger";
       }
 
