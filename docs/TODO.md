@@ -140,12 +140,22 @@ Camera list currently added:
 
 ## Next Dashboard TODO
 
-- [ ] Add GET /dashboard/evidence
-- [ ] Add GET /dashboard/cameras
-- [ ] Add GET /dashboard/events/latest
+- [x] Add GET /dashboard/evidence
+- [x] Add GET /dashboard/cameras
+- [x] Add GET /dashboard/events/latest
 - [ ] Add per-camera latest event endpoint
 - [ ] Add per-camera stats endpoint
 - [ ] Add simple frontend dashboard page later
+
+## Completed on 2026-07-03 - Lightweight Dashboard Endpoints
+
+- [x] Add GET /dashboard/evidence
+- [x] Return evidence filename, URL, modified time, and size
+- [x] Add GET /dashboard/cameras
+- [x] Return camera totals and credential-safe camera list
+- [x] Add GET /dashboard/events/latest
+- [x] Include evidence_url for events with evidence images
+- [x] Keep dashboard endpoints lightweight with no YOLO execution
 
 ## Completed on 2026-07-03 - Dashboard Summary Endpoint
 
@@ -160,9 +170,9 @@ Camera list currently added:
 
 ## Next Dashboard TODO
 
-- [ ] Add GET /dashboard/evidence
-- [ ] Add GET /dashboard/cameras
-- [ ] Add GET /dashboard/events/latest
+- [x] Add GET /dashboard/evidence
+- [x] Add GET /dashboard/cameras
+- [x] Add GET /dashboard/events/latest
 - [ ] Add per-camera latest event endpoint
 - [ ] Add per-camera stats endpoint
 - [ ] Add simple frontend dashboard page later

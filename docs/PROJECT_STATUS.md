@@ -227,6 +227,35 @@ Dashboard summary links included:
 - /events/logs
 - /events/stats
 
+## Latest Milestone - Lightweight Dashboard Endpoints
+
+Updated: 2026-07-03
+
+Additional lightweight dashboard endpoints have been added:
+
+- GET /dashboard/evidence
+- GET /dashboard/cameras
+- GET /dashboard/events/latest
+
+These endpoints read existing runtime data only:
+
+- backend/data/evidence/
+- backend/config/cameras.json
+- backend/data/events.jsonl
+
+They do not run YOLO detection or open CCTV streams.
+
+Dashboard evidence responses include:
+
+- filename
+- url using /events/evidence/{filename}
+- modified_time
+- size_bytes
+
+Dashboard camera responses include camera totals and a credential-safe camera list.
+
+Dashboard latest events responses are sorted newest first and include evidence_url when an event has an evidence image.
+
 ## Latest Milestone - Dashboard Summary Endpoint
 
 Updated: 2026-07-03

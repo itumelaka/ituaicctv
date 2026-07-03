@@ -19,6 +19,7 @@ Completed:
 - Person event decision endpoint
 - Local event logging using JSONL
 - Evidence snapshot logic for person events
+- Lightweight dashboard API endpoints for cameras, latest events, and evidence
 - CCTV sub-stream configured to H.264 for OpenCV compatibility
 - YOLOv8n running in CPU mode
 
@@ -58,6 +59,19 @@ Events:
 GET /events/person
 GET /events/logs
 GET /events/logs?limit=5
+GET /events/stats
+GET /events/evidence/{filename}
+
+Dashboard:
+
+GET /dashboard/summary
+GET /dashboard/evidence
+GET /dashboard/evidence?limit=20
+GET /dashboard/cameras
+GET /dashboard/events/latest
+GET /dashboard/events/latest?limit=10
+
+Dashboard endpoints are lightweight read-only endpoints. They read existing camera configuration, event logs, and evidence image metadata only. They do not run YOLO detection.
 
 ## Event Flow
 
@@ -141,13 +155,11 @@ This is lighter and more suitable for AI detection.
 
 ## Next Milestones
 
-1. Add event stats endpoint
-2. Add evidence image viewer endpoint
-3. Add configurable confidence threshold
-4. Add multi-camera configuration
-5. Add scheduled monitoring loop
-6. Add alert integration such as Telegram
-7. Add dashboard preview
+1. Add configurable confidence threshold
+2. Add per-camera event statistics
+3. Add retention cleanup for evidence images
+4. Add alert integration such as Telegram
+5. Add dashboard preview
 
 ## Repository
 

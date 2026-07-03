@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from app.config import settings
 from app.detection import (
     run_person_detection,
@@ -147,6 +148,48 @@ def get_latest_events(limit: int = 20) -> dict:
     return {
         "status": "ok",
         "limit": limit,
+        "events_count": len(events),
+        "events": events
+    }
+
+
+def _get_evidence_filename(event: dict) -> str | None:
+    evidence_filename = event.get("evidence_filename")
+
+    if evidence_filename:
+        return Path(evidence_filename).name
+
+    evidence_path = event.get("evidence_path")
+
+    if evidence_path:
+        return Path(evidence_path).name
+
+    return None
+
+
+def add_evidence_urls(events: list[dict]) -> list[dict]:
+    dashboard_events = []
+
+    for event in events:
+        dashboard_event = event.copy()
+        evidence_filename = _get_evidence_filename(event)
+
+        if evidence_filename:
+            dashboard_event["evidence_filename"] = evidence_filename
+            dashboard_event["evidence_url"] = f"/events/evidence/{evidence_filename}"
+
+        dashboard_events.append(dashboard_event)
+
+    return dashboard_events
+
+
+def get_latest_dashboard_events(limit: int = 10) -> dict:
+    latest_events = get_latest_events(limit=limit)
+    events = add_evidence_urls(latest_events.get("events", []))
+
+    return {
+        "status": "ok",
+        "limit": latest_events.get("limit"),
         "events_count": len(events),
         "events": events
     }

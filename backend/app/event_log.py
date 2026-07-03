@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any
+from datetime import datetime, timezone
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
@@ -41,6 +42,45 @@ def read_latest_event_logs(limit: int = 20) -> list[dict[str, Any]]:
     latest_events = events[-limit:]
     latest_events.reverse()
     return latest_events
+
+
+def list_evidence_images(limit: int = 20) -> list[dict[str, Any]]:
+    if limit < 1:
+        limit = 1
+
+    if limit > 100:
+        limit = 100
+
+    if not EVIDENCE_DIR.exists():
+        return []
+
+    evidence_files = [
+        file_path for file_path in EVIDENCE_DIR.iterdir()
+        if file_path.is_file()
+    ]
+
+    evidence_files.sort(
+        key=lambda file_path: file_path.stat().st_mtime,
+        reverse=True
+    )
+
+    images = []
+
+    for file_path in evidence_files[:limit]:
+        stat = file_path.stat()
+        modified_time = datetime.fromtimestamp(
+            stat.st_mtime,
+            tz=timezone.utc
+        ).isoformat()
+
+        images.append({
+            "filename": file_path.name,
+            "url": f"/events/evidence/{file_path.name}",
+            "modified_time": modified_time,
+            "size_bytes": stat.st_size
+        })
+
+    return images
 
 
 def save_evidence_image(image_bytes: bytes, filename: str) -> str:

@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from app.camera_registry import load_cameras, list_enabled_cameras
-from app.events import get_event_stats, get_latest_events
+from app.event_log import list_evidence_images
+from app.events import get_event_stats, get_latest_events, get_latest_dashboard_events
 
 router = APIRouter(
     prefix="/dashboard",
@@ -56,3 +57,56 @@ def dashboard_summary():
             "events_stats": "/events/stats"
         }
     }
+
+
+@router.get("/evidence")
+def dashboard_evidence(limit: int = Query(default=20, ge=1, le=100)):
+    evidence_images = list_evidence_images(limit=limit)
+
+    return {
+        "status": "ok",
+        "limit": limit,
+        "evidence_count": len(evidence_images),
+        "evidence": evidence_images
+    }
+
+
+@router.get("/cameras")
+def dashboard_cameras():
+    cameras = load_cameras()
+    enabled_cameras = [
+        camera for camera in cameras
+        if camera.get("enabled", True)
+    ]
+    disabled_cameras = [
+        camera for camera in cameras
+        if not camera.get("enabled", True)
+    ]
+
+    return {
+        "status": "ok",
+        "totals": {
+            "total": len(cameras),
+            "enabled": len(enabled_cameras),
+            "disabled": len(disabled_cameras)
+        },
+        "cameras": [
+            {
+                "camera_id": camera.get("id"),
+                "name": camera.get("name"),
+                "location": camera.get("location"),
+                "block": camera.get("block"),
+                "ip": camera.get("host"),
+                "channel": camera.get("channel"),
+                "enabled": camera.get("enabled", True),
+                "notes": camera.get("notes"),
+                "status": camera.get("status")
+            }
+            for camera in cameras
+        ]
+    }
+
+
+@router.get("/events/latest")
+def dashboard_latest_events(limit: int = Query(default=10, ge=1, le=100)):
+    return get_latest_dashboard_events(limit=limit)

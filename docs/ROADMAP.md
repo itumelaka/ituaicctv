@@ -170,9 +170,30 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- Evidence summary endpoint
+- Per-camera detail endpoint
 - Camera health dashboard endpoint
-- Latest events endpoint
+- Frontend dashboard UI
+
+## Roadmap Update - Lightweight Dashboard Data APIs
+
+Status: Completed
+
+The dashboard API foundation now includes lightweight read-only endpoints:
+
+- GET /dashboard/evidence
+- GET /dashboard/cameras
+- GET /dashboard/events/latest
+
+These endpoints support the future dashboard evidence viewer, camera list, and latest events page without triggering YOLO detection or opening CCTV streams.
+
+Dashboard data now available:
+
+- Evidence image metadata with /events/evidence/{filename} links
+- Credential-safe camera list from backend/config/cameras.json
+- Latest event log entries from backend/data/events.jsonl
+
+Next dashboard work:
+
 - Per-camera detail endpoint
 - Frontend dashboard UI
 

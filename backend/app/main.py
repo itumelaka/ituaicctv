@@ -15,6 +15,7 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(cameras_router)
 app.include_router(detections_router)
+app.include_router(events_router)
 app.include_router(monitor_router)
 app.include_router(dashboard_router)
 
