@@ -12,10 +12,13 @@ Do not commit:
 - .env
 - Virtualenv folders such as .venv, .venv312, or backend/.venv
 - Runtime logs under backend/data/task-logs/
+- Runtime service logs under backend/data/service-logs/
 - Evidence images under backend/data/evidence/
 - Local handoff notes
 - Any screenshot showing CCTV credentials
 - RTSP URLs that contain a username or password
+- Telegram bot tokens or chat IDs
+- CCTV passwords or credential-bearing connection strings
 
 Use backend/.env.example for placeholders only.
 
@@ -61,8 +64,13 @@ Evidence images may contain real CCTV footage. Handle them carefully:
 
 - Do not commit evidence images.
 - Share evidence only with authorised staff.
+- Production evidence is stored on the Windows Server at C:\ituaicctv\backend\data\evidence.
+- The operational SMB share is \\192.168.1.254\ituaicctv-evidence.
+- Laptop evidence folders are not production evidence storage.
 - Avoid posting evidence images in public chats, issue trackers, or documentation.
 - Apply a retention policy before production use.
+
+Evidence images are saved only for person_detected=True events. no_person events usually have no evidence image.
 
 ## Face Recognition
 

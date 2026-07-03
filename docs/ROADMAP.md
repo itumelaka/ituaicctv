@@ -4,11 +4,17 @@
 
 Latest confirmed commit:
 
-60d241c
+8352f37
 
 Checkpoint summary:
 
-- First production deployment done on 2026-07-03: backend live as a Windows Service, LAN-only firewall, monitor task registered (disabled), dashboard reachable on LAN.
+- Production backend is live on the Windows Server at C:\ituaicctv.
+- Production dashboard is http://192.168.1.254:8000/dashboard-ui for LAN / Teleport access.
+- GitHub Pages is no longer the primary production dashboard; daily operation uses the Windows Server backend dashboard.
+- Backend service listens on 0.0.0.0:8000 with Windows Firewall inbound rule ITU AI CCTV Backend Port 8000.
+- Person Monitor scheduled task is Ready and has completed a successful check-all run with enabled=9, person=0, no_person=9, failed=0, exit code 0.
+- Evidence share is available at \\192.168.1.254\ituaicctv-evidence, mapped to C:\ituaicctv\backend\data\evidence.
+- Evidence images are saved only when person_detected=True; no_person events usually do not have evidence images.
 
 - Backend FastAPI works.
 - Hikvision RTSP works.
@@ -28,10 +34,11 @@ Checkpoint summary:
 
 Next recommended work:
 
-1. Scheduler task enable decision
+1. Dashboard production polish and evidence review workflow
 2. Investigate block_f_cam_8 network/IP
-3. Later: face detection planning
-4. Later: number plate recognition planning
+3. Avoid overlapping scheduler runs if check-all takes too long
+4. Later: face detection planning
+5. Later: number plate recognition planning
 
 ## Phase 1 - Backend Foundation
 
@@ -249,7 +256,7 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- Scheduler task enable decision
+- Dashboard production polish and evidence review workflow
 - Investigate block_f_cam_8 network/IP
 
 ## Roadmap Update - Lightweight Dashboard Data APIs
@@ -274,7 +281,7 @@ Dashboard data now available:
 
 Next dashboard work:
 
-- Scheduler task enable decision
+- Dashboard production polish and evidence review workflow
 - Investigate block_f_cam_8 network/IP
 
 ## Roadmap Update - Per-Camera Dashboard APIs
@@ -323,7 +330,7 @@ Dashboard UI currently includes:
 
 Next dashboard work:
 
-- Scheduler task enable decision
+- Dashboard production polish and evidence review workflow
 - Investigate block_f_cam_8 network/IP
 - Later: face detection planning
 - Later: number plate recognition planning
@@ -399,7 +406,7 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- Scheduler task enable decision
+- Dashboard production polish and evidence review workflow
 - Investigate block_f_cam_8 network/IP
 - Later: face detection planning
 - Later: number plate recognition planning

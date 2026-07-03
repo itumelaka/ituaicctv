@@ -11,8 +11,7 @@ ITU AI CCTV Person Monitor
 Current state:
 
 - Registered on the Windows Server on 2026-07-03 via scripts/server/setup_task_scheduler.ps1
-- Intentionally Disabled
-- Enable only when operational testing is ready (Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor")
+- Confirmed Ready on the production Windows Server
 - Uses the multi-camera hidden VBS launcher
 - Checks enabled cameras from backend/config/cameras.json
 - BAT launcher returns 0 to Task Scheduler so person detection or camera check results do not appear as Task Scheduler failures
@@ -22,6 +21,25 @@ Current state:
   2. .venv\Scripts\python.exe
   3. python from PATH
 - This fixes laptop environments where old .venv is missing or broken but .venv312 exists
+
+Production server path:
+
+C:\ituaicctv
+
+Production scheduler Python:
+
+C:\ituaicctv\.venv312\Scripts\python.exe
+
+Latest confirmed successful server check-all run:
+
+- Run started: Fri 03/07/2026 22:59:30
+- Run ended: Fri 03/07/2026 23:00:03
+- Enabled cameras: 9
+- Attention/person: 0
+- No action/no_person: 9
+- Failed: 0
+- Exit code: 0
+- YOLOv8n downloaded successfully on the server during the first successful run
 
 ## Scheduler Scripts
 
@@ -40,6 +58,10 @@ backend/scripts/run_monitor_person_all_once_hidden.vbs
 Runtime log:
 
 backend/data/task-logs/monitor_person_all.log
+
+Production runtime log:
+
+C:\ituaicctv\backend\data\task-logs\monitor_person_all.log
 
 ## Launcher Flow
 
@@ -104,14 +126,16 @@ The default stale threshold is 120 minutes. Stale health is based on existing ev
 
 Current expected healthy dashboard state after a successful scheduler run:
 
-- Dashboard UI: http://127.0.0.1:8000/dashboard-ui
-- Health endpoint: http://127.0.0.1:8000/dashboard/health
+- Dashboard UI: http://192.168.1.254:8000/dashboard-ui
+- Health endpoint: http://192.168.1.254:8000/dashboard/health
 - total cameras: 10
 - enabled: 9
 - disabled/offline: 1
 - active: 9
 - stale: 0
 - latest scheduler summary: status=ok, mode=check_all, enabled=9, person=0, no_person=9, failed=0
+
+Use 127.0.0.1 only when browsing on the server itself.
 
 Known camera note:
 
@@ -128,6 +152,20 @@ Operational notes:
 - Never commit backend/.env, virtualenv folders, logs, evidence images, or local handoff notes.
 
 ## PowerShell Commands
+
+Check backend service:
+
+Get-Service ITUAICCTVBackend
+
+Check backend listening port:
+
+netstat -ano | findstr ":8000"
+
+Check backend Python process:
+
+Get-CimInstance Win32_Process -Filter "name='python.exe'" |
+  Select-Object ProcessId, CreationDate, CommandLine |
+  Format-List
 
 Check task state:
 
@@ -148,3 +186,26 @@ Disable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
 Start the task manually:
 
 Start-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+
+Read scheduler log:
+
+Get-Content C:\ituaicctv\backend\data\task-logs\monitor_person_all.log -Tail 160
+
+Check latest evidence:
+
+Get-ChildItem C:\ituaicctv\backend\data\evidence |
+  Sort-Object LastWriteTime -Descending |
+  Select-Object -First 10 Name, LastWriteTime, Length
+
+Open evidence share:
+
+explorer "\\192.168.1.254\ituaicctv-evidence"
+
+Check RTSP reachability from server:
+
+Test-NetConnection 192.168.40.21 -Port 554
+Test-NetConnection 192.168.40.22 -Port 554
+
+Check dashboard port from laptop / Teleport:
+
+Test-NetConnection 192.168.1.254 -Port 8000

@@ -4,11 +4,19 @@
 
 Latest confirmed commit:
 
-60d241c
+8352f37
 
 Checkpoint notes:
 
-- First production deployment done on 2026-07-03: backend running as Windows Service, firewall (LAN-only) set, monitor task registered but disabled, dashboard reachable on LAN, setup scripts fixed for PowerShell 5.1.
+- Production backend runs on Windows Server at C:\ituaicctv.
+- Production dashboard: http://192.168.1.254:8000/dashboard-ui.
+- Use 127.0.0.1 dashboard URLs only on the machine running the backend.
+- GitHub Pages is no longer the primary production dashboard.
+- Backend service listens on 0.0.0.0:8000 and is reachable from LAN / Teleport.
+- Scheduler task ITU AI CCTV Person Monitor is Ready.
+- Latest successful check-all run: enabled=9, person=0, no_person=9, failed=0, exit code 0.
+- Evidence share: \\192.168.1.254\ituaicctv-evidence.
+- Evidence images are saved only for person_detected=True; no_person events usually have no evidence image.
 
 - GET /dashboard-ui is usable.
 - GET /dashboard/health is usable.
@@ -29,8 +37,10 @@ Checkpoint notes:
 - [x] Enhance dashboard health card
 - [x] Add stale camera health logic
 - [x] Dashboard stale/offline visual polish
-- [ ] Scheduler task enable decision
+- [x] Scheduler task server readiness confirmed
+- [x] Document production dashboard and evidence share
 - [ ] Investigate block_f_cam_8 network/IP issue
+- [ ] Avoid overlapping scheduler runs if check-all takes too long
 - [ ] Prepare face detection planning notes later
 - [ ] Prepare number plate recognition planning notes later
 
@@ -146,7 +156,7 @@ Camera list:
 - [x] Enhance dashboard health card
 - [x] Add stale camera health logic
 - [x] Dashboard stale/offline visual polish
-- [ ] Scheduler task enable decision
+- [x] Scheduler task server readiness confirmed
 - [ ] Investigate block_f_cam_8 network/IP issue
 - [ ] Add event cooldown to avoid repeated evidence spam
 - [ ] Add per-camera confidence threshold

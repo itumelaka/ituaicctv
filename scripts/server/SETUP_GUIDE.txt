@@ -10,6 +10,70 @@ Baca dulu sebelum start:
 - NOTA: Windows Server selalunya TAKDE 'winget'. Guide ni guna
   cara download manual supaya selamat pada mana-mana server.
 
+STATUS PRODUCTION TERKINI (selepas commit 8352f37):
+- Backend production berjalan di Windows Server: C:\ituaicctv
+- IP LAN server: 192.168.1.254
+- Dashboard production LAN / Teleport:
+  http://192.168.1.254:8000/dashboard-ui
+- URL 127.0.0.1 hanya untuk browser di mesin yang sedang run backend.
+- GitHub Pages bukan dashboard production utama; operasi harian guna
+  dashboard backend Windows Server.
+- Task Scheduler: ITU AI CCTV Person Monitor, status Ready.
+- Script task: backend/scripts/run_monitor_person_all_once.bat
+- Hidden launcher: backend/scripts/run_monitor_person_all_once_hidden.vbs
+- Log task: C:\ituaicctv\backend\data\task-logs\monitor_person_all.log
+- Python task: C:\ituaicctv\.venv312\Scripts\python.exe
+- Run check-all server berjaya: enabled=9, person=0, no_person=9,
+  failed=0, exit code 0.
+- Evidence hanya disimpan bila person_detected=True. Event no_person
+  biasanya evidence_path=null dan tiada gambar evidence.
+- Folder evidence production:
+  C:\ituaicctv\backend\data\evidence
+- Share evidence:
+  \\192.168.1.254\ituaicctv-evidence
+- Folder log service:
+  C:\ituaicctv\backend\data\service-logs
+- Laptop jangan run scheduler production jika server ini ialah backend
+  production.
+
+NETWORK PRODUCTION:
+- Server ada dua NIC:
+  GOVNET/NIC: 10.65.28.254
+  LAN/NIC: 192.168.1.254
+- Kamera CCTV berada dalam subnet 192.168.40.0/24.
+- Jika laptop Teleport boleh akses CCTV tetapi server gagal RTSP, itu
+  biasanya sebab flow server-to-CCTV VLAN belum dibenarkan.
+- UDM Pro rule yang diperlukan:
+  Type: Firewall
+  Action: Allow
+  Source Zone: Internal
+  Source IP: 192.168.1.254
+  Source Port: Any
+  Destination Zone: Internal
+  Destination IP/Subnet: 192.168.40.0/24
+  Destination Port: TCP 554
+  Auto Allow Return Traffic: On
+  Letak rule ini di atas inter-VLAN block/drop.
+- Selepas rule, semakan berjaya:
+  Test-NetConnection 192.168.40.21 -Port 554
+  Test-NetConnection 192.168.40.22 -Port 554
+  SourceAddress: 192.168.1.254
+  TcpTestSucceeded: True
+- Backend listen pada 0.0.0.0:8000.
+- Windows Firewall inbound rule:
+  DisplayName: ITU AI CCTV Backend Port 8000
+  Direction: Inbound
+  Action: Allow
+  Protocol: TCP
+  LocalPort: 8000
+  Profile: Any
+- Semakan dari laptop / Teleport:
+  Test-NetConnection 192.168.1.254 -Port 8000
+  SourceAddress: 192.168.2.7
+  TcpTestSucceeded: True
+- Cipta evidence share jika belum ada:
+  New-SmbShare -Name "ituaicctv-evidence" -Path "C:\ituaicctv\backend\data\evidence" -ReadAccess "Everyone"
+
 ======================================================
 LANGKAH 0 - SEMAK APA YANG DAH ADA
 ======================================================

@@ -14,8 +14,10 @@ Jangan simpan maklumat berikut dalam GitHub atau mana-mana repository awam:
 - Password CCTV/NVR sebenar.
 - RTSP URL lengkap yang mengandungi username/password.
 - Token Telegram Bot.
+- Telegram chat ID.
 - SMTP password.
 - IP dalaman sensitif jika repo dijadikan public.
+- Log runtime, gambar evidence CCTV, folder virtualenv, atau nota handoff local.
 
 Gunakan fail `.env` atau config local yang dimasukkan dalam `.gitignore`.
 
@@ -75,7 +77,13 @@ events/*
 *.log
 __pycache__/
 .venv/
+.venv312/
+backend/data/task-logs/
+backend/data/service-logs/
+backend/data/evidence/
 ```
+
+Evidence production disimpan di Windows Server pada `C:\ituaicctv\backend\data\evidence` dan boleh dibuka secara dalaman melalui `\\192.168.1.254\ituaicctv-evidence`. Jangan commit evidence image, log, token, password, atau RTSP URL yang mengandungi credential.
 
 ## Responsible Use
 

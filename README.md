@@ -8,7 +8,7 @@ The project is currently focused on local backend development, RTSP camera acces
 
 Latest confirmed commit:
 
-60d241c
+8352f37
 
 Confirmed at this checkpoint:
 
@@ -35,17 +35,48 @@ Confirmed at this checkpoint:
 First production deployment (2026-07-03):
 
 - Backend deployed on the Windows Server as a Windows Service (ITUAICCTVBackend) via NSSM, auto-start enabled, confirmed Running.
-- Firewall opens port 8000 on the LAN (Private) profile only; the GOVNET (Public) NIC is intentionally not exposed.
-- Person Monitor scheduled task registered but left disabled pending go-live.
-- Dashboard confirmed reachable across the LAN (GET /health returns ok from another PC).
+- Production backend path: C:\ituaicctv.
+- Server LAN IP: 192.168.1.254.
+- Production dashboard URL on LAN / Teleport: http://192.168.1.254:8000/dashboard-ui.
+- Local 127.0.0.1 dashboard URLs are only for browsing on the machine running the backend.
+- GitHub Pages is no longer the primary production dashboard; daily operation uses the Windows Server backend dashboard.
+- Firewall opens port 8000 for backend dashboard/API access.
+- Person Monitor scheduled task is registered and confirmed Ready.
+- Dashboard confirmed reachable across the LAN / Teleport.
 - Server setup PowerShell scripts fixed for Windows PowerShell 5.1 (project-root path, PS7-only null-conditional operator, non-ASCII em-dash) and SETUP_GUIDE.txt rewritten for a clean-server install.
+
+Production evidence and logs:
+
+- Evidence images are saved only when person_detected=True.
+- no_person events usually have evidence_path=null and no evidence image.
+- Production evidence folder: C:\ituaicctv\backend\data\evidence.
+- Production task log folder: C:\ituaicctv\backend\data\task-logs.
+- Production service log folder: C:\ituaicctv\backend\data\service-logs.
+- Evidence SMB share: \\192.168.1.254\ituaicctv-evidence.
+- Share physical path: C:\ituaicctv\backend\data\evidence.
+- Dashboard includes Refresh Evidence and Copy Evidence Folder Path actions. If the browser blocks direct folder access, paste the UNC path into File Explorer.
+- Laptop evidence folders are not production evidence storage, and the laptop should not run the production scheduler while the server is the production backend.
+
+Latest successful server scheduler run:
+
+- Task: ITU AI CCTV Person Monitor.
+- Run started: Fri 03/07/2026 22:59:30.
+- Run ended: Fri 03/07/2026 23:00:03.
+- Enabled cameras: 9.
+- Attention/person: 0.
+- No action/no_person: 9.
+- Failed: 0.
+- Exit code: 0.
+- Server uses C:\ituaicctv\.venv312\Scripts\python.exe.
+- YOLOv8n downloaded successfully on the server during the first successful run.
 
 Next recommended work:
 
-1. Scheduler task enable decision
+1. Dashboard production polish and evidence review workflow
 2. Investigate block_f_cam_8 network/IP
-3. Later: face detection planning
-4. Later: number plate recognition planning
+3. Avoid overlapping scheduler runs if check-all takes too long
+4. Later: face detection planning
+5. Later: number plate recognition planning
 
 ## Current Status
 
@@ -381,10 +412,11 @@ This is lighter and more suitable for AI detection.
 
 ## Next Milestones
 
-1. Scheduler task enable decision
+1. Dashboard production polish and evidence review workflow
 2. Investigate block_f_cam_8 network/IP
-3. Later: face detection planning
-4. Later: number plate recognition planning
+3. Avoid overlapping scheduler runs if check-all takes too long
+4. Later: face detection planning
+5. Later: number plate recognition planning
 
 ## Repository
 

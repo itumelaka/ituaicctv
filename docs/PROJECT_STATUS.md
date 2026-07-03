@@ -6,19 +6,58 @@ Last updated: 2026-07-03
 
 First production deployment on 2026-07-03:
 
-- Deployed on the Windows Server (dual-NIC: LAN 192.168.1.x, GOVNET 10.65.28.x).
+- Deployed on the Windows Server at C:\ituaicctv.
+- Server LAN IP: 192.168.1.254.
+- Server NICs: GOVNET/NIC 10.65.28.254 and LAN/NIC 192.168.1.254.
 - Backend runs as a Windows Service (ITUAICCTVBackend) via NSSM, auto-start enabled, confirmed Running.
 - Health confirmed: GET /health returns {"status":"ok","service":"ituaicctv-backend"} locally and across the LAN.
-- Firewall opens port 8000 on the LAN (Private) profile only; GOVNET (Public) NIC not exposed.
-- Person Monitor scheduled task registered, currently disabled pending go-live.
-- Dashboard (GitHub Pages PWA) confirmed reachable; backend reachable at http://<server-lan-ip>:8000.
+- Backend service listens on 0.0.0.0:8000.
+- Windows Firewall inbound rule: ITU AI CCTV Backend Port 8000, TCP local port 8000, Profile Any.
+- Dashboard reachable from LAN / Teleport at http://192.168.1.254:8000/dashboard-ui.
+- Use http://127.0.0.1:8000/dashboard-ui only when browsing on the backend server itself.
+- GitHub Pages is no longer the primary production dashboard. It may remain static/PWA/demo/client, but daily operation uses the Windows Server backend dashboard.
+- Person Monitor scheduled task registered and confirmed Ready.
 - Setup scripts fixed for Windows PowerShell 5.1 and SETUP_GUIDE.txt rewritten (commit 60d241c).
+- Latest production documentation checkpoint after commit 8352f37.
+
+Production network notes:
+
+- CCTV cameras are on 192.168.40.0/24.
+- Initial server RTSP failed because server-to-CCTV VLAN traffic was not allowed.
+- Teleport laptop access worked because VPN client traffic was a different flow from server-to-CCTV traffic.
+- UDM Pro rule required: Firewall, Allow, Source Zone Internal, Source IP 192.168.1.254, Source Port Any, Destination Zone Internal, Destination IP/Subnet 192.168.40.0/24, Destination Port TCP 554, Auto Allow Return Traffic On.
+- Place the UDM Pro rule above inter-VLAN block/drop rules.
+- After the rule, Test-NetConnection to 192.168.40.21 and 192.168.40.22 on port 554 succeeded from SourceAddress 192.168.1.254.
+- Laptop via Teleport uses a source IP around 192.168.2.x.
+- After the Windows Firewall backend rule, Test-NetConnection 192.168.1.254 -Port 8000 succeeded from laptop SourceAddress 192.168.2.7.
+
+Production evidence and logs:
+
+- Evidence images are saved only when person_detected=True.
+- no_person events usually have evidence_path=null and no evidence image.
+- Production evidence folder: C:\ituaicctv\backend\data\evidence.
+- Production task log folder: C:\ituaicctv\backend\data\task-logs.
+- Production service log folder: C:\ituaicctv\backend\data\service-logs.
+- Laptop evidence folders are not production evidence storage.
+- Laptop should not run the production scheduler when the server is production backend.
+- SMB share: \\192.168.1.254\ituaicctv-evidence -> C:\ituaicctv\backend\data\evidence.
+- Share created with: New-SmbShare -Name "ituaicctv-evidence" -Path "C:\ituaicctv\backend\data\evidence" -ReadAccess "Everyone".
+- Dashboard has Refresh Evidence and Copy Evidence Folder Path actions. Paste the UNC path into File Explorer if the browser blocks direct folder links.
+
+Current expected healthy dashboard state after a successful scheduler run:
+
+- total cameras: 10
+- enabled: 9
+- disabled/offline: 1
+- active: 9
+- stale: 0
+- latest scheduler summary: status=ok, mode=check_all, enabled=9, person=0, no_person=9, failed=0
 
 ## Current Checkpoint
 
 Latest confirmed commit:
 
-60d241c
+8352f37
 
 Confirmed at this checkpoint:
 
@@ -44,10 +83,11 @@ Confirmed at this checkpoint:
 
 Next recommended work:
 
-1. Scheduler task enable decision
+1. Dashboard production polish and evidence review workflow
 2. Investigate block_f_cam_8 network/IP
-3. Later: face detection planning
-4. Later: number plate recognition planning
+3. Avoid overlapping scheduler runs if check-all takes too long
+4. Later: face detection planning
+5. Later: number plate recognition planning
 
 ## Current Project Goal
 
@@ -261,10 +301,11 @@ The project now has a lightweight dashboard health endpoint and health card base
 
 Next technical focus:
 
-1. Scheduler task enable decision
+1. Dashboard production polish and evidence review workflow
 2. Investigate block_f_cam_8 network/IP
-3. Later: face detection planning
-4. Later: number plate recognition planning
+3. Avoid overlapping scheduler runs if check-all takes too long
+4. Later: face detection planning
+5. Later: number plate recognition planning
 
 ## Latest Milestone - Multi-Camera Scheduler
 

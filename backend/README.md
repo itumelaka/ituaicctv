@@ -69,6 +69,32 @@ GET /dashboard-ui
 
 Full HTML dashboard served directly by the backend. Auto-refreshes every 30 seconds. Loads data from all dashboard endpoints.
 
+Production dashboard:
+
+```
+http://192.168.1.254:8000/dashboard-ui
+```
+
+Use `http://127.0.0.1:8000/dashboard-ui` only when browsing on the machine running the backend. The production backend runs from `C:\ituaicctv` on the Windows Server. GitHub Pages may remain useful for static/demo/client work, but daily operation uses the backend dashboard served by FastAPI.
+
+Evidence images are saved only for `person_detected=True` events. `no_person` events usually have `evidence_path=null`.
+
+Production runtime paths:
+
+```
+C:\ituaicctv\backend\data\evidence
+C:\ituaicctv\backend\data\task-logs
+C:\ituaicctv\backend\data\service-logs
+```
+
+Evidence SMB share:
+
+```
+\\192.168.1.254\ituaicctv-evidence
+```
+
+The dashboard includes Refresh Evidence and Copy Evidence Folder Path actions. If browser security blocks direct folder links, paste the UNC path into File Explorer.
+
 ## Folder Structure
 
 ```
