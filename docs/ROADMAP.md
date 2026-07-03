@@ -148,3 +148,30 @@ Future dashboard pages:
 - Person detection summary
 - Future face recognition summary
 - Future number plate recognition summary
+
+## Roadmap Update - Dashboard Summary
+
+Status: In progress
+
+The first dashboard-level endpoint has been completed:
+
+- GET /dashboard/summary
+
+This endpoint provides a lightweight overview for a future web dashboard without triggering new AI detection.
+
+Dashboard foundation currently includes:
+
+- Camera count summary
+- Disabled camera list
+- Event statistics
+- Latest event
+- Latest 10 events
+- Useful backend links
+
+Next dashboard work:
+
+- Evidence summary endpoint
+- Camera health dashboard endpoint
+- Latest events endpoint
+- Per-camera detail endpoint
+- Frontend dashboard UI

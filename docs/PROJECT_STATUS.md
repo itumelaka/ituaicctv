@@ -191,3 +191,38 @@ Disabled camera:
 Dashboard endpoint example:
 
 GET /monitor/person/summary
+
+## Latest Milestone - Dashboard Summary Endpoint
+
+Updated: 2026-07-03
+
+A new dashboard summary endpoint has been added:
+
+- GET /dashboard/summary
+
+This endpoint is lightweight because it reads existing camera configuration and event logs only. It does not run YOLO detection.
+
+Current confirmed output:
+
+- cameras_total: 10
+- cameras_enabled: 9
+- cameras_disabled: 1
+- total_events: 114
+- person_detected_count: 8
+- no_person_count: 106
+- evidence_count: 8
+- cooldown_skipped_count: 0
+
+Disabled camera:
+
+- block_f_cam_8
+- IP: 192.168.40.20
+- Current issue: not reachable by ping or RTSP port 554
+
+Dashboard summary links included:
+
+- /cameras/audit
+- /monitor/person/summary
+- /monitor/person/check-all
+- /events/logs
+- /events/stats
