@@ -136,9 +136,13 @@ Tasks:
 - [x] CORS enabled pada backend supaya browser LAN boleh connect dari GitHub Pages.
 - [x] Backend URL configurable dalam dashboard (simpan dalam localStorage).
 - [x] Windows Server deployment guide dalam README.
-- [ ] Deploy backend ke Windows Server (bilik server).
-- [ ] Setup NSSM untuk auto-start backend sebagai Windows Service.
-- [ ] Allow port 8000 dalam Windows Firewall (LAN only).
+- [x] PowerShell scripts untuk Windows Server deployment (scripts/server/).
+- [x] install_backend_service.ps1 — install FastAPI sebagai Windows Service via NSSM.
+- [x] setup_firewall.ps1 — buka port 8000 untuk LAN sahaja.
+- [x] setup_task_scheduler.ps1 — setup Task Scheduler monitor setiap 5 minit.
+- [x] check_server.ps1 — health check semua komponen di server.
+- [x] uninstall_backend_service.ps1 — buang service.
+- [ ] Deploy ke Windows Server (bilik server) — run scripts/server/ di server.
 - [ ] Log rotation.
 - [ ] Config backup.
 - [ ] Retention policy snapshot/log.

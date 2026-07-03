@@ -450,23 +450,39 @@ Steps to deploy on Windows Server:
    python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
    ```
 
-7. For auto-start as a Windows Service, use NSSM:
-   ```
-   nssm install "ITU AI CCTV Backend" "C:\path\to\.venv312\Scripts\python.exe" "-m uvicorn app.main:app --host 0.0.0.0 --port 8000"
-   nssm set "ITU AI CCTV Backend" AppDirectory "C:\path\to\ituaicctv\backend"
-   nssm start "ITU AI CCTV Backend"
+7. Run deployment scripts (as Administrator):
+
+   ```powershell
+   # Install backend as Windows Service (auto-start on boot)
+   .\scripts\server\install_backend_service.ps1
+
+   # Open port 8000 in Windows Firewall (LAN only)
+   .\scripts\server\setup_firewall.ps1
+
+   # Setup Task Scheduler for periodic monitoring (every 5 min)
+   .\scripts\server\setup_task_scheduler.ps1
    ```
 
-8. Setup Windows Task Scheduler for periodic monitoring:
-   - Use `backend\scripts\run_monitor_person_all_once_hidden.vbs`
-   - Set trigger: every 5 minutes
-   - Task name: `ITU AI CCTV Person Monitor`
+   Scripts require NSSM for the service installer.
+   Download NSSM: https://nssm.cc/download — place `nssm.exe` at `C:\nssm\nssm.exe`.
 
-9. Open GitHub Pages dashboard in any browser on the LAN:
+8. Enable the monitoring task when ready:
+
+   ```powershell
+   Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
    ```
-   https://itumelaka.github.io/ituaicctv/
+
+9. Check server health anytime:
+
+   ```powershell
+   .\scripts\server\check_server.ps1
    ```
-   Set Backend URL to `http://<windows-server-ip>:8000`.
+
+10. Open GitHub Pages dashboard in any browser on the LAN:
+    ```
+    https://itumelaka.github.io/ituaicctv/
+    ```
+    Set Backend URL to `http://<windows-server-ip>:8000`.
 
 ## Monitor Endpoint
 
