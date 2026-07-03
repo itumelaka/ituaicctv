@@ -30,3 +30,6 @@ backend/data/*.jsonl
 
 # Runtime evidence images
 backend/data/evidence/
+
+# Scheduled task logs
+backend/data/task-logs/
