@@ -2,11 +2,10 @@
 
 ## Immediate TODO
 
-- [ ] Add GET /dashboard/health
-- [ ] Add camera health/offline summary
-- [ ] Track latest successful check per camera
-- [ ] Add dashboard health card
+- [ ] Improve latest successful check tracking per camera
 - [ ] Investigate block_f_cam_8 network/RTSP issue
+- [ ] Add dashboard filters and search
+- [ ] Add evidence retention cleanup
 - [ ] Prepare face detection planning notes later
 - [ ] Prepare number plate recognition planning notes later
 
@@ -75,10 +74,11 @@ Camera list:
 - [x] Per-camera dashboard event endpoints
 - [x] Lightweight browser dashboard
 - [x] Dashboard auto-refresh/status UI polish
-- [ ] GET /dashboard/health
-- [ ] Camera health/offline summary
-- [ ] Latest successful check per camera
-- [ ] Dashboard health card
+- [x] GET /dashboard/health
+- [x] Camera health/offline summary
+- [x] Dashboard health card
+- [x] Per-camera health badges
+- [ ] Improve latest successful check tracking per camera
 - [ ] Search by camera
 - [ ] Search by date
 - [ ] Search by event type
@@ -111,11 +111,10 @@ Camera list:
 
 ## Next TODO
 
-- [ ] Add GET /dashboard/health
-- [ ] Add camera health/offline summary
-- [ ] Track latest successful check per camera
-- [ ] Add dashboard health card
+- [ ] Improve latest successful check tracking per camera
 - [ ] Investigate block_f_cam_8 network/RTSP issue
+- [ ] Add dashboard filters and search
+- [ ] Add evidence retention cleanup
 - [ ] Add event cooldown to avoid repeated evidence spam
 - [ ] Add per-camera confidence threshold
 - [ ] Lower block_e_cam_1 sub-stream from 1280x720 to 640x360 if CPU usage is high
@@ -136,10 +135,10 @@ Camera list:
 - [x] Create dashboard API for evidence summary
 - [x] Add per-camera latest event endpoint
 - [x] Add per-camera stats endpoint
-- [ ] Add GET /dashboard/health
-- [ ] Add camera health/offline summary
-- [ ] Track latest successful check per camera
-- [ ] Add dashboard health card
+- [x] Add GET /dashboard/health
+- [x] Add camera health/offline summary
+- [x] Add dashboard health card
+- [ ] Improve latest successful check tracking per camera
 - [ ] Investigate block_f_cam_8 network/RTSP issue
 - [ ] Add event cooldown test with real person detection
 - [ ] Later: add face detection planning notes

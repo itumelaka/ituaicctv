@@ -108,10 +108,12 @@ Planned features:
 - Event statistics - completed
 - Evidence viewer - completed
 - Dashboard summary API - completed
+- Dashboard health API - completed
 - Per-camera dashboard event endpoints - completed
 - Lightweight browser dashboard - completed
 - Dashboard auto-refresh/status UI polish - completed
-- Camera health status - next
+- Camera health status - completed
+- Dashboard health card - completed
 - Search and filter
 - Future face recognition view
 - Future plate recognition view
@@ -120,6 +122,7 @@ Important dashboard URLs:
 
 - /dashboard-ui
 - /dashboard/summary
+- /dashboard/health
 - /dashboard/cameras
 - /dashboard/events/latest
 - /dashboard/evidence
@@ -191,9 +194,9 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- Per-camera detail endpoint
-- Camera health dashboard endpoint
-- Frontend dashboard UI
+- Improve latest successful check tracking per camera
+- Investigate block_f_cam_8
+- Dashboard filters and search
 
 ## Roadmap Update - Lightweight Dashboard Data APIs
 
@@ -217,11 +220,10 @@ Dashboard data now available:
 
 Next dashboard work:
 
-- GET /dashboard/health
-- Camera health/offline summary
-- Latest successful check per camera
-- Dashboard health card
+- Improve latest successful check tracking per camera
 - Investigate block_f_cam_8
+- Dashboard filters and search
+- Evidence retention cleanup
 
 ## Roadmap Update - Per-Camera Dashboard APIs
 
@@ -267,11 +269,10 @@ Dashboard UI currently includes:
 
 Next dashboard work:
 
-- GET /dashboard/health
-- Camera health/offline summary
-- Latest successful check per camera
-- Dashboard health card
+- Improve latest successful check tracking per camera
 - Investigate block_f_cam_8
+- Dashboard filters and search
+- Evidence retention cleanup
 - Later: face detection planning
 - Later: number plate recognition planning
 
@@ -296,10 +297,9 @@ Dashboard foundation currently includes:
 
 Next dashboard work:
 
-- GET /dashboard/health
-- Camera health/offline summary
-- Latest successful check per camera
-- Dashboard health card
+- Improve latest successful check tracking per camera
 - Investigate block_f_cam_8
+- Dashboard filters and search
+- Evidence retention cleanup
 - Later: face detection planning
 - Later: number plate recognition planning

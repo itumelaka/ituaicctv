@@ -27,10 +27,12 @@ Completed:
 - Camera audit endpoint
 - Check-all monitor endpoint
 - Dashboard summary API
+- Dashboard health API
 - Lightweight dashboard API endpoints for cameras, latest events, and evidence
 - Per-camera dashboard endpoints for latest event and event stats
 - Simple browser dashboard UI
 - Dashboard auto-refresh and status UI polish
+- Dashboard health card with per-camera health badges
 - CCTV sub-stream configured to H.264 for OpenCV compatibility
 - YOLOv8n running in CPU mode
 
@@ -87,6 +89,7 @@ Dashboard:
 
 GET /dashboard-ui
 GET /dashboard/summary
+GET /dashboard/health
 GET /dashboard/evidence
 GET /dashboard/evidence?limit=20
 GET /dashboard/cameras
@@ -101,6 +104,7 @@ Important dashboard URLs:
 
 - /dashboard-ui
 - /dashboard/summary
+- /dashboard/health
 - /dashboard/cameras
 - /dashboard/events/latest
 - /dashboard/evidence
@@ -113,11 +117,12 @@ Open this URL after starting the backend:
 
 http://127.0.0.1:8000/dashboard-ui
 
-The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, clickable evidence thumbnails, camera status badges, per-camera event counts, last updated time, and a 30-second auto-refresh countdown.
+The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, clickable evidence thumbnails, camera status badges, per-camera event counts, a health card, per-camera health badges, last updated time, and a 30-second auto-refresh countdown.
 
 The page also includes quick links for:
 
 - Refresh now
+- /dashboard/health
 - /dashboard/summary
 - /dashboard/cameras
 - /dashboard/events/latest
@@ -234,13 +239,12 @@ This is lighter and more suitable for AI detection.
 
 ## Next Milestones
 
-1. Add GET /dashboard/health
-2. Add camera health/offline summary
-3. Track latest successful check per camera
-4. Add dashboard health card
-5. Investigate block_f_cam_8 network/RTSP issue
-6. Later: face detection planning
-7. Later: number plate recognition planning
+1. Improve latest successful check tracking per camera
+2. Investigate block_f_cam_8 network/RTSP issue
+3. Add dashboard filters and search
+4. Add evidence retention cleanup
+5. Later: face detection planning
+6. Later: number plate recognition planning
 
 ## Repository
 

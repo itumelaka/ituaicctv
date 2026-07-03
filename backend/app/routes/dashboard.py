@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.camera_registry import get_camera_by_id, load_cameras, list_enabled_cameras
+from app.dashboard_health import build_dashboard_health
 from app.event_log import list_evidence_images
+from app.event_log import read_all_event_logs
 from app.events import (
     get_dashboard_camera_event_stats,
     get_event_stats,
@@ -63,6 +65,14 @@ def dashboard_summary():
             "events_stats": "/events/stats"
         }
     }
+
+
+@router.get("/health")
+def dashboard_health():
+    return build_dashboard_health(
+        cameras=load_cameras(),
+        events=read_all_event_logs()
+    )
 
 
 @router.get("/evidence")

@@ -34,9 +34,11 @@ Completed foundation and dashboard features:
 - Camera audit
 - Check-all monitor
 - Dashboard summary API
+- Dashboard health API
 - Per-camera dashboard event endpoints
 - Lightweight browser dashboard
 - Dashboard auto-refresh and status UI polish
+- Dashboard health card with per-camera health badges
 
 Current camera status:
 
@@ -50,6 +52,7 @@ Important dashboard URLs:
 
 - /dashboard-ui
 - /dashboard/summary
+- /dashboard/health
 - /dashboard/cameras
 - /dashboard/events/latest
 - /dashboard/evidence
@@ -160,17 +163,16 @@ Ignored runtime paths:
 
 ## Current Development Focus
 
-The project has moved beyond the first multi-camera dashboard foundation. The next recommended work is dashboard health and camera status visibility.
+The project now has a lightweight dashboard health endpoint and health card based on existing camera config and event logs.
 
 Next technical focus:
 
-1. GET /dashboard/health
-2. Camera health/offline summary
-3. Latest successful check per camera
-4. Dashboard health card
-5. Investigate block_f_cam_8 network/RTSP issue
-6. Later: face detection planning
-7. Later: number plate recognition planning
+1. Improve latest successful check tracking per camera
+2. Investigate block_f_cam_8 network/RTSP issue
+3. Add dashboard filters and search
+4. Add evidence retention cleanup
+5. Later: face detection planning
+6. Later: number plate recognition planning
 
 ## Latest Milestone - Multi-Camera Scheduler
 
@@ -355,6 +357,7 @@ A simple browser dashboard UI has been added:
 The page is mobile-friendly and uses the existing dashboard API endpoints only:
 
 - /dashboard/summary
+- /dashboard/health
 - /dashboard/cameras
 - /dashboard/events/latest
 - /dashboard/evidence
@@ -369,6 +372,8 @@ The dashboard UI shows:
 - clickable evidence thumbnails and links
 - camera list with enabled or disabled badges
 - per-camera total and person event counts
+- health card
+- per-camera health badges
 - last updated time
 - 30-second auto-refresh countdown
 - quick links to summary, cameras, latest events, and evidence APIs

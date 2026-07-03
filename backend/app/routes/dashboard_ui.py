@@ -285,6 +285,31 @@ def dashboard_ui():
       margin-top: 8px;
     }
 
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .health-stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfd;
+    }
+
+    .health-stat .label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .health-stat .value {
+      margin-top: 4px;
+      font-size: 18px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
     a {
       color: var(--accent);
       font-weight: 700;
@@ -304,7 +329,7 @@ def dashboard_ui():
     }
 
     @media (max-width: 860px) {
-      .metrics, .two-col, .camera-grid {
+      .metrics, .two-col, .camera-grid, .health-grid {
         grid-template-columns: 1fr;
       }
 
@@ -353,6 +378,7 @@ def dashboard_ui():
           <a class="quick-link" href="/dashboard/cameras" target="_blank" rel="noopener">Cameras</a>
           <a class="quick-link" href="/dashboard/events/latest" target="_blank" rel="noopener">Latest events</a>
           <a class="quick-link" href="/dashboard/evidence" target="_blank" rel="noopener">Evidence</a>
+          <a class="quick-link" href="/dashboard/health" target="_blank" rel="noopener">Health</a>
         </nav>
       </div>
 
@@ -372,6 +398,31 @@ def dashboard_ui():
         <div class="metric">
           <div class="label">Latest events shown</div>
           <div id="latestEventsCount" class="value">-</div>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-bottom: 14px;" aria-label="Dashboard health">
+        <div class="section-title">
+          <h2>Health</h2>
+          <span id="healthBadge" class="badge neutral">Waiting</span>
+        </div>
+        <div class="health-grid">
+          <div class="health-stat">
+            <div class="label">Total cameras</div>
+            <div id="healthTotalCameras" class="value">-</div>
+          </div>
+          <div class="health-stat">
+            <div class="label">Enabled</div>
+            <div id="healthEnabledCameras" class="value">-</div>
+          </div>
+          <div class="health-stat">
+            <div class="label">Disabled</div>
+            <div id="healthDisabledCameras" class="value">-</div>
+          </div>
+          <div class="health-stat">
+            <div class="label">Latest event</div>
+            <div id="healthLatestEventTime" class="value">-</div>
+          </div>
         </div>
       </section>
 
@@ -424,7 +475,8 @@ def dashboard_ui():
       summary: "/dashboard/summary",
       cameras: "/dashboard/cameras",
       latestEvents: "/dashboard/events/latest?limit=10",
-      evidence: "/dashboard/evidence?limit=8"
+      evidence: "/dashboard/evidence?limit=8",
+      health: "/dashboard/health"
     };
     const refreshIntervalSeconds = 30;
     let nextRefreshAt = Date.now() + refreshIntervalSeconds * 1000;
@@ -464,6 +516,22 @@ def dashboard_ui():
       badge.className = `badge ${tone || "neutral"}`;
       badge.textContent = label;
       return badge;
+    }
+
+    function healthTone(status) {
+      if (status === "active") {
+        return "ok";
+      }
+
+      if (status === "disabled" || status === "warning" || status === "failing") {
+        return "warn";
+      }
+
+      if (status === "failed") {
+        return "danger";
+      }
+
+      return "neutral";
     }
 
     function eventTone(event) {
@@ -659,6 +727,20 @@ def dashboard_ui():
       });
     }
 
+    function renderHealth(healthData) {
+      const cameras = healthData?.cameras || {};
+      const events = healthData?.events || {};
+      const badge = el("healthBadge");
+
+      el("healthTotalCameras").textContent = text(cameras.total);
+      el("healthEnabledCameras").textContent = text(cameras.enabled);
+      el("healthDisabledCameras").textContent = text(cameras.disabled);
+      el("healthLatestEventTime").textContent = formatTime(events.latest_event_time);
+
+      badge.className = cameras.disabled ? "badge warn" : "badge ok";
+      badge.textContent = cameras.disabled ? `${cameras.disabled} disabled` : "ok";
+    }
+
     function renderEvidence(evidenceData) {
       const list = el("evidenceList");
       clearNode(list);
@@ -705,11 +787,15 @@ def dashboard_ui():
       });
     }
 
-    async function renderCameras(camerasData) {
+    async function renderCameras(camerasData, healthData) {
       const list = el("cameraList");
       clearNode(list);
       const cameras = camerasData?.cameras || [];
       const totals = camerasData?.totals || {};
+      const healthByCamera = {};
+      (healthData?.per_camera || []).forEach((camera) => {
+        healthByCamera[camera.camera_id] = camera;
+      });
       el("totalCameras").textContent = text(totals.total);
       el("enabledCameras").textContent = text(totals.enabled);
       el("disabledCameras").textContent = text(totals.disabled);
@@ -731,6 +817,7 @@ def dashboard_ui():
 
       cameras.forEach((camera, index) => {
         const stats = statsResults[index];
+        const health = healthByCamera[camera.camera_id] || {};
         const item = document.createElement("div");
         item.className = "item";
 
@@ -754,6 +841,7 @@ def dashboard_ui():
         const statsRow = document.createElement("div");
         statsRow.className = "camera-stats";
         statsRow.append(
+          makeBadge(text(health.health_status, "unknown"), healthTone(health.health_status)),
           makeBadge(`events ${text(stats?.total_events, "0")}`, "neutral"),
           makeBadge(`person ${text(stats?.person_events, "0")}`, "danger")
         );
@@ -783,18 +871,20 @@ def dashboard_ui():
       status.textContent = "Loading dashboard...";
 
       try {
-        const [summary, cameras, events, evidence] = await Promise.all([
+        const [summary, cameras, events, evidence, health] = await Promise.all([
           getJson(endpoints.summary),
           getJson(endpoints.cameras),
           getJson(endpoints.latestEvents),
-          getJson(endpoints.evidence)
+          getJson(endpoints.evidence),
+          getJson(endpoints.health)
         ]);
 
         renderLatestSummary(summary);
         renderDisabled(summary);
         renderEvents(events);
         renderEvidence(evidence);
-        await renderCameras(cameras);
+        renderHealth(health);
+        await renderCameras(cameras, health);
 
         status.textContent = `Last updated ${new Date().toLocaleString()}`;
       } catch (error) {
