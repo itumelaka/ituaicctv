@@ -382,6 +382,92 @@ This is lighter and more suitable for AI detection.
 
 https://github.com/itumelaka/ituaicctv
 
+## GitHub Pages Dashboard
+
+Live dashboard URL:
+
+https://itumelaka.github.io/ituaicctv/
+
+The GitHub Pages site serves the full dashboard UI as a static PWA from the `docs/` folder.
+It is installable as a PWA on desktop and mobile (Add to Home Screen).
+
+The dashboard connects to the FastAPI backend over the LAN.
+Set the Backend URL in the dashboard header to your server IP, for example:
+
+```
+http://192.168.x.x:8000
+```
+
+The backend URL is saved in the browser's localStorage and remembered on next visit.
+
+CORS is enabled on the backend (`allow_origins=["*"]`) so any browser on the LAN can connect.
+
+## Windows Server Deployment
+
+Recommended setup for production:
+
+```
+CCTV LAN
+  → Hikvision NVR / cameras
+  → Windows Server (bilik server)
+       → FastAPI backend (port 8000)
+       → Windows Task Scheduler (monitor every 5 min)
+  → Staff browser → https://itumelaka.github.io/ituaicctv/
+       → Backend URL set to http://<server-ip>:8000
+```
+
+Steps to deploy on Windows Server:
+
+1. Install Python 3.12 on Windows Server.
+
+2. Clone the repository:
+   ```powershell
+   git clone https://github.com/itumelaka/ituaicctv.git
+   cd ituaicctv
+   ```
+
+3. Create virtual environment and install dependencies:
+   ```powershell
+   python -m venv .venv312
+   .\.venv312\Scripts\Activate.ps1
+   pip install -r backend\requirements.txt
+   ```
+
+4. Create `backend\.env` from example:
+   ```powershell
+   Copy-Item backend\.env.example backend\.env
+   ```
+   Fill in CCTV credentials, Telegram token, and chat ID.
+
+5. Allow port 8000 through Windows Firewall (LAN only):
+   ```powershell
+   New-NetFirewallRule -DisplayName "ITU AI CCTV Backend" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow
+   ```
+
+6. Run backend:
+   ```powershell
+   cd backend
+   python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+   ```
+
+7. For auto-start as a Windows Service, use NSSM:
+   ```
+   nssm install "ITU AI CCTV Backend" "C:\path\to\.venv312\Scripts\python.exe" "-m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+   nssm set "ITU AI CCTV Backend" AppDirectory "C:\path\to\ituaicctv\backend"
+   nssm start "ITU AI CCTV Backend"
+   ```
+
+8. Setup Windows Task Scheduler for periodic monitoring:
+   - Use `backend\scripts\run_monitor_person_all_once_hidden.vbs`
+   - Set trigger: every 5 minutes
+   - Task name: `ITU AI CCTV Person Monitor`
+
+9. Open GitHub Pages dashboard in any browser on the LAN:
+   ```
+   https://itumelaka.github.io/ituaicctv/
+   ```
+   Set Backend URL to `http://<windows-server-ip>:8000`.
+
 ## Monitor Endpoint
 
 Manual monitor check endpoint:

@@ -1,12 +1,12 @@
 {
-  "name": "AI CCTV Detection",
-  "short_name": "AI CCTV",
-  "description": "PWA dashboard for Hikvision AI CCTV detection pilot.",
+  "name": "ITU AI CCTV Dashboard",
+  "short_name": "CCTV Dashboard",
+  "description": "AI CCTV monitoring dashboard for ITU Melaka. Connects to the local backend server.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#0f172a",
-  "orientation": "portrait",
+  "background_color": "#f4f6f8",
+  "theme_color": "#11202d",
+  "orientation": "any",
   "icons": [
     {
       "src": "./icons/icon-192.png",

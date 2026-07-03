@@ -1,11 +1,11 @@
-const CACHE_NAME = "ai-cctv-pwa-v1";
+const CACHE_NAME = "ituaicctv-dashboard-v2";
 
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css",
-  "./app.js",
-  "./manifest.json"
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -29,6 +29,15 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // Never cache API calls to the backend — always fetch live
+  if (url.pathname.startsWith("/dashboard") || url.pathname.startsWith("/events") || url.pathname.startsWith("/monitor")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Cache-first for static assets
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );

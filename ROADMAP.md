@@ -127,15 +127,20 @@ Acceptance Criteria:
 
 ## Phase 7: Production Hardening
 
-Status: **Not started**
+Status: **In Progress**
 
 Tasks:
 
-- [ ] Service auto-start (Windows Task Scheduler atau systemd).
+- [x] GitHub Pages dashboard live di https://itumelaka.github.io/ituaicctv/
+- [x] Dashboard installable sebagai PWA (Add to Home Screen).
+- [x] CORS enabled pada backend supaya browser LAN boleh connect dari GitHub Pages.
+- [x] Backend URL configurable dalam dashboard (simpan dalam localStorage).
+- [x] Windows Server deployment guide dalam README.
+- [ ] Deploy backend ke Windows Server (bilik server).
+- [ ] Setup NSSM untuk auto-start backend sebagai Windows Service.
+- [ ] Allow port 8000 dalam Windows Firewall (LAN only).
 - [ ] Log rotation.
 - [ ] Config backup.
-- [ ] Access control dashboard.
-- [ ] Monitoring CPU/GPU/storage.
 - [ ] Retention policy snapshot/log.
 
 Acceptance Criteria:
