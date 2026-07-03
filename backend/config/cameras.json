@@ -1,0 +1,11 @@
+[
+  {
+    "id": "block_f_cam_9",
+    "name": "ITU BLOCK F CAM 9",
+    "host": "192.168.40.21",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Current confirmed working camera. H.264 sub-stream 640x360."
+  }
+]

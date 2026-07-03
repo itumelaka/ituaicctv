@@ -2,10 +2,11 @@ import os
 import time
 import cv2
 from app.config import settings
+from app.camera_registry import build_rtsp_url, build_masked_rtsp_url
 
-def _open_rtsp_stream():
+def _open_rtsp_stream(rtsp_url: str):
     os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
-    cap = cv2.VideoCapture(settings.rtsp_url, cv2.CAP_FFMPEG)
+    cap = cv2.VideoCapture(rtsp_url, cv2.CAP_FFMPEG)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     return cap
 
@@ -22,11 +23,11 @@ def _read_frame_with_retry(cap, max_attempts: int = 30):
     return None
 
 
-def capture_frame():
-    if not settings.cctv_host or not settings.cctv_username or not settings.cctv_password:
-        raise RuntimeError("CCTV configuration is incomplete. Check backend/.env.")
+def capture_frame_from_rtsp(rtsp_url: str):
+    if not rtsp_url:
+        raise RuntimeError("RTSP URL is empty.")
 
-    cap = _open_rtsp_stream()
+    cap = _open_rtsp_stream(rtsp_url)
 
     if not cap.isOpened():
         cap.release()
@@ -39,6 +40,50 @@ def capture_frame():
         raise RuntimeError("RTSP stream opened but cannot read frame after retries.")
 
     return frame
+
+
+def capture_frame():
+    if not settings.cctv_host or not settings.cctv_username or not settings.cctv_password:
+        raise RuntimeError("CCTV configuration is incomplete. Check backend/.env.")
+
+    return capture_frame_from_rtsp(settings.rtsp_url)
+
+
+def capture_frame_for_camera(camera: dict):
+    if not settings.cctv_username or not settings.cctv_password:
+        raise RuntimeError("CCTV username/password is incomplete. Check backend/.env.")
+
+    rtsp_url = build_rtsp_url(camera)
+    return capture_frame_from_rtsp(rtsp_url)
+
+
+def test_camera_connection(camera: dict) -> dict:
+    try:
+        frame = capture_frame_for_camera(camera)
+    except RuntimeError as error:
+        return {
+            "status": "failed",
+            "message": str(error),
+            "camera_id": camera.get("id"),
+            "camera_name": camera.get("name"),
+            "camera_host": camera.get("host"),
+            "channel": camera.get("channel"),
+            "rtsp_url": build_masked_rtsp_url(camera)
+        }
+
+    height, width = frame.shape[:2]
+
+    return {
+        "status": "connected",
+        "message": "RTSP stream is reachable.",
+        "camera_id": camera.get("id"),
+        "camera_name": camera.get("name"),
+        "camera_host": camera.get("host"),
+        "channel": camera.get("channel"),
+        "frame_width": width,
+        "frame_height": height,
+        "rtsp_url": build_masked_rtsp_url(camera)
+    }
 
 
 def test_rtsp_connection() -> dict:
