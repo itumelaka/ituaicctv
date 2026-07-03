@@ -1,11 +1,92 @@
 [
   {
+    "id": "block_e_cam_1",
+    "name": "ITU BLOCK E CAM1",
+    "host": "192.168.40.13",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
+    "id": "block_e_cam_2",
+    "name": "ITU BLOCK E CAM2",
+    "host": "192.168.40.14",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
+    "id": "block_e_cam_3",
+    "name": "ITU BLOCK E CAM3",
+    "host": "192.168.40.15",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
+    "id": "block_e_cam_4",
+    "name": "ITU BLOCK E CAM4",
+    "host": "192.168.40.16",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
+    "id": "block_e_cam_5",
+    "name": "ITU BLOCK E CAM5",
+    "host": "192.168.40.17",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
+    "id": "block_f_cam_6",
+    "name": "ITU BLOCK F CAM6",
+    "host": "192.168.40.18",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
+    "id": "block_f_cam_7",
+    "name": "ITU BLOCK F CAM7",
+    "host": "192.168.40.19",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
+    "id": "block_f_cam_8",
+    "name": "ITU BLOCK F CAM8",
+    "host": "192.168.40.20",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
+  },
+  {
     "id": "block_f_cam_9",
-    "name": "ITU BLOCK F CAM 9",
+    "name": "ITU BLOCK F CAM9",
     "host": "192.168.40.21",
     "port": 554,
     "channel": "102",
     "enabled": true,
-    "notes": "Current confirmed working camera. H.264 sub-stream 640x360."
+    "notes": "Confirmed working. H.264 sub-stream 640x360."
+  },
+  {
+    "id": "block_f_cam_10",
+    "name": "ITU BLOCK F CAM10",
+    "host": "192.168.40.22",
+    "port": 554,
+    "channel": "102",
+    "enabled": true,
+    "notes": "Direct IP camera. Sub-stream channel 102."
   }
 ]
