@@ -4,16 +4,16 @@ Roadmap ini disusun untuk membangunkan projek **Hikvision AI CCTV Detection Proj
 
 ## Phase 0: Documentation and Planning
 
-Status: In Progress
+Status: **Complete**
 
 Tasks:
 
-- Sediakan README.md.
-- Sediakan SECURITY.md.
-- Sediakan REQUIREMENTS.md.
-- Sediakan ARCHITECTURE.md.
-- Senaraikan kamera/NVR yang terlibat.
-- Tetapkan use case pilot.
+- [x] Sediakan README.md.
+- [x] Sediakan SECURITY.md.
+- [x] Sediakan REQUIREMENTS.md.
+- [x] Sediakan ARCHITECTURE.md.
+- [x] Senaraikan kamera/NVR yang terlibat (camera-inventory.md).
+- [x] Tetapkan use case pilot.
 
 Deliverable:
 
@@ -21,13 +21,15 @@ Deliverable:
 
 ## Phase 1: RTSP Pilot Test
 
+Status: **Complete**
+
 Tasks:
 
-- Dapatkan IP NVR/kamera.
-- Cipta user read-only untuk stream.
-- Test RTSP dalam VLC.
-- Test main stream dan sub stream.
-- Rekod format RTSP yang berjaya.
+- [x] Dapatkan IP NVR/kamera (192.168.40.21).
+- [x] Cipta user read-only untuk stream.
+- [x] Test RTSP dalam VLC.
+- [x] Test main stream dan sub stream (channel 101/102).
+- [x] Rekod format RTSP yang berjaya (H.264, sub-stream 640x360).
 
 Acceptance Criteria:
 
@@ -36,27 +38,31 @@ Acceptance Criteria:
 
 ## Phase 2: Basic AI Detection Prototype
 
+Status: **Complete**
+
 Tasks:
 
-- Setup Python environment.
-- Install OpenCV dan YOLO/Ultralytics.
-- Baca RTSP stream.
-- Detect person/vehicle.
-- Papar bounding box pada preview window.
+- [x] Setup Python environment (.venv312).
+- [x] Install OpenCV dan YOLO/Ultralytics.
+- [x] Baca RTSP stream (camera.py).
+- [x] Detect person (detection.py — YOLO person-only mode).
+- [x] Return bounding box, confidence, detection result.
 
 Acceptance Criteria:
 
-- Sistem boleh detect person/vehicle daripada live CCTV.
+- Sistem boleh detect person daripada live CCTV.
 - FPS dan CPU/GPU usage direkod.
 
 ## Phase 3: Event Logging and Snapshot
 
+Status: **Complete**
+
 Tasks:
 
-- Simpan snapshot apabila detection berlaku.
-- Simpan event log dalam CSV/JSON.
-- Tambah cooldown untuk elak spam event.
-- Tambah camera name dan timestamp.
+- [x] Simpan snapshot apabila person detection berlaku (evidence/).
+- [x] Simpan event log dalam JSONL (events.jsonl).
+- [x] Tambah cooldown untuk elak spam event (PERSON_EVENT_COOLDOWN_SECONDS).
+- [x] Tambah camera name, timestamp, severity, evidence_path.
 
 Acceptance Criteria:
 
@@ -65,12 +71,14 @@ Acceptance Criteria:
 
 ## Phase 4: Alert System
 
+Status: **Not started**
+
 Tasks:
 
-- Setup Telegram Bot atau email alert.
-- Hantar alert apabila event berlaku.
-- Sertakan snapshot jika sesuai.
-- Tambah setting enable/disable alert per kamera.
+- [ ] Setup Telegram Bot atau email alert.
+- [ ] Hantar alert apabila event berlaku.
+- [ ] Sertakan snapshot jika sesuai.
+- [ ] Tambah setting enable/disable alert per kamera.
 
 Acceptance Criteria:
 
@@ -79,12 +87,17 @@ Acceptance Criteria:
 
 ## Phase 5: Dashboard Basic
 
+Status: **Complete**
+
 Tasks:
 
-- Papar status kamera.
-- Papar senarai event terkini.
-- Papar snapshot event.
-- Tambah filter kamera/event type.
+- [x] Papar status kamera (dashboard/cameras, per-camera health).
+- [x] Papar senarai event terkini (dashboard/events/latest).
+- [x] Papar snapshot event (dashboard/evidence, evidence thumbnails).
+- [x] Dashboard UI boleh dibuka dalam LAN (GET /dashboard-ui).
+- [x] Auto-refresh setiap 30 saat.
+- [x] Health monitoring per kamera (active/stale/offline/disabled).
+- [x] Scheduler log summary dalam health endpoint.
 
 Acceptance Criteria:
 
@@ -92,6 +105,8 @@ Acceptance Criteria:
 - Event terkini boleh disemak oleh PIC.
 
 ## Phase 6: Advanced Detection
+
+Status: **Not started**
 
 Possible features:
 
@@ -110,14 +125,16 @@ Acceptance Criteria:
 
 ## Phase 7: Production Hardening
 
+Status: **Not started**
+
 Tasks:
 
-- Service auto-start.
-- Log rotation.
-- Config backup.
-- Access control dashboard.
-- Monitoring CPU/GPU/storage.
-- Retention policy snapshot/log.
+- [ ] Service auto-start (Windows Task Scheduler atau systemd).
+- [ ] Log rotation.
+- [ ] Config backup.
+- [ ] Access control dashboard.
+- [ ] Monitoring CPU/GPU/storage.
+- [ ] Retention policy snapshot/log.
 
 Acceptance Criteria:
 
@@ -132,7 +149,7 @@ Cadangan paling selamat:
 Kamera: Pintu masuk / laluan umum
 Detection: Person detected after office hours
 Alert: Telegram
-Storage: Snapshot + CSV log
+Storage: Snapshot + JSONL log
 ```
 
 Sebab:

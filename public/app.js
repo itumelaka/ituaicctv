@@ -1,4 +1,3 @@
-@'
 const enableNotifyBtn = document.getElementById("enableNotifyBtn");
 const testAlertBtn = document.getElementById("testAlertBtn");
 const eventsEl = document.getElementById("events");
@@ -69,4 +68,3 @@ enableNotifyBtn.addEventListener("click", requestNotificationPermission);
 testAlertBtn.addEventListener("click", sendTestAlert);
 
 registerServiceWorker();
-'@ | Set-Content public\app.js
