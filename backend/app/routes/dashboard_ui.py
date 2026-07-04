@@ -1620,10 +1620,16 @@ def dashboard_tv():
 
     * { box-sizing: border-box; }
 
+    html {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
       overflow: hidden;
+      max-width: 100%;
       background:
         radial-gradient(circle at 16% 0%, rgba(35, 216, 196, 0.16), transparent 30%),
         radial-gradient(circle at 85% 10%, rgba(93, 167, 255, 0.12), transparent 28%),
@@ -1648,11 +1654,13 @@ def dashboard_tv():
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-rows: 82px 1fr 230px;
+      grid-template-rows: minmax(82px, auto) minmax(0, 1fr) minmax(210px, 0.26fr);
       gap: 14px;
       width: 100vw;
+      max-width: 100%;
       height: 100vh;
       padding: 16px;
+      overflow: hidden;
     }
 
     .topbar, .panel, .metric, .camera-card, .event-card {
@@ -1663,36 +1671,71 @@ def dashboard_tv():
     }
 
     .topbar {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
+      justify-content: space-between;
       gap: 18px;
       padding: 14px 18px;
       overflow: hidden;
+      min-width: 0;
     }
 
     .brand-row {
       display: flex;
       align-items: center;
       gap: 14px;
+      flex: 1 1 460px;
       min-width: 0;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(28px, 2.5vw, 48px);
+      max-width: 100%;
+      font-size: clamp(28px, 3.5vw, 56px);
       line-height: 1;
       letter-spacing: 0;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .top-actions {
+    .topbar-right {
       display: flex;
+      flex: 1 1 640px;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: flex-end;
       gap: 10px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .status-group,
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .status-group {
+      justify-content: flex-end;
       color: var(--muted);
-      font-size: clamp(14px, 1.2vw, 20px);
+      font-size: clamp(13px, 1.05vw, 19px);
+    }
+
+    .button-group {
+      justify-content: flex-end;
+    }
+
+    .status-text {
+      display: inline-block;
+      max-width: min(38vw, 320px);
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
     }
 
@@ -1707,6 +1750,7 @@ def dashboard_tv():
       font-size: clamp(12px, 0.9vw, 16px);
       font-weight: 900;
       white-space: nowrap;
+      max-width: 100%;
     }
 
     .badge.live {
@@ -1743,6 +1787,8 @@ def dashboard_tv():
       font-weight: 900;
       text-decoration: none;
       cursor: pointer;
+      max-width: 100%;
+      white-space: nowrap;
     }
 
     button:disabled {
@@ -1752,15 +1798,18 @@ def dashboard_tv():
 
     .main-grid {
       display: grid;
-      grid-template-columns: 310px minmax(0, 1.2fr) minmax(360px, 0.85fr);
+      grid-template-columns: minmax(240px, 310px) minmax(0, 1.2fr) minmax(300px, 0.85fr);
       gap: 14px;
       min-height: 0;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .left-stack, .center-stack, .right-stack {
       display: grid;
       gap: 14px;
       min-height: 0;
+      min-width: 0;
     }
 
     .left-stack {
@@ -1779,6 +1828,7 @@ def dashboard_tv():
       padding: 16px;
       overflow: hidden;
       min-width: 0;
+      max-width: 100%;
     }
 
     .metric-label, .panel-label {
@@ -1794,6 +1844,7 @@ def dashboard_tv():
       font-size: clamp(34px, 3.5vw, 66px);
       line-height: 1;
       font-weight: 900;
+      overflow-wrap: anywhere;
     }
 
     .metric-detail {
@@ -1808,6 +1859,7 @@ def dashboard_tv():
       grid-template-rows: auto 1fr auto;
       gap: 16px;
       border-color: rgba(35, 216, 196, 0.35);
+      min-width: 0;
     }
 
     .latest-event.person {
@@ -1819,16 +1871,19 @@ def dashboard_tv():
 
     .event-title {
       margin: 0;
-      font-size: clamp(44px, 5vw, 92px);
+      font-size: clamp(34px, 5vw, 92px);
       line-height: 0.98;
       letter-spacing: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
     }
 
     .event-fields {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 12px;
       align-content: end;
+      min-width: 0;
     }
 
     .field {
@@ -1857,11 +1912,13 @@ def dashboard_tv():
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
       gap: 10px;
+      min-width: 0;
     }
 
     .evidence-link {
       display: block;
       min-height: 0;
+      max-width: 100%;
       border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(0,0,0,0.18);
@@ -1892,6 +1949,7 @@ def dashboard_tv():
       gap: 8px;
       min-height: 0;
       overflow: hidden;
+      min-width: 0;
     }
 
     .event-card {
@@ -1903,6 +1961,17 @@ def dashboard_tv():
       padding: 10px 12px;
       box-shadow: none;
       background: rgba(10, 17, 26, 0.7);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .event-card > div {
+      min-width: 0;
+    }
+
+    .event-card .badge {
+      justify-self: end;
+      max-width: 100%;
     }
 
     .event-card.person {
@@ -1931,13 +2000,18 @@ def dashboard_tv():
       grid-template-columns: minmax(0, 1fr) 360px;
       gap: 14px;
       min-height: 0;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .camera-strip {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 10px;
       min-height: 0;
+      min-width: 0;
+      overflow-x: auto;
+      padding-bottom: 2px;
     }
 
     .camera-card {
@@ -1960,6 +2034,7 @@ def dashboard_tv():
       color: var(--muted);
       font-size: clamp(12px, 0.85vw, 15px);
       overflow-wrap: anywhere;
+      min-width: 0;
     }
 
     .warning {
@@ -1992,18 +2067,64 @@ def dashboard_tv():
         height: auto;
         min-height: 100vh;
         grid-template-rows: auto auto auto;
+        overflow: visible;
+      }
+      .topbar {
+        align-items: stretch;
+      }
+      .brand-row {
+        flex-basis: 100%;
+      }
+      .topbar-right {
+        flex-basis: 100%;
+        justify-content: space-between;
+      }
+      .status-group,
+      .button-group {
+        justify-content: flex-start;
+      }
+      .status-text {
+        max-width: 100%;
       }
       .main-grid, .bottom-grid {
         grid-template-columns: 1fr;
+        overflow: visible;
       }
       .left-stack, .center-stack, .right-stack {
         grid-template-rows: none;
       }
       .camera-strip {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
       }
       .event-fields {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .screen {
+        padding: 10px;
+      }
+      .topbar {
+        padding: 12px;
+      }
+      h1 {
+        white-space: normal;
+      }
+      button, a.button-link {
+        min-height: 34px;
+        padding: 6px 9px;
+        font-size: 13px;
+      }
+      .camera-strip {
+        grid-template-columns: minmax(220px, 1fr);
+      }
+      .event-card {
+        grid-template-columns: 18px minmax(0, 1fr);
+      }
+      .event-card .badge {
+        grid-column: 2;
+        justify-self: start;
       }
     }
   </style>
@@ -2013,15 +2134,19 @@ def dashboard_tv():
     <header class="topbar">
       <div class="brand-row">
         <h1>ITU AI CCTV Command Center</h1>
-        <span class="badge live"><span class="dot" aria-hidden="true"></span>LIVE AI MONITORING</span>
-        <span class="badge neutral">Production Server</span>
       </div>
-      <div class="top-actions">
-        <span id="loadStatus">Loading...</span>
-        <span id="countdown">Next refresh in 30s</span>
-        <button type="button" id="refreshButton">Refresh</button>
-        <button type="button" id="fullscreenButton">Fullscreen</button>
-        <a class="button-link" href="/dashboard-ui">Normal dashboard</a>
+      <div class="topbar-right">
+        <div class="status-group">
+          <span class="badge live"><span class="dot" aria-hidden="true"></span>LIVE AI MONITORING</span>
+          <span class="badge neutral">Production Server</span>
+          <span id="loadStatus" class="status-text">Loading...</span>
+          <span id="countdown" class="status-text">Next refresh in 30s</span>
+        </div>
+        <div class="button-group">
+          <button type="button" id="refreshButton">Refresh</button>
+          <button type="button" id="fullscreenButton">Fullscreen</button>
+          <a class="button-link" href="/dashboard-ui">Normal dashboard</a>
+        </div>
       </div>
     </header>
 
