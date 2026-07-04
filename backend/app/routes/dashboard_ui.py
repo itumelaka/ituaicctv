@@ -129,6 +129,46 @@ def dashboard_ui():
       text-align: right;
     }
 
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 24px;
+      border: 1px solid rgba(57, 217, 138, 0.8);
+      border-radius: 999px;
+      padding: 3px 9px;
+      color: #d8ffed;
+      background: rgba(57, 217, 138, 0.12);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      box-shadow: 0 0 18px rgba(57, 217, 138, 0.14);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 0 rgba(57, 217, 138, 0.65);
+      animation: livePulse 1.8s infinite;
+    }
+
+    .header-scanline {
+      height: 2px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .header-scanline::before {
+      content: "";
+      display: block;
+      width: 42%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanLine 3.2s linear infinite;
+    }
+
     main {
       padding: 24px 16px 36px;
     }
@@ -197,6 +237,12 @@ def dashboard_ui():
       background: var(--accent-soft);
       color: #dffefa;
       box-shadow: inset 0 0 0 1px rgba(32, 198, 183, 0.35);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.72;
+      transform: none;
     }
 
     button:focus, .quick-link:focus, a:focus {
@@ -360,6 +406,26 @@ def dashboard_ui():
       background: var(--muted-soft);
     }
 
+    .badge.ok::before,
+    .badge.warn::before,
+    .badge.danger::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      margin-right: 6px;
+      border-radius: 999px;
+      background: currentColor;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .badge.warn {
+      box-shadow: 0 0 16px rgba(255, 200, 87, 0.11);
+    }
+
+    .badge.danger {
+      box-shadow: 0 0 18px rgba(255, 95, 109, 0.13);
+    }
+
     .health-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -398,6 +464,13 @@ def dashboard_ui():
       border: 1px solid var(--line-bright);
       border-radius: 8px;
       background: linear-gradient(135deg, rgba(32, 198, 183, 0.12), rgba(77, 163, 255, 0.08));
+    }
+
+    .latest-event-card.person-alert {
+      border-color: rgba(255, 95, 109, 0.72);
+      background: linear-gradient(135deg, rgba(255, 95, 109, 0.18), rgba(77, 163, 255, 0.08));
+      box-shadow: 0 0 0 1px rgba(255, 95, 109, 0.22), 0 18px 48px rgba(255, 95, 109, 0.12);
+      animation: alertGlow 2.4s ease-in-out infinite;
     }
 
     .latest-event-title {
@@ -457,11 +530,13 @@ def dashboard_ui():
     .timeline-item.person {
       border-color: rgba(255, 95, 109, 0.46);
       background: linear-gradient(90deg, rgba(255, 95, 109, 0.13), rgba(10, 16, 24, 0.64));
+      box-shadow: 0 0 22px rgba(255, 95, 109, 0.08);
     }
 
     .timeline-item.person .timeline-dot {
       background: var(--danger);
       box-shadow: 0 0 0 5px var(--danger-soft);
+      animation: alertDot 1.7s ease-in-out infinite;
     }
 
     .thumb {
@@ -509,6 +584,18 @@ def dashboard_ui():
       min-width: 0;
       max-width: 100%;
       overflow: hidden;
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .evidence-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(32, 198, 183, 0.55);
+      box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28), 0 0 22px rgba(32, 198, 183, 0.08);
+    }
+
+    .evidence-card.person-evidence {
+      border-color: rgba(255, 95, 109, 0.32);
+      box-shadow: 0 0 18px rgba(255, 95, 109, 0.06);
     }
 
     .evidence-card .thumb {
@@ -554,6 +641,11 @@ def dashboard_ui():
       border-color: rgba(255, 95, 109, 0.38);
     }
 
+    .camera-card.stale, .camera-card.no_recent_event {
+      border-color: rgba(255, 200, 87, 0.36);
+      box-shadow: 0 0 18px rgba(255, 200, 87, 0.07);
+    }
+
     .camera-stats {
       display: flex;
       gap: 8px;
@@ -572,6 +664,39 @@ def dashboard_ui():
     .error {
       color: var(--danger);
       font-weight: 800;
+    }
+
+    @keyframes livePulse {
+      0% { box-shadow: 0 0 0 0 rgba(57, 217, 138, 0.65); }
+      70% { box-shadow: 0 0 0 8px rgba(57, 217, 138, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(57, 217, 138, 0); }
+    }
+
+    @keyframes alertGlow {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(255, 95, 109, 0.18), 0 18px 48px rgba(255, 95, 109, 0.10); }
+      50% { box-shadow: 0 0 0 1px rgba(255, 95, 109, 0.34), 0 18px 54px rgba(255, 95, 109, 0.19); }
+    }
+
+    @keyframes alertDot {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 5px var(--danger-soft); }
+      50% { transform: scale(1.18); box-shadow: 0 0 0 8px rgba(255, 95, 109, 0.08); }
+    }
+
+    @keyframes scanLine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(260%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
     }
 
     @media (max-width: 1050px) {
@@ -641,6 +766,7 @@ def dashboard_ui():
         <div class="title-row">
           <h1>ITU AI CCTV Command Center</h1>
           <span class="badge neutral">Production Server</span>
+          <span class="live-pill"><span class="live-dot" aria-hidden="true"></span>LIVE AI MONITORING</span>
         </div>
         <p class="subtitle">Real-time AI surveillance, evidence, health and alert monitoring</p>
       </div>
@@ -649,6 +775,7 @@ def dashboard_ui():
         <div id="refreshStatus">Next refresh in 30s</div>
       </div>
     </div>
+    <div class="header-scanline" aria-hidden="true"></div>
   </header>
 
   <main>
@@ -656,6 +783,7 @@ def dashboard_ui():
       <div class="status-row">
         <div class="status-copy">
           <div class="status-text">Operations view from existing dashboard APIs</div>
+          <div id="monitoringLine" class="status-text">AI scan status loading...</div>
         </div>
         <nav class="quick-links" aria-label="Dashboard quick links">
           <button type="button" id="refreshButton" class="primary-button">Refresh now</button>
@@ -963,6 +1091,16 @@ def dashboard_ui():
         || null;
     }
 
+    function updateMonitoringLine(camerasData, healthData) {
+      const totals = camerasData?.totals || {};
+      const scheduler = healthData?.scheduler || {};
+      const summary = String(scheduler.latest_summary || "").toLowerCase();
+      const schedulerLooksOk = summary.includes("status=ok") || summary.includes("ok");
+      const enabledCount = text(totals.enabled, "0");
+      const scanLabel = schedulerLooksOk ? "AI scan active" : "AI scan status pending";
+      el("monitoringLine").textContent = `${scanLabel} | Monitoring ${enabledCount} enabled cameras`;
+    }
+
     function evidenceUrlFromImage(image) {
       if (image?.url) {
         return image.url;
@@ -1053,7 +1191,7 @@ def dashboard_ui():
       message.className = "meta";
       message.textContent = text(latest.message, "");
 
-      box.className = "latest-event-card";
+      box.className = latest.person_detected ? "latest-event-card person-alert" : "latest-event-card";
       box.append(title, fields, message);
     }
 
@@ -1219,7 +1357,7 @@ def dashboard_ui():
 
       evidence.forEach((image) => {
         const item = document.createElement("div");
-        item.className = "evidence-card";
+        item.className = "evidence-card person-evidence";
 
         const imageUrl = evidenceUrlFromImage(image);
         if (imageUrl) {
@@ -1389,8 +1527,11 @@ def dashboard_ui():
 
       isLoading = true;
       const status = el("loadStatus");
+      const refreshButton = el("refreshButton");
       status.className = "";
       status.textContent = "Loading dashboard...";
+      refreshButton.disabled = true;
+      refreshButton.textContent = "Refreshing...";
 
       try {
         const [summary, cameras, events, evidence, health] = await Promise.all([
@@ -1407,6 +1548,7 @@ def dashboard_ui():
         renderEvents(events, cameraNameMap);
         renderEvidence(evidence);
         renderHealth(health);
+        updateMonitoringLine(cameras, health);
         await renderCameras(cameras, health);
 
         status.textContent = `Last refresh ${new Date().toLocaleString()}`;
@@ -1415,6 +1557,8 @@ def dashboard_ui():
         status.textContent = `Dashboard load failed: ${error.message}`;
       } finally {
         resetRefreshCountdown();
+        refreshButton.disabled = false;
+        refreshButton.textContent = "Refresh now";
         isLoading = false;
       }
     }
