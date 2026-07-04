@@ -101,20 +101,38 @@ Status: Planned
 
 Goal:
 
-Build a controlled face detection and recognition module.
+Build a controlled face module in phases. Do not implement automatic identity recognition until person detection reliability, privacy controls, and review workflow are ready.
 
 Important note:
 
-Face recognition involves biometric data. It must be implemented with proper policy, consent, access control, and retention rules.
+Face recognition involves biometric data. It must be used only with clear authorization, consent or policy, access control, and retention rules.
 
-Planned features:
+Phased approach:
 
-- Face detection only
-- Face crop evidence
-- Authorised face enrolment
-- Known person matching
-- Confidence threshold
-- Recognition event log
+1. Face detection only, no identity recognition.
+2. Face crop saving linked to existing person detection evidence.
+3. Opt-in known-person recognition using approved reference images only.
+4. Dashboard review and human confirmation before any operational identity action.
+
+Operational constraints:
+
+- Do not store random unknown face identities by default.
+- Do not expose a face database through public routes, public shares, screenshots, or Git.
+- Never commit face images, face embeddings, or personal identity data.
+- Keep face reference data local and private on the production server.
+- Telegram alerts should avoid unnecessary personal data. Prefer "face present" or "review required" over names unless policy explicitly allows it.
+
+Proposed future private folders, documented only:
+
+- backend/data/faces/reference/ - private approved reference images, ignored
+- backend/data/faces/embeddings/ - private embeddings, ignored
+- backend/data/faces/crops/ - private detected face crops, ignored
+
+Before Phase 4 implementation:
+
+- Finish person detection tuning and review false-positive examples.
+- Keep person evidence snapshots with bounding boxes enabled for review.
+- Define retention, approval, access, and audit rules for any face data.
 
 ## Phase 5 - Vehicle and Number Plate Recognition
 

@@ -19,6 +19,7 @@ Do not commit:
 - RTSP URLs that contain a username or password
 - Telegram bot tokens or chat IDs
 - CCTV passwords or credential-bearing connection strings
+- Face images, face crops, face embeddings, or personal identity data
 
 Use backend/.env.example for placeholders only.
 
@@ -75,6 +76,30 @@ Evidence images are saved only for person_detected=True events. no_person events
 ## Face Recognition
 
 Face recognition involves biometric data.
+
+Face work must be phased and privacy-first:
+
+1. Face detection only, no identity recognition.
+2. Face crop saving linked to existing person detection evidence.
+3. Opt-in known-person recognition using approved reference images only.
+4. Dashboard review and human confirmation before operational identity action.
+
+Rules:
+
+- Use face recognition only with clear authorization, consent, or written policy.
+- Do not store random unknown face identities by default.
+- Do not expose any face database, crop folder, embedding store, or identity mapping publicly.
+- Never commit face images, face embeddings, or personal identity data to Git.
+- Keep face reference data local and private on the production server.
+- Telegram alerts should avoid unnecessary personal data. Prefer a generic review alert unless policy explicitly allows names.
+
+Proposed future private folders:
+
+- backend/data/faces/reference/ - approved reference images only
+- backend/data/faces/embeddings/ - private generated embeddings
+- backend/data/faces/crops/ - detected face crops linked to evidence review
+- backend/data/face-embeddings/ - legacy/private embeddings path, ignored
+- backend/data/face-reference/ - legacy/private reference path, ignored
 
 Before enabling identity recognition:
 

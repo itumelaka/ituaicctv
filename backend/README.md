@@ -181,6 +181,7 @@ CCTV_PASSWORD=your_password
 CCTV_CHANNEL=102
 
 YOLO_CONFIDENCE=0.35
+PERSON_CONFIDENCE_THRESHOLD=0.60
 PERSON_EVENT_COOLDOWN_SECONDS=300
 
 TELEGRAM_BOT_TOKEN=your_bot_token_here
@@ -209,6 +210,7 @@ Jika `TELEGRAM_BOT_TOKEN` atau `TELEGRAM_CHAT_ID` kosong, alert akan dilog sebag
 
 Alert akan hantar:
 - Foto evidence (jika ada snapshot) dengan caption kamera, masa dan bilangan detections
+- Confidence tertinggi dan threshold aktif jika data confidence tersedia
 - Teks sahaja jika tiada evidence (contoh: cooldown skip)
 
 Alert dihantar daripada endpoint:

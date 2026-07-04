@@ -49,6 +49,10 @@ Production evidence and logs:
 
 - Evidence images are saved only when person_detected=True.
 - no_person events usually have evidence_path=null and no evidence image.
+- Person detection now uses PERSON_CONFIDENCE_THRESHOLD with a safer default of 0.60 for person-only detections and monitor alerts.
+- YOLO_CONFIDENCE remains available for general YOLO detection; tune PERSON_CONFIDENCE_THRESHOLD first when reducing false person alerts.
+- Telegram person alerts include the highest available person confidence and active threshold when the event contains detection confidence data.
+- Evidence snapshots for person events use the person snapshot path, which draws YOLO bounding boxes and confidence labels on the saved image.
 - Production evidence folder: C:\ituaicctv\backend\data\evidence.
 - Production task log folder: C:\ituaicctv\backend\data\task-logs.
 - Production service log folder: C:\ituaicctv\backend\data\service-logs.
@@ -72,11 +76,12 @@ Latest successful server scheduler run:
 
 Next recommended work:
 
-1. Dashboard production polish and evidence review workflow
-2. Investigate block_f_cam_8 network/IP
-3. Avoid overlapping scheduler runs if check-all takes too long
-4. Later: face detection planning
-5. Later: number plate recognition planning
+1. Review recent person alerts at PERSON_CONFIDENCE_THRESHOLD=0.60 before lowering the threshold.
+2. Dashboard production polish and evidence review workflow
+3. Investigate block_f_cam_8 network/IP
+4. Avoid overlapping scheduler runs if check-all takes too long
+5. Later: face detection planning
+6. Later: number plate recognition planning
 
 ## Current Status
 

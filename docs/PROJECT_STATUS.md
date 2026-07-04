@@ -35,6 +35,9 @@ Production evidence and logs:
 
 - Evidence images are saved only when person_detected=True.
 - no_person events usually have evidence_path=null and no evidence image.
+- Person-only detection uses PERSON_CONFIDENCE_THRESHOLD with a safer default of 0.60.
+- Telegram person alerts include the highest available person confidence and active threshold when detection data is available.
+- Person evidence snapshots are generated through the person snapshot path, which draws bounding boxes and confidence labels.
 - Production evidence folder: C:\ituaicctv\backend\data\evidence.
 - Production task log folder: C:\ituaicctv\backend\data\task-logs.
 - Production service log folder: C:\ituaicctv\backend\data\service-logs.
@@ -83,11 +86,12 @@ Confirmed at this checkpoint:
 
 Next recommended work:
 
-1. Dashboard production polish and evidence review workflow
-2. Investigate block_f_cam_8 network/IP
-3. Avoid overlapping scheduler runs if check-all takes too long
-4. Later: face detection planning
-5. Later: number plate recognition planning
+1. Review recent person alerts at PERSON_CONFIDENCE_THRESHOLD=0.60 before lowering the threshold.
+2. Dashboard production polish and evidence review workflow
+3. Investigate block_f_cam_8 network/IP
+4. Avoid overlapping scheduler runs if check-all takes too long
+5. Later: face detection planning
+6. Later: number plate recognition planning
 
 ## Current Project Goal
 
@@ -301,11 +305,12 @@ The project now has a lightweight dashboard health endpoint and health card base
 
 Next technical focus:
 
-1. Dashboard production polish and evidence review workflow
-2. Investigate block_f_cam_8 network/IP
-3. Avoid overlapping scheduler runs if check-all takes too long
-4. Later: face detection planning
-5. Later: number plate recognition planning
+1. Review person detection false positives with PERSON_CONFIDENCE_THRESHOLD=0.60.
+2. Dashboard production polish and evidence review workflow.
+3. Investigate block_f_cam_8 network/IP.
+4. Avoid overlapping scheduler runs if check-all takes too long.
+5. Later: phased face detection planning, starting with face detection only and no identity recognition.
+6. Later: number plate recognition planning.
 
 ## Latest Milestone - Multi-Camera Scheduler
 

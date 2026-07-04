@@ -74,6 +74,8 @@ Camera list:
 - [x] Add monitor all enabled cameras endpoint
 - [x] Add per-camera event stats
 - [x] Add per-camera latest event endpoint
+- [x] Add configurable PERSON_CONFIDENCE_THRESHOLD for person-only detection
+- [x] Include person detection confidence in Telegram alerts when available
 - [ ] Add duplicate detection filtering
 - [ ] Add configurable detection classes
 - [ ] Add configurable monitoring interval
@@ -81,6 +83,9 @@ Camera list:
 
 ## Face Detection TODO
 
+- [x] Document phased face feature roadmap
+- [x] Document private future face folders without creating sensitive data
+- [x] Ignore future private face data folders in Git
 - [ ] Add face detection only endpoint
 - [ ] Detect face presence without identifying identity
 - [ ] Add face crop evidence storage
@@ -89,6 +94,7 @@ Camera list:
 - [ ] Add face recognition pilot only for authorised users
 - [ ] Add known persons database
 - [ ] Add confidence threshold for identity matching
+- [ ] Add dashboard human review and confirmation flow before identity actions
 
 ## Number Plate Recognition TODO
 
