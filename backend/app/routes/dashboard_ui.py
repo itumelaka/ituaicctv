@@ -1822,7 +1822,7 @@ def dashboard_tv():
     }
 
     .right-stack {
-      grid-template-rows: minmax(0, 1fr) 150px;
+      grid-template-rows: minmax(0, 1fr) minmax(180px, 0.42fr);
     }
 
     .metric, .panel {
@@ -1909,11 +1909,68 @@ def dashboard_tv():
       overflow-wrap: anywhere;
     }
 
+    .live-camera-panel,
     .evidence-panel {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
       gap: 10px;
       min-width: 0;
+    }
+
+    .live-panel-head,
+    .live-panel-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    select {
+      min-height: 34px;
+      max-width: 100%;
+      min-width: 180px;
+      border: 1px solid rgba(35, 216, 196, 0.45);
+      border-radius: 8px;
+      background: #0b1420;
+      color: var(--text);
+      padding: 6px 10px;
+      font-weight: 800;
+    }
+
+    .live-frame-wrap {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+
+    .live-frame-wrap > * {
+      grid-area: 1 / 1;
+    }
+
+    .live-frame-wrap .empty {
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 8, 13, 0.72);
+    }
+
+    .live-camera-img {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .live-camera-img.ready {
+      display: block;
     }
 
     .evidence-link {
@@ -1929,6 +1986,7 @@ def dashboard_tv():
     .evidence-img {
       width: 100%;
       height: 100%;
+      max-height: 100%;
       object-fit: contain;
       display: block;
     }
@@ -2026,6 +2084,13 @@ def dashboard_tv():
       box-shadow: none;
       min-width: 0;
       overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .camera-card.selected {
+      border-color: rgba(35, 216, 196, 0.85);
+      box-shadow: 0 0 0 1px rgba(35, 216, 196, 0.34), 0 0 24px rgba(35, 216, 196, 0.16);
     }
 
     .camera-title {
@@ -2195,14 +2260,26 @@ def dashboard_tv():
       </section>
 
       <section class="right-stack">
-        <div class="panel evidence-panel">
-          <div class="panel-label">Latest Evidence Preview</div>
-          <div id="evidencePreview"></div>
-          <div id="evidenceMeta" class="metric-detail">Waiting for evidence...</div>
-        </div>
-        <div class="panel">
-          <div class="panel-label">Health Notes</div>
+        <div class="panel live-camera-panel">
+          <div class="live-panel-head">
+            <div class="panel-label">Live Camera View</div>
+            <select id="cameraSelector" aria-label="Select live camera"></select>
+          </div>
+          <div id="liveCameraInfo" class="metric-detail">Select a camera for live snapshot view.</div>
+          <div class="live-frame-wrap">
+            <img id="liveCameraImage" class="live-camera-img" alt="Selected live camera stream">
+            <div id="liveCameraEmpty" class="empty">Live stream waiting for camera selection.</div>
+          </div>
+          <div class="live-panel-footer">
+            <span id="liveFrameStatus" class="metric-detail">MJPEG live proxy | selected camera only.</span>
+            <button type="button" id="refreshFrameButton">Restart stream</button>
+          </div>
           <div id="healthNotes" class="metric-detail">Loading production health...</div>
+        </div>
+        <div class="panel evidence-panel">
+          <div class="panel-label">Latest Evidence Snapshot</div>
+          <div id="evidencePreview"></div>
+          <div id="evidenceMeta" class="metric-detail">Historical proof, not a live feed.</div>
         </div>
       </section>
     </main>
@@ -2225,11 +2302,17 @@ def dashboard_tv():
       cameras: "/dashboard/cameras",
       latestEvents: "/dashboard/events/latest?limit=10",
       evidence: "/dashboard/evidence?limit=8",
-      health: "/dashboard/health"
+      health: "/dashboard/health",
+      liveStream: "/dashboard/live"
     };
     const refreshIntervalSeconds = 30;
     let nextRefreshAt = Date.now() + refreshIntervalSeconds * 1000;
     let loading = false;
+    let selectedCameraId = "";
+    let streamedCameraId = "";
+    let latestCamerasData = null;
+    let latestEventsData = null;
+    let latestHealthData = null;
 
     const el = (id) => document.getElementById(id);
 
@@ -2259,9 +2342,13 @@ def dashboard_tv():
     }
 
     function cameraId(event) {
-      const nested = event?.camera?.id || event?.camera?.camera_id || "";
-      if (nested && nested !== "unknown_camera") return nested;
-      return event?.camera_id || event?.camera_id_from_log || "";
+      const candidates = [
+        event?.camera_id,
+        event?.camera_id_from_log,
+        event?.camera?.camera_id,
+        event?.camera?.id
+      ];
+      return candidates.find((id) => id && id !== "unknown_camera") || "";
     }
 
     function cameraMap(camerasData) {
@@ -2278,6 +2365,123 @@ def dashboard_tv():
       const id = cameraId(event);
       const label = event?.camera_name || event?.name || event?.camera?.camera_name || event?.camera?.name || map[id] || id;
       return label && label !== "unknown_camera" ? label : "Unknown camera";
+    }
+
+    function cameraDisplayName(camera) {
+      return text(camera?.camera_name || camera?.name || camera?.camera_id || camera?.id);
+    }
+
+    function healthByCamera(healthData) {
+      const map = {};
+      (healthData?.per_camera || []).forEach((camera) => {
+        map[camera.camera_id] = camera;
+      });
+      return map;
+    }
+
+    function selectedCamera() {
+      return (latestCamerasData?.cameras || []).find((camera) => camera.camera_id === selectedCameraId);
+    }
+
+    function preferredLiveCameraId(camerasData, eventsData, summary) {
+      const cameras = camerasData?.cameras || [];
+      const enabledIds = new Set(cameras.filter((camera) => camera.enabled !== false).map((camera) => camera.camera_id));
+      const events = eventsData?.events || [];
+      const candidates = [
+        events.find((event) => event?.person_detected),
+        summary?.events?.latest_event,
+        events[0]
+      ];
+
+      for (const event of candidates) {
+        const id = cameraId(event);
+        if (id && enabledIds.has(id)) return id;
+      }
+
+      return cameras.find((camera) => camera.enabled !== false)?.camera_id || cameras[0]?.camera_id || "";
+    }
+
+    function selectLiveCamera(cameraId, forceRefresh = true) {
+      if (!cameraId || selectedCameraId === cameraId) {
+        updateLiveCameraPanel();
+        if (forceRefresh && cameraId) restartLiveCameraStream();
+        return;
+      }
+
+      selectedCameraId = cameraId;
+      updateLiveCameraPanel();
+      if (forceRefresh) restartLiveCameraStream();
+    }
+
+    function renderCameraSelector(camerasData, eventsData, summary) {
+      const selector = el("cameraSelector");
+      const cameras = camerasData?.cameras || [];
+      selector.innerHTML = "";
+
+      cameras.forEach((camera) => {
+        const option = document.createElement("option");
+        option.value = camera.camera_id;
+        option.textContent = `${cameraDisplayName(camera)} (${camera.camera_id})`;
+        option.disabled = camera.enabled === false;
+        selector.appendChild(option);
+      });
+
+      const selected = cameras.find((camera) => camera.camera_id === selectedCameraId);
+      if (!selectedCameraId || !selected || selected.enabled === false) {
+        selectedCameraId = preferredLiveCameraId(camerasData, eventsData, summary);
+      }
+
+      selector.value = selectedCameraId;
+      updateLiveCameraPanel();
+    }
+
+    function updateLiveCameraPanel() {
+      const camera = selectedCamera();
+      const selector = el("cameraSelector");
+      if (selector && selectedCameraId) selector.value = selectedCameraId;
+
+      document.querySelectorAll(".camera-card").forEach((card) => {
+        card.classList.toggle("selected", card.dataset.cameraId === selectedCameraId);
+      });
+
+      if (!camera) {
+        el("liveCameraInfo").textContent = "No enabled camera is available for live snapshot view.";
+        el("liveFrameStatus").textContent = "MJPEG live proxy | selected camera only.";
+        return;
+      }
+
+      const health = healthByCamera(latestHealthData)[camera.camera_id] || {};
+      const status = health.health_status || (camera.enabled ? "active" : "disabled");
+      el("liveCameraInfo").textContent = `${cameraDisplayName(camera)} | ID: ${camera.camera_id} | Health: ${status}`;
+      el("liveFrameStatus").textContent = "MJPEG live proxy | selected camera only.";
+    }
+
+    function restartLiveCameraStream() {
+      const camera = selectedCamera();
+      const image = el("liveCameraImage");
+      const empty = el("liveCameraEmpty");
+      const status = el("liveFrameStatus");
+
+      if (!camera || camera.enabled === false) {
+        status.textContent = "Live stream unavailable for the selected camera.";
+        image.removeAttribute("src");
+        image.classList.remove("ready");
+        empty.style.display = "grid";
+        empty.textContent = "Live stream unavailable.";
+        return;
+      }
+
+      const streamUrl = `${endpoints.liveStream}/${encodeURIComponent(camera.camera_id)}/stream.mjpg?t=${Date.now()}`;
+      streamedCameraId = camera.camera_id;
+      status.textContent = `Stream started: ${new Date().toLocaleTimeString()} | MJPEG live proxy | selected camera only.`;
+      empty.style.display = "none";
+      image.classList.add("ready");
+      image.onerror = () => {
+        status.textContent = "Live stream unavailable. Try another camera or restart stream.";
+        empty.style.display = "grid";
+        empty.textContent = "Live stream unavailable. Try another camera or restart stream.";
+      };
+      image.src = streamUrl;
     }
 
     function eventTone(event) {
@@ -2365,7 +2569,7 @@ def dashboard_tv():
       preview.innerHTML = "";
       if (!images.length) {
         preview.innerHTML = '<div class="empty">No evidence images yet.</div>';
-        meta.textContent = "Evidence is saved only when person_detected=True.";
+        meta.textContent = "Historical evidence is saved only when person_detected=True.";
         return;
       }
       const image = images[0];
@@ -2384,7 +2588,7 @@ def dashboard_tv():
       };
       link.appendChild(img);
       preview.appendChild(link);
-      meta.textContent = `${text(image.filename)} | ${formatTime(image.modified_time)} | ${text(image.size_bytes)} bytes | Recognition requires high-resolution face evidence.`;
+      meta.textContent = `${text(image.filename)} | ${formatTime(image.modified_time)} | ${text(image.size_bytes)} bytes | Historical evidence, not a live feed.`;
     }
 
     function renderTimeline(eventsData, map) {
@@ -2426,7 +2630,13 @@ def dashboard_tv():
         const status = health.health_status || (camera.enabled ? "active" : "disabled");
         const tone = status === "active" ? "ok" : (status === "offline" || status === "disabled" ? "danger" : "warn");
         const item = document.createElement("div");
-        item.className = "camera-card";
+        item.className = `camera-card ${camera.camera_id === selectedCameraId ? "selected" : ""}`;
+        item.dataset.cameraId = camera.camera_id;
+        item.addEventListener("click", () => {
+          if (camera.enabled !== false) {
+            selectLiveCamera(camera.camera_id);
+          }
+        });
         item.innerHTML = `
           <div class="camera-title">${text(camera.name || camera.camera_id)}</div>
           <div class="camera-meta">${badge(status, tone)}</div>
@@ -2452,12 +2662,19 @@ def dashboard_tv():
           getJson(endpoints.evidence),
           getJson(endpoints.health)
         ]);
+        latestCamerasData = cameras;
+        latestEventsData = events;
+        latestHealthData = health;
         const map = cameraMap(cameras);
         renderMetrics(cameras, health);
         renderLatest(summary, events, map);
         renderEvidence(evidence);
         renderTimeline(events, map);
+        renderCameraSelector(cameras, events, summary);
         await renderCameras(cameras, health);
+        if (!el("liveCameraImage").classList.contains("ready") || streamedCameraId !== selectedCameraId) {
+          restartLiveCameraStream();
+        }
         el("loadStatus").textContent = `Last refreshed ${new Date().toLocaleString()}`;
         el("errorBox").textContent = "Dashboard data stream healthy.";
       } catch (error) {
@@ -2472,6 +2689,10 @@ def dashboard_tv():
       }
     }
 
+    el("cameraSelector").addEventListener("change", (event) => {
+      selectLiveCamera(event.target.value);
+    });
+    el("refreshFrameButton").addEventListener("click", restartLiveCameraStream);
     el("refreshButton").addEventListener("click", loadTvDashboard);
     el("fullscreenButton").addEventListener("click", async () => {
       if (document.fullscreenElement) {

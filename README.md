@@ -141,12 +141,15 @@ Get-SmbShareAccess -Name "ituaicctv-evidence"
 - large readable status cards
 - LIVE AI MONITORING badge
 - latest AI alert panel
-- latest evidence preview using object-fit contain
+- selectable MJPEG Live Camera View proxied by the backend for one selected camera
+- latest evidence snapshot in a smaller historical evidence panel
 - compact event timeline
 - compact camera health strip
 - 30-second auto-refresh
 - Fullscreen button and F keyboard shortcut
 - R keyboard shortcut for refresh
+
+The browser does not connect to RTSP directly and never receives CCTV credentials. `/dashboard-tv` uses the backend MJPEG proxy for the selected live camera, while `/dashboard/live/{camera_id}/snapshot.jpg` remains available as a lightweight fallback/manual snapshot path. MJPEG is intended for one selected TV view, not all cameras at once; future scaling work should consider WebRTC or HLS.
 
 Dashboard navigation:
 

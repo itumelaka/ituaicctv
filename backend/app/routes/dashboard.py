@@ -1,5 +1,10 @@
-from fastapi import APIRouter, HTTPException, Query
-from app.camera_registry import get_camera_by_id, load_cameras, list_enabled_cameras
+import time
+
+import cv2
+from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi.responses import StreamingResponse
+from app.camera import _open_rtsp_stream, capture_frame_for_camera
+from app.camera_registry import build_rtsp_url, get_camera_by_id, load_cameras, list_enabled_cameras
 from app.dashboard_health import build_dashboard_health
 from app.event_log import list_evidence_images
 from app.event_log import read_all_event_logs
@@ -15,6 +20,11 @@ router = APIRouter(
     prefix="/dashboard",
     tags=["Dashboard"]
 )
+
+TV_MJPEG_FPS = 4
+TV_MJPEG_MAX_WIDTH = 960
+TV_MJPEG_FRAME_DELAY_SECONDS = 1 / TV_MJPEG_FPS
+TV_MJPEG_MAX_READ_FAILURES = 30
 
 
 @router.get("/summary")
@@ -148,3 +158,131 @@ def dashboard_camera_latest_event(camera_id: str):
 def dashboard_camera_stats(camera_id: str):
     _validate_dashboard_camera(camera_id)
     return get_dashboard_camera_event_stats(camera_id)
+
+
+@router.get("/live/{camera_id}/snapshot.jpg")
+def dashboard_live_camera_snapshot(camera_id: str):
+    try:
+        camera = get_camera_by_id(camera_id)
+    except KeyError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Camera not found: {camera_id}"
+        )
+
+    if not camera.get("enabled", True):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Camera is disabled: {camera_id}"
+        )
+
+    try:
+        frame = capture_frame_for_camera(camera)
+        success, buffer = cv2.imencode(".jpg", frame)
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Live snapshot unavailable for {camera_id}: {error}"
+        )
+
+    if not success:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to encode live snapshot for {camera_id}"
+        )
+
+    return Response(
+        content=buffer.tobytes(),
+        media_type="image/jpeg",
+        headers={"Cache-Control": "no-store"}
+    )
+
+
+def _get_enabled_dashboard_camera(camera_id: str) -> dict:
+    try:
+        camera = get_camera_by_id(camera_id)
+    except KeyError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Camera not found: {camera_id}"
+        )
+
+    if not camera.get("enabled", True):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Camera is disabled: {camera_id}"
+        )
+
+    return camera
+
+
+def _resize_for_tv_mjpeg(frame):
+    height, width = frame.shape[:2]
+
+    if width <= TV_MJPEG_MAX_WIDTH:
+        return frame
+
+    scale = TV_MJPEG_MAX_WIDTH / width
+    resized_height = max(1, int(height * scale))
+    return cv2.resize(
+        frame,
+        (TV_MJPEG_MAX_WIDTH, resized_height),
+        interpolation=cv2.INTER_AREA
+    )
+
+
+def _mjpeg_frame_generator(cap):
+    # MJPEG is intended for one selected TV camera, not all cameras at once.
+    failures = 0
+
+    try:
+        while True:
+            ok, frame = cap.read()
+
+            if not ok or frame is None:
+                failures += 1
+                if failures >= TV_MJPEG_MAX_READ_FAILURES:
+                    break
+                time.sleep(TV_MJPEG_FRAME_DELAY_SECONDS)
+                continue
+
+            failures = 0
+            frame = _resize_for_tv_mjpeg(frame)
+            success, buffer = cv2.imencode(".jpg", frame)
+
+            if not success:
+                time.sleep(TV_MJPEG_FRAME_DELAY_SECONDS)
+                continue
+
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n"
+                b"Cache-Control: no-store\r\n\r\n"
+                + buffer.tobytes()
+                + b"\r\n"
+            )
+            time.sleep(TV_MJPEG_FRAME_DELAY_SECONDS)
+    except GeneratorExit:
+        pass
+    finally:
+        cap.release()
+
+
+@router.get("/live/{camera_id}/stream.mjpg")
+def dashboard_live_camera_stream(camera_id: str):
+    camera = _get_enabled_dashboard_camera(camera_id)
+    rtsp_url = build_rtsp_url(camera)
+    cap = _open_rtsp_stream(rtsp_url)
+
+    if not cap.isOpened():
+        cap.release()
+        raise HTTPException(
+            status_code=503,
+            detail=f"Live stream unavailable for {camera_id}"
+        )
+
+    return StreamingResponse(
+        _mjpeg_frame_generator(cap),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers={"Cache-Control": "no-store"}
+    )

@@ -14,6 +14,7 @@
 - Evidence crop labels avoid implying face identity quality; low-resolution crops can be marked FACE ID NOT SUITABLE.
 - Dashboard is now the dark AI Command Center served by backend /dashboard-ui.
 - Fullscreen TV Command Center mode is available at /dashboard-tv.
+- TV mode includes a selectable backend-proxied MJPEG live camera panel; latest evidence is shown separately as historical proof.
 
 ## Current Production Backlog
 
@@ -176,6 +177,9 @@ Camera list:
 - [x] Add zoomed person evidence composite
 - [x] Add face-identity caution labels to person crop evidence
 - [x] Add /dashboard-tv fullscreen monitor mode
+- [x] Add selectable live camera snapshot panel to /dashboard-tv
+- [x] Add selectable MJPEG live camera stream to /dashboard-tv
+- [ ] Consider WebRTC or HLS upgrade for better TV stream scaling and lower CPU/network usage
 - [ ] Search by camera
 - [ ] Search by date
 - [ ] Search by event type

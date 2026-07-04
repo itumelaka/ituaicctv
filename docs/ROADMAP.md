@@ -20,6 +20,7 @@ Operational foundation:
 - New evidence is a composite full-frame-plus-zoom-crop image.
 - The person crop is review evidence only. Low-resolution sub-stream crops are not suitable proof for face identity recognition.
 - Fullscreen TV Command Center mode is available at `/dashboard-tv`.
+- TV mode now separates a selectable backend-proxied MJPEG live camera view from historical evidence snapshots.
 
 ## Forward Backlog
 
@@ -218,9 +219,12 @@ Planned features:
 - Section scroll navigation - completed
 - Evidence gallery with clearer composite evidence - completed
 - Fullscreen TV Command Center mode at /dashboard-tv - completed
+- Selectable live camera snapshot panel in TV mode - completed
+- Selectable backend-proxied MJPEG live camera stream in TV mode - completed
 - Search and filter
 - Human review actions
 - TV mode visual tuning after wall-monitor review
+- Future WebRTC/HLS live stream scaling or high-resolution event snapshot path
 - Future face recognition view
 - Future plate recognition view
 
