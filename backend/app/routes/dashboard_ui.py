@@ -792,6 +792,7 @@ def dashboard_ui():
           <button type="button" class="quick-link" data-scroll-target="latest-events-section">Latest events</button>
           <button type="button" class="quick-link" data-scroll-target="evidence-section">Evidence</button>
           <button type="button" class="quick-link" data-scroll-target="cameras-section">Cameras</button>
+          <a class="quick-link" href="/dashboard-tv" title="Fullscreen TV Command Center">TV Mode</a>
         </nav>
       </div>
 
