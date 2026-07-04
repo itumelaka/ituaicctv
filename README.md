@@ -4,6 +4,140 @@ Backend AI CCTV detection project for ITU Melaka using existing Hikvision CCTV i
 
 The project is currently focused on local backend development, RTSP camera access, YOLO detection, person-only detection, event decision, event logging, and evidence snapshot preparation.
 
+## Current Production Status
+
+Repository and runtime:
+
+- GitHub repo: https://github.com/itumelaka/ituaicctv
+- Production server path: C:\ituaicctv
+- Local laptop development path: C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection
+- Production dashboard: http://192.168.1.254:8000/dashboard-ui
+- GitHub Pages is no longer the primary production dashboard. Daily operation uses the backend-served /dashboard-ui page.
+
+Latest deployed checkpoints:
+
+- a04f8b6 feat: add live dashboard effects and zoomed evidence
+- 9ac95c5 feat: redesign dashboard command center UI
+- a65e817 docs: add safe face detection and recognition roadmap
+- 016cc02 feat: add person detection confidence threshold
+- 657f110 feat: make dashboard nav scroll to sections
+
+Production server status:
+
+- Windows Service: ITUAICCTVBackend
+- Service status: Running
+- Service StartType: Automatic
+- Backend listens on port 8000 and should auto-start after Windows Server reboot.
+- Task Scheduler task: ITU AI CCTV Person Monitor
+- Task state: Ready
+- Scheduler Python: C:\ituaicctv\.venv312\Scripts\python.exe
+- Scheduler scans 9 enabled cameras. Latest logs show status ok, enabled=9, failed=0.
+
+Camera and network status:
+
+- Total cameras: 10
+- Enabled cameras: 9
+- Disabled/offline cameras: 1
+- Disabled/offline: block_f_cam_8 / ITU BLOCK F CAM8, because ping and RTSP port 554 are not reachable.
+- All 9 enabled cameras are active based on recent health checks.
+- Production server LAN IP: 192.168.1.254
+- GOVNET NIC: 10.65.28.254
+- CCTV subnet: 192.168.40.0/24
+- UDM Pro allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
+- Windows Firewall allows inbound TCP 8000 for dashboard/API.
+
+## Verify After Server Restart
+
+Run these on the Windows Server:
+
+```powershell
+Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+```
+
+Expected:
+
+- ITUAICCTVBackend is Running and Automatic.
+- ITU AI CCTV Person Monitor is Ready.
+- /dashboard/health returns camera totals, scheduler latest run/summary, and per-camera health.
+
+## Evidence Share Usage
+
+Production evidence:
+
+- Server folder: C:\ituaicctv\backend\data\evidence
+- SMB share: \\192.168.1.254\ituaicctv-evidence
+- Normal share access is read-only for Everyone.
+- Backend/server can still save evidence locally.
+- Use File Explorer for browsing if the browser shows a directory index.
+
+Open from laptop:
+
+```powershell
+explorer "\\192.168.1.254\ituaicctv-evidence"
+```
+
+Copy laptop evidence to server only during a controlled maintenance window:
+
+```powershell
+$source = "C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection\backend\data\evidence"
+$dest = "\\192.168.1.254\ituaicctv-evidence"
+robocopy $source $dest *.jpg /E /XO /R:2 /W:2
+```
+
+Temporary server-side write access, then revert to read-only:
+
+```powershell
+Grant-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -AccessRight Change -Force
+icacls "C:\ituaicctv\backend\data\evidence" /grant "*S-1-1-0:(OI)(CI)M"
+
+Revoke-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -Force
+Grant-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -AccessRight Read -Force
+icacls "C:\ituaicctv\backend\data\evidence" /remove:g "*S-1-1-0"
+Get-SmbShareAccess -Name "ituaicctv-evidence"
+```
+
+## Exit Codes
+
+- 0 = ok / no attention required / no person detected.
+- 2 = attention required / person detected; this is an operational alert, not a crash.
+- Other non-zero failures should be checked in backend/data/task-logs/monitor_person_all.log.
+
+## Latest AI Features
+
+- YOLO person detection from Hikvision RTSP streams.
+- PERSON_CONFIDENCE_THRESHOLD defaults to 0.60. This reduces false positives but can miss distant or low-light people.
+- Telegram person alerts include confidence and active threshold when available.
+- New person evidence uses a clearer composite image: full CCTV frame with bounding boxes plus a zoom crop of the highest-confidence person.
+- Composite evidence keeps the existing filename pattern: person_detected_<camera_id>_<timestamp>.jpg
+- If composite generation fails, the fallback is the boxed full-frame evidence image.
+- Telegram sends the saved evidence image, so new detections use the clearer composite.
+
+## Latest Dashboard UI
+
+/dashboard-ui is now a dark AI Command Center dashboard with:
+
+- LIVE AI MONITORING pulsing indicator
+- animated scan line
+- summary cards
+- AI Status / Health section
+- latest AI event card
+- event timeline
+- evidence gallery
+- camera grid cards
+- section scroll navigation
+- Refresh now loading state
+- hover/glow effects
+- person-detected pulse/glow
+- prefers-reduced-motion support
+
+Dashboard navigation:
+
+- Refresh now reloads dashboard data.
+- Summary / Health / Latest events / Evidence / Cameras scroll to same-page sections.
+- Copy Evidence Folder Path may be blocked by browser clipboard permissions over HTTP; manually copy \\192.168.1.254\ituaicctv-evidence if needed.
+
 ## Current Checkpoint
 
 Latest confirmed commit:

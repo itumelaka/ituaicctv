@@ -1,5 +1,45 @@
 # ITU AI CCTV - TODO List
 
+## Current Production TODO Context
+
+- Production backend path: C:\ituaicctv
+- Production dashboard: http://192.168.1.254:8000/dashboard-ui
+- Backend service ITUAICCTVBackend is Running and Automatic.
+- Task Scheduler task ITU AI CCTV Person Monitor is Ready.
+- Scheduler uses C:\ituaicctv\.venv312\Scripts\python.exe.
+- Scheduler scans 9 enabled cameras; latest logs show status ok and failed 0.
+- Exit code 0 = ok/no attention. Exit code 2 = attention/person detected, not a crash.
+- Evidence is saved only when person_detected=True.
+- New evidence image behavior: full-frame boxes plus zoom crop of highest-confidence person.
+- Dashboard is now the dark AI Command Center served by backend /dashboard-ui.
+
+## Current Production Backlog
+
+- [ ] Tune person threshold per camera.
+- [ ] Add minimum bounding box size filtering for person detections.
+- [ ] Add false-positive review labels in dashboard.
+- [ ] Improve dashboard confidence display and review workflow.
+- [ ] Add polygon zone intrusion detection per camera.
+- [ ] Add restricted zone alerts.
+- [ ] Add line crossing detection with direction.
+- [ ] Add loitering duration alerts.
+- [ ] Add vehicle detection / parking monitoring.
+- [ ] Add number plate recognition as future module.
+- [ ] Add camera health AI for blur/dark/blocked/angle changed/stale frame.
+- [ ] Add human review actions: true positive / false positive / ignore / download.
+- [ ] Add AI risk score using confidence, zone, after-hours, and camera importance.
+- [ ] Add after-hours detection.
+- [ ] Add fullscreen command center / TV mode.
+- [ ] Continue face detection and safe opt-in face recognition roadmap.
+
+## Production Verification Commands
+
+```powershell
+Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+```
+
 ## Current Checkpoint
 
 Latest confirmed commit:
@@ -125,6 +165,9 @@ Camera list:
 - [x] Add stale health badge support
 - [x] Document active/stale/no_recent_event/disabled/offline health logic
 - [x] Dashboard stale/offline visual polish
+- [x] Redesign /dashboard-ui as dark AI Command Center
+- [x] Add live dashboard visual effects
+- [x] Add zoomed person evidence composite
 - [ ] Search by camera
 - [ ] Search by date
 - [ ] Search by event type

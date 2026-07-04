@@ -1,5 +1,29 @@
 # ITU AI CCTV - Security Notes
 
+## Current Production Security Posture
+
+- Production backend path: C:\ituaicctv
+- Production dashboard: http://192.168.1.254:8000/dashboard-ui
+- Backend service ITUAICCTVBackend is Running and Automatic.
+- Task Scheduler task ITU AI CCTV Person Monitor is Ready.
+- Backend listens on port 8000.
+- Windows Firewall allows inbound TCP 8000 for dashboard/API.
+- UDM Pro allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
+- Evidence share: \\192.168.1.254\ituaicctv-evidence
+- Normal evidence share access: Read for Everyone.
+- Temporary Change access is allowed only during controlled copy operations and must be reverted to Read.
+- NTFS Everyone Modify was removed after copy cleanup.
+- Browser may show a directory index if opening the UNC/share path; use File Explorer for folder browsing.
+
+Verify production access:
+
+```powershell
+Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+Get-SmbShareAccess -Name "ituaicctv-evidence"
+```
+
 ## Credentials
 
 Never commit real CCTV usernames or passwords.
@@ -72,6 +96,30 @@ Evidence images may contain real CCTV footage. Handle them carefully:
 - Apply a retention policy before production use.
 
 Evidence images are saved only for person_detected=True events. no_person events usually have no evidence image.
+
+## Evidence Share Maintenance
+
+Copy laptop evidence to the server only when needed:
+
+```powershell
+$source = "C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection\backend\data\evidence"
+$dest = "\\192.168.1.254\ituaicctv-evidence"
+robocopy $source $dest *.jpg /E /XO /R:2 /W:2
+```
+
+If write access is needed temporarily, grant it on the server and revert immediately after copying:
+
+```powershell
+Grant-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -AccessRight Change -Force
+icacls "C:\ituaicctv\backend\data\evidence" /grant "*S-1-1-0:(OI)(CI)M"
+
+Revoke-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -Force
+Grant-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -AccessRight Read -Force
+icacls "C:\ituaicctv\backend\data\evidence" /remove:g "*S-1-1-0"
+Get-SmbShareAccess -Name "ituaicctv-evidence"
+```
+
+Do not leave temporary share Change access or NTFS Everyone Modify in place.
 
 ## Face Recognition
 

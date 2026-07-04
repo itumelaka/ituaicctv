@@ -1,6 +1,6 @@
 # ITU AI CCTV - Windows Task Scheduler
 
-Last updated: 2026-07-03
+Last updated: 2026-07-04
 
 ## Current Scheduler Status
 
@@ -12,6 +12,7 @@ Current state:
 
 - Registered on the Windows Server on 2026-07-03 via scripts/server/setup_task_scheduler.ps1
 - Confirmed Ready on the production Windows Server
+- Current production state confirmed Ready
 - Uses the multi-camera hidden VBS launcher
 - Checks enabled cameras from backend/config/cameras.json
 - BAT launcher returns 0 to Task Scheduler so person detection or camera check results do not appear as Task Scheduler failures
@@ -32,14 +33,28 @@ C:\ituaicctv\.venv312\Scripts\python.exe
 
 Latest confirmed successful server check-all run:
 
-- Run started: Fri 03/07/2026 22:59:30
-- Run ended: Fri 03/07/2026 23:00:03
 - Enabled cameras: 9
-- Attention/person: 0
-- No action/no_person: 9
 - Failed: 0
-- Exit code: 0
+- Latest logs show status ok
+- Exit code 0 means no person detected / no action
+- Exit code 2 means attention required / person detected, not a crash
 - YOLOv8n downloaded successfully on the server during the first successful run
+
+## Reboot Behavior
+
+- Backend service `ITUAICCTVBackend` is confirmed `Running`.
+- Service `StartType` is confirmed `Automatic`.
+- Backend/API/dashboard should auto-start after Windows Server reboot.
+- Task `ITU AI CCTV Person Monitor` is confirmed `Ready`.
+- Scheduler should continue using `C:\ituaicctv\.venv312\Scripts\python.exe`.
+
+Verify after restart:
+
+```powershell
+Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+```
 
 ## Scheduler Scripts
 
@@ -87,9 +102,9 @@ Current camera summary:
 
 The Python monitor script can report:
 
-- 0 = no person detected
+- 0 = ok / no attention required / no person detected
 - 1 = one or more camera checks failed
-- 2 = person detected
+- 2 = attention required / person detected, not a crash
 
 The BAT launcher returns 0 to Windows Task Scheduler. This is intentional because person detection is an operational event, not a failed scheduled task.
 
@@ -155,7 +170,7 @@ Operational notes:
 
 Check backend service:
 
-Get-Service ITUAICCTVBackend
+Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
 
 Check backend listening port:
 
@@ -186,6 +201,7 @@ Disable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
 Start the task manually:
 
 Start-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+Start-Sleep -Seconds 60
 
 Read scheduler log:
 

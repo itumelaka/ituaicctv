@@ -10,31 +10,74 @@ Baca dulu sebelum start:
 - NOTA: Windows Server selalunya TAKDE 'winget'. Guide ni guna
   cara download manual supaya selamat pada mana-mana server.
 
-STATUS PRODUCTION TERKINI (selepas commit 8352f37):
+STATUS PRODUCTION TERKINI:
+- Repo GitHub:
+  https://github.com/itumelaka/ituaicctv
 - Backend production berjalan di Windows Server: C:\ituaicctv
+- Local laptop dev path:
+  C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection
 - IP LAN server: 192.168.1.254
 - Dashboard production LAN / Teleport:
   http://192.168.1.254:8000/dashboard-ui
 - URL 127.0.0.1 hanya untuk browser di mesin yang sedang run backend.
 - GitHub Pages bukan dashboard production utama; operasi harian guna
   dashboard backend Windows Server.
+- Latest important deployed commits:
+  a04f8b6 feat: add live dashboard effects and zoomed evidence
+  9ac95c5 feat: redesign dashboard command center UI
+  a65e817 docs: add safe face detection and recognition roadmap
+  016cc02 feat: add person detection confidence threshold
+  657f110 feat: make dashboard nav scroll to sections
+- Windows Service: ITUAICCTVBackend
+- Service status: Running
+- Service StartType: Automatic
+- Backend/API/dashboard patut auto-start selepas Windows Server reboot.
 - Task Scheduler: ITU AI CCTV Person Monitor, status Ready.
 - Script task: backend/scripts/run_monitor_person_all_once.bat
 - Hidden launcher: backend/scripts/run_monitor_person_all_once_hidden.vbs
 - Log task: C:\ituaicctv\backend\data\task-logs\monitor_person_all.log
 - Python task: C:\ituaicctv\.venv312\Scripts\python.exe
-- Run check-all server berjaya: enabled=9, person=0, no_person=9,
-  failed=0, exit code 0.
+- Scheduler scan 9 enabled cameras.
+- Latest log: status ok, enabled=9, failed=0.
+- Exit code 0 = ok / no attention / no person detected.
+- Exit code 2 = attention required / person detected, bukan crash.
 - Evidence hanya disimpan bila person_detected=True. Event no_person
   biasanya evidence_path=null dan tiada gambar evidence.
+- Evidence baru guna composite lebih jelas:
+  full CCTV frame dengan bounding box + zoom crop person confidence tertinggi.
+- Filename evidence kekal:
+  person_detected_<camera_id>_<timestamp>.jpg
+- Jika composite gagal, fallback ialah full-frame dengan bounding box.
 - Folder evidence production:
   C:\ituaicctv\backend\data\evidence
 - Share evidence:
   \\192.168.1.254\ituaicctv-evidence
+- Share evidence normal: Everyone Read sahaja.
+- Temporary Change access hanya untuk copy evidence manual dari laptop ke
+  server, kemudian revert semula ke Read.
+- NTFS Everyone Modify telah dibuang selepas copy cleanup.
 - Folder log service:
   C:\ituaicctv\backend\data\service-logs
+- Camera total: 10
+- Enabled: 9
+- Disabled/offline: 1
+- Disabled/offline: block_f_cam_8 / ITU BLOCK F CAM8
+- Reason: ping dan RTSP port 554 tidak reachable.
+- All 9 enabled cameras active based on recent health checks.
+- PERSON_CONFIDENCE_THRESHOLD default: 0.60
+- Telegram alert include confidence dan threshold jika available.
+- Dashboard /dashboard-ui sekarang dark AI Command Center dengan LIVE AI
+  MONITORING, scan line, summary cards, AI Status / Health, latest AI event,
+  event timeline, evidence gallery, camera grid, section scroll navigation,
+  Refreshing state, hover/glow effects, person-detected pulse/glow, dan
+  prefers-reduced-motion support.
 - Laptop jangan run scheduler production jika server ini ialah backend
   production.
+
+SEMAK SELEPAS SERVER RESTART:
+  Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+  Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+  Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
 
 NETWORK PRODUCTION:
 - Server ada dua NIC:

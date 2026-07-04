@@ -1,6 +1,95 @@
 # ITU AI CCTV - Project Status
 
-Last updated: 2026-07-03
+Last updated: 2026-07-04
+
+## Current Production Status
+
+Repository:
+
+- GitHub repo: https://github.com/itumelaka/ituaicctv
+- Production server path: C:\ituaicctv
+- Local laptop dev path: C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection
+- Production dashboard: http://192.168.1.254:8000/dashboard-ui
+- GitHub Pages is no longer the primary dashboard. Production dashboard is served by backend /dashboard-ui.
+
+Latest important deployed commits:
+
+- a04f8b6 feat: add live dashboard effects and zoomed evidence
+- 9ac95c5 feat: redesign dashboard command center UI
+- a65e817 docs: add safe face detection and recognition roadmap
+- 016cc02 feat: add person detection confidence threshold
+- 657f110 feat: make dashboard nav scroll to sections
+
+Production service and scheduler:
+
+- Windows Server backend service name: ITUAICCTVBackend
+- Service status: Running
+- Service StartType: Automatic
+- Backend listens on port 8000 and should auto-start after Windows Server reboot.
+- Task Scheduler task: ITU AI CCTV Person Monitor
+- Task state: Ready
+- Scheduler Python: C:\ituaicctv\.venv312\Scripts\python.exe
+- Scheduler scans 9 enabled cameras.
+- Latest logs show status ok, enabled cameras 9, failed 0.
+- Exit code 0 means no person detected / no action.
+- Exit code 2 means attention required / person detected, not a crash.
+
+Camera and health:
+
+- Total cameras: 10
+- Enabled cameras: 9
+- Disabled/offline cameras: 1
+- Disabled/offline: block_f_cam_8 / ITU BLOCK F CAM8
+- Disabled reason: ping and RTSP port 554 are not reachable.
+- All 9 enabled cameras are active based on recent health checks.
+- Current stale threshold: 120 minutes.
+
+Network:
+
+- Production server LAN IP: 192.168.1.254
+- GOVNET NIC: 10.65.28.254
+- CCTV subnet: 192.168.40.0/24
+- UDM Pro firewall rule allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
+- Windows Firewall allows inbound TCP 8000 for dashboard/API.
+- Teleport/laptop can access http://192.168.1.254:8000/dashboard-ui.
+
+Evidence:
+
+- Server evidence folder: C:\ituaicctv\backend\data\evidence
+- SMB share: \\192.168.1.254\ituaicctv-evidence
+- Share is read-only for Everyone under normal operation.
+- Temporary Change access can be granted only when manually copying evidence from laptop to server, then should be reverted to Read.
+- NTFS Everyone Modify was removed after copy cleanup.
+- Backend/server can still save evidence locally.
+- Laptop evidence was successfully copied to server using robocopy.
+
+Current AI and dashboard features:
+
+- YOLO person detection from Hikvision RTSP streams.
+- PERSON_CONFIDENCE_THRESHOLD default is 0.60.
+- Telegram person alerts include confidence and threshold when available.
+- Evidence image now uses clearer composite: full CCTV frame with bounding boxes plus zoomed crop of highest-confidence person.
+- /dashboard-ui is now a dark AI Command Center with LIVE AI MONITORING indicator, scan line, summary cards, AI Status / Health, latest AI event, event timeline, evidence gallery, camera cards, section scroll navigation, refresh loading state, hover/glow effects, person-detected pulse/glow, and prefers-reduced-motion support.
+
+## How to Verify After Server Restart
+
+```powershell
+Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+```
+
+Optional operational checks:
+
+```powershell
+Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
+Start-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+Start-Sleep -Seconds 60
+Get-Content C:\ituaicctv\backend\data\task-logs\monitor_person_all.log -Tail 160
+Get-ChildItem C:\ituaicctv\backend\data\evidence |
+  Sort-Object LastWriteTime -Descending |
+  Select-Object -First 10 Name, LastWriteTime, Length
+```
 
 ## Deployment Status
 

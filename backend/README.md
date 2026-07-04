@@ -2,6 +2,49 @@
 
 FastAPI backend for CCTV RTSP testing, snapshot capture, YOLO detection, person-only detection, event decision, local logging, evidence snapshot, multi-camera monitoring, and dashboard UI.
 
+## Current Production Runtime
+
+- Production path: `C:\ituaicctv`
+- Development path: `C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection`
+- Production dashboard: `http://192.168.1.254:8000/dashboard-ui`
+- Backend service: `ITUAICCTVBackend`, confirmed `Running`, `Automatic`
+- Scheduler task: `ITU AI CCTV Person Monitor`, confirmed `Ready`
+- Scheduler Python: `C:\ituaicctv\.venv312\Scripts\python.exe`
+- Enabled cameras scanned: 9
+- Disabled/offline camera: `block_f_cam_8 / ITU BLOCK F CAM8`
+- Evidence share: `\\192.168.1.254\ituaicctv-evidence`
+
+Verify after server restart:
+
+```powershell
+Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+```
+
+## Latest Evidence Behavior
+
+Person evidence remains one saved JPEG using the existing filename pattern:
+
+```text
+person_detected_<camera_id>_<timestamp>.jpg
+```
+
+For new detections, the evidence image is a clearer composite:
+
+- full CCTV frame with bounding boxes
+- zoomed crop of the highest-confidence person
+- crop label with class and confidence
+- fallback to boxed full-frame evidence if composite generation fails
+
+Telegram sends the saved evidence image, so new alerts use the clearer composite image automatically.
+
+## Scheduler Exit Codes
+
+- `0` = ok / no attention required / no person detected
+- `2` = attention required / person detected, not a crash
+- Other non-zero failures should be checked in `C:\ituaicctv\backend\data\task-logs\monitor_person_all.log`
+
 ## API Endpoints
 
 ### Health

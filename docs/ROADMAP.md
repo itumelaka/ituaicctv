@@ -1,5 +1,39 @@
 # ITU AI CCTV - Roadmap
 
+## Current Production Roadmap Context
+
+Production is now running from `C:\ituaicctv` on the Windows Server with backend dashboard at `http://192.168.1.254:8000/dashboard-ui`. GitHub Pages is no longer the primary dashboard. Latest deployed work includes:
+
+- a04f8b6 feat: add live dashboard effects and zoomed evidence
+- 9ac95c5 feat: redesign dashboard command center UI
+- a65e817 docs: add safe face detection and recognition roadmap
+- 016cc02 feat: add person detection confidence threshold
+- 657f110 feat: make dashboard nav scroll to sections
+
+Operational foundation:
+
+- Backend service `ITUAICCTVBackend` is Running and Automatic.
+- Scheduler task `ITU AI CCTV Person Monitor` is Ready.
+- Scheduler scans 9 enabled cameras with latest logs status ok and failed=0.
+- One camera remains disabled/offline: `block_f_cam_8 / ITU BLOCK F CAM8`.
+- Evidence is saved only for `person_detected=True`.
+- New evidence is a composite full-frame-plus-zoom-crop image.
+
+## Forward Backlog
+
+1. Person detection reliability: per-camera thresholds, minimum bounding box size, false-positive review labels, dashboard confidence display.
+2. Zone intrusion detection: polygon zones per camera and restricted zone alerts.
+3. Line crossing detection: virtual line and direction.
+4. Loitering detection: duration-based alert.
+5. Vehicle detection and parking monitoring.
+6. Number plate recognition as a future module.
+7. Camera health AI: blur, dark, blocked, angle changed, stale frame.
+8. Human review workflow: true positive, false positive, ignore, download.
+9. AI risk score: confidence, zone, after-hours, camera importance.
+10. After-hours detection.
+11. Fullscreen command center / TV mode.
+12. Face detection and safe opt-in face recognition roadmap.
+
 ## Current Checkpoint
 
 Latest confirmed commit:
@@ -153,7 +187,7 @@ Planned features:
 
 ## Phase 6 - Dashboard
 
-Status: In progress
+Status: In progress / production command center live
 
 Goal:
 
@@ -175,7 +209,13 @@ Planned features:
 - Scheduler log health summary - completed
 - Stale camera health logic - completed
 - Dashboard stale/offline visual polish - completed
+- AI Command Center dark UI - completed
+- LIVE AI MONITORING indicator and live visual effects - completed
+- Section scroll navigation - completed
+- Evidence gallery with clearer composite evidence - completed
 - Search and filter
+- Human review actions
+- Fullscreen command center / TV mode
 - Future face recognition view
 - Future plate recognition view
 
