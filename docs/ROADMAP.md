@@ -4,18 +4,21 @@
 
 Production is now running from `C:\ituaicctv` on the Windows Server with backend dashboard at `http://192.168.1.254:8000/dashboard-ui`. GitHub Pages is no longer the primary dashboard. Latest deployed work includes:
 
-- a04f8b6 feat: add live dashboard effects and zoomed evidence
-- 9ac95c5 feat: redesign dashboard command center UI
-- a65e817 docs: add safe face detection and recognition roadmap
-- 016cc02 feat: add person detection confidence threshold
-- 657f110 feat: make dashboard nav scroll to sections
+- bd556ec fix: correct and rename additional CCTV cameras
+- aa62e5b feat: add additional CCTV cameras to inventory
+- 7b8271e fix: add tv dashboard link to normal dashboard
+- 6da444a docs: document tv dashboard mjpeg live stream
+- 073424a fix: improve dashboard tv live camera selection
+- b89afba feat: add mjpeg live camera stream to tv dashboard
 
 Operational foundation:
 
 - Backend service `ITUAICCTVBackend` is Running and Automatic.
 - Scheduler task `ITU AI CCTV Person Monitor` is Ready.
-- Scheduler scans 9 enabled cameras with latest logs status ok and failed=0.
+- Camera registry has 13 known cameras, 12 enabled cameras, and 1 disabled/offline camera.
+- Latest confirmed scheduler logs before adding the newly labelled cameras show status ok, enabled=9, failed=0.
 - One camera remains disabled/offline: `block_f_cam_8 / ITU BLOCK F CAM8`.
+- Newly confirmed enabled cameras: `kuarantin_cam_11` / `192.168.40.23`, `biosekuriti_cam_12` / `192.168.40.24`, and `makmal_cam_13` / `192.168.40.25`.
 - Evidence is saved only for `person_detected=True`.
 - New evidence is a composite full-frame-plus-zoom-crop image.
 - The person crop is review evidence only. Low-resolution sub-stream crops are not suitable proof for face identity recognition.
@@ -57,7 +60,7 @@ Checkpoint summary:
 
 - Backend FastAPI works.
 - Hikvision RTSP works.
-- Multi-camera config has 10 cameras: 9 enabled and 1 disabled.
+- Multi-camera config has 13 cameras: 12 enabled and 1 disabled/offline.
 - Disabled camera: block_f_cam_8 / 192.168.40.20.
 - Disabled camera reason: ping and RTSP port 554 are not reachable.
 - GET /dashboard-ui is usable.
@@ -112,8 +115,8 @@ Completed features:
 
 Current camera summary:
 
-- Total cameras: 10
-- Enabled cameras: 9
+- Total cameras: 13
+- Enabled cameras: 12
 - Disabled cameras: 1
 - block_f_cam_8 / 192.168.40.20 is disabled because ping and RTSP port 554 are not reachable
 
@@ -517,12 +520,12 @@ This supports laptop environments where the old .venv is missing or broken but .
 
 Current expected healthy dashboard state after a successful scheduler run:
 
-- total cameras: 10
-- enabled: 9
+- total cameras: 13
+- enabled: 12
 - disabled/offline: 1
-- active: 9
+- active: 12 after the newly labelled cameras are confirmed by health checks
 - stale: 0
-- latest scheduler summary: status=ok, mode=check_all, enabled=9, person=0, no_person=9, failed=0
+- latest confirmed scheduler summary before adding the newly labelled cameras: status=ok, mode=check_all, enabled=9, person=0, no_person=9, failed=0
 
 Next operational decisions:
 

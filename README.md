@@ -13,15 +13,18 @@ Repository and runtime:
 - Local laptop development path: C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection
 - Production dashboard: http://192.168.1.254:8000/dashboard-ui
 - Fullscreen TV command center: http://192.168.1.254:8000/dashboard-tv
+- Normal dashboard includes a TV Mode link to /dashboard-tv.
+- TV command center includes a Normal dashboard link back to /dashboard-ui.
 - GitHub Pages is no longer the primary production dashboard. Daily operation uses the backend-served /dashboard-ui page.
 
 Latest deployed checkpoints:
 
-- a04f8b6 feat: add live dashboard effects and zoomed evidence
-- 9ac95c5 feat: redesign dashboard command center UI
-- a65e817 docs: add safe face detection and recognition roadmap
-- 016cc02 feat: add person detection confidence threshold
-- 657f110 feat: make dashboard nav scroll to sections
+- bd556ec fix: correct and rename additional CCTV cameras
+- aa62e5b feat: add additional CCTV cameras to inventory
+- 7b8271e fix: add tv dashboard link to normal dashboard
+- 6da444a docs: document tv dashboard mjpeg live stream
+- 073424a fix: improve dashboard tv live camera selection
+- b89afba feat: add mjpeg live camera stream to tv dashboard
 
 Production server status:
 
@@ -42,6 +45,7 @@ Camera and network status:
 - Disabled/offline: block_f_cam_8 / ITU BLOCK F CAM8 / 192.168.40.20, because ping and RTSP port 554 are not reachable.
 - Previously confirmed enabled cameras were active based on recent health checks; kuarantin_cam_11, biosekuriti_cam_12, and makmal_cam_13 should be verified after the next scheduler or dashboard health run.
 - Production server LAN IP: 192.168.1.254
+- Server source interface to CCTV subnet: Ethernet 2 / 192.168.1.254
 - GOVNET NIC: 10.65.28.254
 - CCTV subnet: 192.168.40.0/24
 - UDM Pro allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
@@ -54,7 +58,8 @@ Run these on the Windows Server:
 ```powershell
 Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
 Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
-Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
 ```
 
 Expected:
@@ -62,6 +67,18 @@ Expected:
 - ITUAICCTVBackend is Running and Automatic.
 - ITU AI CCTV Person Monitor is Ready.
 - /dashboard/health returns camera totals, scheduler latest run/summary, and per-camera health.
+
+Manual scheduler and evidence checks:
+
+```powershell
+Start-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+Start-Sleep -Seconds 120
+Get-Content C:\ituaicctv\backend\data\task-logs\monitor_person_all.log -Tail 220
+Get-ChildItem C:\ituaicctv\backend\data\evidence |
+  Sort-Object LastWriteTime -Descending |
+  Select-Object -First 10 Name, LastWriteTime, Length
+explorer "\\192.168.1.254\ituaicctv-evidence"
+```
 
 ## Evidence Share Usage
 
@@ -154,8 +171,10 @@ The browser does not connect to RTSP directly and never receives CCTV credential
 Production TV and live-view test URLs:
 
 - TV dashboard: http://192.168.1.254:8000/dashboard-tv
-- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/block_e_cam_2/stream.mjpg
-- Snapshot fallback: http://192.168.1.254:8000/dashboard/live/block_e_cam_2/snapshot.jpg
+- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg
+- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/biosekuriti_cam_12/stream.mjpg
+- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/makmal_cam_13/stream.mjpg
+- Snapshot fallback: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg
 
 The MJPEG stream endpoint returns `multipart/x-mixed-replace` and does not run YOLO, save evidence, write event logs, or send Telegram alerts. Latest Evidence Snapshot on `/dashboard-tv` is historical proof and is separate from the live feed.
 

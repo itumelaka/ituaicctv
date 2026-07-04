@@ -6,11 +6,14 @@ Dokumen ini menerangkan garis panduan keselamatan untuk projek **Hikvision AI CC
 
 - Production backend path: `C:\ituaicctv`
 - Production dashboard: `http://192.168.1.254:8000/dashboard-ui`
+- TV command center dashboard: `http://192.168.1.254:8000/dashboard-tv`
 - GitHub Pages is no longer the primary production dashboard.
 - Backend service `ITUAICCTVBackend` is confirmed `Running` and `Automatic`.
 - Task Scheduler task `ITU AI CCTV Person Monitor` is confirmed `Ready`.
 - Windows Firewall allows inbound TCP `8000` for dashboard/API access.
 - UDM Pro allows server `192.168.1.254` to CCTV subnet `192.168.40.0/24` on TCP `554`.
+- Current camera inventory has 13 known cameras, 12 enabled cameras, and 1 disabled/offline camera: `block_f_cam_8 / 192.168.40.20`.
+- The mistaken `192.168.40.26` camera entry is not part of the current inventory.
 - Evidence share: `\\192.168.1.254\ituaicctv-evidence`
 - Evidence share should normally be read-only for Everyone.
 - Temporary Change access for evidence copying must be reverted to Read after copying.
@@ -21,7 +24,8 @@ Verify service, scheduler, and health:
 ```powershell
 Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
 Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
-Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
 ```
 
 ## Prinsip Keselamatan
@@ -61,6 +65,7 @@ TELEGRAM_CHAT_ID=change_this_chat_id
 - Hadkan akses kepada IP server AI sahaja jika boleh.
 - Jangan expose port RTSP/NVR ke internet.
 - Jika akses luar diperlukan, gunakan VPN.
+- Browser dashboard tidak patut akses RTSP terus. `/dashboard-tv` guna backend MJPEG proxy `/dashboard/live/{camera_id}/stream.mjpg` supaya RTSP URL dan credential CCTV tidak masuk frontend.
 
 ## Network Security
 

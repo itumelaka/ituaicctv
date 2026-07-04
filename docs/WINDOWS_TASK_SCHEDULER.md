@@ -36,6 +36,7 @@ Latest confirmed successful server check-all run:
 - Enabled cameras: 9
 - Failed: 0
 - Latest logs show status ok
+- Current camera registry now has 12 enabled cameras after the newly labelled cameras were added.
 - Exit code 0 means no person detected / no action
 - Exit code 2 means attention required / person detected, not a crash
 - YOLOv8n downloaded successfully on the server during the first successful run
@@ -53,7 +54,8 @@ Verify after restart:
 ```powershell
 Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
 Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
-Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
 ```
 
 ## Scheduler Scripts
@@ -92,8 +94,8 @@ The multi-camera script checks all enabled cameras from the camera registry.
 
 Current camera summary:
 
-- Total cameras: 10
-- Enabled cameras: 9
+- Total cameras: 13
+- Enabled cameras: 12
 - Disabled cameras: 1
 - Disabled camera: block_f_cam_8 / 192.168.40.20
 - Reason: ping and RTSP port 554 are not reachable
@@ -143,10 +145,10 @@ Current expected healthy dashboard state after a successful scheduler run:
 
 - Dashboard UI: http://192.168.1.254:8000/dashboard-ui
 - Health endpoint: http://192.168.1.254:8000/dashboard/health
-- total cameras: 10
-- enabled: 9
+- total cameras: 13
+- enabled: 12
 - disabled/offline: 1
-- active: 9
+- active: 12 after the newly labelled cameras are confirmed by health checks
 - stale: 0
 - latest scheduler summary: status=ok, mode=check_all, enabled=9, person=0, no_person=9, failed=0
 

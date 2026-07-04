@@ -19,15 +19,20 @@ STATUS PRODUCTION TERKINI:
 - IP LAN server: 192.168.1.254
 - Dashboard production LAN / Teleport:
   http://192.168.1.254:8000/dashboard-ui
+- TV Command Center:
+  http://192.168.1.254:8000/dashboard-tv
+- Dashboard normal ada link TV Mode ke /dashboard-tv, dan TV dashboard ada
+  link balik ke /dashboard-ui.
 - URL 127.0.0.1 hanya untuk browser di mesin yang sedang run backend.
 - GitHub Pages bukan dashboard production utama; operasi harian guna
   dashboard backend Windows Server.
 - Latest important deployed commits:
-  a04f8b6 feat: add live dashboard effects and zoomed evidence
-  9ac95c5 feat: redesign dashboard command center UI
-  a65e817 docs: add safe face detection and recognition roadmap
-  016cc02 feat: add person detection confidence threshold
-  657f110 feat: make dashboard nav scroll to sections
+  bd556ec fix: correct and rename additional CCTV cameras
+  aa62e5b feat: add additional CCTV cameras to inventory
+  7b8271e fix: add tv dashboard link to normal dashboard
+  6da444a docs: document tv dashboard mjpeg live stream
+  073424a fix: improve dashboard tv live camera selection
+  b89afba feat: add mjpeg live camera stream to tv dashboard
 - Windows Service: ITUAICCTVBackend
 - Service status: Running
 - Service StartType: Automatic
@@ -37,7 +42,7 @@ STATUS PRODUCTION TERKINI:
 - Hidden launcher: backend/scripts/run_monitor_person_all_once_hidden.vbs
 - Log task: C:\ituaicctv\backend\data\task-logs\monitor_person_all.log
 - Python task: C:\ituaicctv\.venv312\Scripts\python.exe
-- Scheduler scan 9 enabled cameras.
+- Camera registry sekarang ada 12 enabled cameras.
 - Latest log: status ok, enabled=9, failed=0.
 - Exit code 0 = ok / no attention / no person detected.
 - Exit code 2 = attention required / person detected, bukan crash.
@@ -58,12 +63,18 @@ STATUS PRODUCTION TERKINI:
 - NTFS Everyone Modify telah dibuang selepas copy cleanup.
 - Folder log service:
   C:\ituaicctv\backend\data\service-logs
-- Camera total: 10
-- Enabled: 9
+- Camera total: 13
+- Enabled: 12
 - Disabled/offline: 1
-- Disabled/offline: block_f_cam_8 / ITU BLOCK F CAM8
+- Disabled/offline: block_f_cam_8 / ITU BLOCK F CAM8 / 192.168.40.20
 - Reason: ping dan RTSP port 554 tidak reachable.
-- All 9 enabled cameras active based on recent health checks.
+- Newly confirmed enabled cameras:
+  kuarantin_cam_11 / ITU KUARANTIN CAM11 / 192.168.40.23 / channel 102
+  biosekuriti_cam_12 / ITU BIOSEKURITI CAM12 / 192.168.40.24 / channel 102
+  makmal_cam_13 / ITU MAKMAL CAM13 / 192.168.40.25 / channel 102
+- 192.168.40.26 ialah mistaken entry dan bukan current inventory.
+- Existing enabled cameras active based on recent health checks; newly labelled
+  cameras perlu verify selepas scheduler/dashboard health run seterusnya.
 - PERSON_CONFIDENCE_THRESHOLD default: 0.60
 - Telegram alert include confidence dan threshold jika available.
 - Dashboard /dashboard-ui sekarang dark AI Command Center dengan LIVE AI
@@ -71,18 +82,36 @@ STATUS PRODUCTION TERKINI:
   event timeline, evidence gallery, camera grid, section scroll navigation,
   Refreshing state, hover/glow effects, person-detected pulse/glow, dan
   prefers-reduced-motion support.
+- /dashboard-tv ialah fullscreen TV Command Center dengan selectable MJPEG live
+  camera stream untuk satu selected camera/viewer. Browser connect ke backend
+  sahaja; RTSP URL dan credential CCTV tidak expose ke frontend.
+- Test TV dashboard:
+  http://192.168.1.254:8000/dashboard-tv
+- Test direct MJPEG stream:
+  http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg
+  http://192.168.1.254:8000/dashboard/live/biosekuriti_cam_12/stream.mjpg
+  http://192.168.1.254:8000/dashboard/live/makmal_cam_13/stream.mjpg
 - Laptop jangan run scheduler production jika server ini ialah backend
   production.
 
 SEMAK SELEPAS SERVER RESTART:
   Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
   Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
-  Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+  Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
+  Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
+  Start-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
+  Start-Sleep -Seconds 120
+  Get-Content C:\ituaicctv\backend\data\task-logs\monitor_person_all.log -Tail 220
+  Get-ChildItem C:\ituaicctv\backend\data\evidence |
+    Sort-Object LastWriteTime -Descending |
+    Select-Object -First 10 Name, LastWriteTime, Length
+  explorer "\\192.168.1.254\ituaicctv-evidence"
 
 NETWORK PRODUCTION:
 - Server ada dua NIC:
   GOVNET/NIC: 10.65.28.254
   LAN/NIC: 192.168.1.254
+- Source interface server ke CCTV subnet: Ethernet 2 / 192.168.1.254
 - Kamera CCTV berada dalam subnet 192.168.40.0/24.
 - Jika laptop Teleport boleh akses CCTV tetapi server gagal RTSP, itu
   biasanya sebab flow server-to-CCTV VLAN belum dibenarkan.

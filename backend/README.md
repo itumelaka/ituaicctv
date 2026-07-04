@@ -11,8 +11,9 @@ FastAPI backend for CCTV RTSP testing, snapshot capture, YOLO detection, person-
 - Backend service: `ITUAICCTVBackend`, confirmed `Running`, `Automatic`
 - Scheduler task: `ITU AI CCTV Person Monitor`, confirmed `Ready`
 - Scheduler Python: `C:\ituaicctv\.venv312\Scripts\python.exe`
-- Enabled cameras scanned: 9
-- Disabled/offline camera: `block_f_cam_8 / ITU BLOCK F CAM8`
+- Total known cameras: 13
+- Enabled cameras: 12
+- Disabled/offline camera: `block_f_cam_8 / ITU BLOCK F CAM8 / 192.168.40.20`
 - Evidence share: `\\192.168.1.254\ituaicctv-evidence`
 
 Verify after server restart:
@@ -133,13 +134,15 @@ The TV dashboard includes a selectable MJPEG Live Camera View. The browser conne
 Live stream test URL:
 
 ```
-http://192.168.1.254:8000/dashboard/live/block_e_cam_2/stream.mjpg
+http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg
+http://192.168.1.254:8000/dashboard/live/biosekuriti_cam_12/stream.mjpg
+http://192.168.1.254:8000/dashboard/live/makmal_cam_13/stream.mjpg
 ```
 
 Snapshot fallback test URL:
 
 ```
-http://192.168.1.254:8000/dashboard/live/block_e_cam_2/snapshot.jpg
+http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg
 ```
 
 The live stream and snapshot fallback do not run YOLO, write event logs, save evidence images, or send Telegram alerts. Latest evidence in `/dashboard-tv` remains a separate historical evidence panel.
@@ -355,7 +358,13 @@ Scheduler log is read from `data/task-logs/monitor_person_all.log` to surface la
 
 ## Camera Registry
 
-Cameras are configured in `backend/data/cameras.json`. Each camera entry:
+Cameras are configured in `backend/config/cameras.json`. Current production inventory has 13 known cameras, 12 enabled cameras, and 1 disabled/offline camera (`block_f_cam_8 / 192.168.40.20`). The confirmed additional cameras are:
+
+- `kuarantin_cam_11` / `ITU KUARANTIN CAM11` / `192.168.40.23` / channel `102`
+- `biosekuriti_cam_12` / `ITU BIOSEKURITI CAM12` / `192.168.40.24` / channel `102`
+- `makmal_cam_13` / `ITU MAKMAL CAM13` / `192.168.40.25` / channel `102`
+
+Each camera entry:
 
 ```json
 {

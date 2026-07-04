@@ -11,15 +11,18 @@ Repository:
 - Local laptop dev path: C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection
 - Production dashboard: http://192.168.1.254:8000/dashboard-ui
 - TV command center: http://192.168.1.254:8000/dashboard-tv
+- Normal dashboard includes a TV Mode link to /dashboard-tv.
+- TV command center includes a Normal dashboard link back to /dashboard-ui.
 - GitHub Pages is no longer the primary dashboard. Production dashboard is served by backend /dashboard-ui.
 
 Latest important deployed commits:
 
-- a04f8b6 feat: add live dashboard effects and zoomed evidence
-- 9ac95c5 feat: redesign dashboard command center UI
-- a65e817 docs: add safe face detection and recognition roadmap
-- 016cc02 feat: add person detection confidence threshold
-- 657f110 feat: make dashboard nav scroll to sections
+- bd556ec fix: correct and rename additional CCTV cameras
+- aa62e5b feat: add additional CCTV cameras to inventory
+- 7b8271e fix: add tv dashboard link to normal dashboard
+- 6da444a docs: document tv dashboard mjpeg live stream
+- 073424a fix: improve dashboard tv live camera selection
+- b89afba feat: add mjpeg live camera stream to tv dashboard
 
 Production service and scheduler:
 
@@ -48,6 +51,7 @@ Camera and health:
 Network:
 
 - Production server LAN IP: 192.168.1.254
+- Server source interface to CCTV subnet: Ethernet 2 / 192.168.1.254
 - GOVNET NIC: 10.65.28.254
 - CCTV subnet: 192.168.40.0/24
 - UDM Pro firewall rule allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
@@ -77,7 +81,7 @@ Current AI and dashboard features:
 ```powershell
 Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
 Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
-Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
 ```
 
 Optional operational checks:
@@ -85,11 +89,12 @@ Optional operational checks:
 ```powershell
 Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
 Start-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
-Start-Sleep -Seconds 60
-Get-Content C:\ituaicctv\backend\data\task-logs\monitor_person_all.log -Tail 160
+Start-Sleep -Seconds 120
+Get-Content C:\ituaicctv\backend\data\task-logs\monitor_person_all.log -Tail 220
 Get-ChildItem C:\ituaicctv\backend\data\evidence |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 10 Name, LastWriteTime, Length
+explorer "\\192.168.1.254\ituaicctv-evidence"
 ```
 
 ## Deployment Status

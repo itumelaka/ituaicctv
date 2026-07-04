@@ -4,11 +4,13 @@
 
 - Production backend path: C:\ituaicctv
 - Production dashboard: http://192.168.1.254:8000/dashboard-ui
+- TV command center dashboard: http://192.168.1.254:8000/dashboard-tv
 - Backend service ITUAICCTVBackend is Running and Automatic.
 - Task Scheduler task ITU AI CCTV Person Monitor is Ready.
 - Backend listens on port 8000.
 - Windows Firewall allows inbound TCP 8000 for dashboard/API.
 - UDM Pro allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
+- Current camera inventory has 13 known cameras, 12 enabled cameras, and 1 disabled/offline camera. The mistaken 192.168.40.26 entry is not part of the current inventory.
 - Evidence share: \\192.168.1.254\ituaicctv-evidence
 - Normal evidence share access: Read for Everyone.
 - Temporary Change access is allowed only during controlled copy operations and must be reverted to Read.
@@ -22,7 +24,8 @@ Verify production access:
 ```powershell
 Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
 Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
-Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
+Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
+Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
 Get-SmbShareAccess -Name "ituaicctv-evidence"
 ```
 
