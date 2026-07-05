@@ -16,6 +16,7 @@ Current state:
 - Scans enabled cameras sequentially.
 - Configured interval is 10 seconds between full scan cycles.
 - Real observed cycle time is about 30 seconds because scanning 12 cameras takes time.
+- Latest production verification showed `enabled=12 attention=0 failed=0 next_scan=10s`.
 - Replaces the old 5-minute batch monitor as the primary alerting path.
 - Reuses existing person detection, evidence save, event, cooldown, and Telegram alert flow.
 - Suppresses routine no_person event writes to avoid excessive event-log noise.
@@ -44,6 +45,7 @@ Current camera registry:
 - Exit code 0 means no person detected / no action.
 - Exit code 2 means attention required / person detected, not a crash.
 - LastTaskResult 267009 / 0x41301 means a long-running task is currently running.
+- A one-time HEVC/RTSP warning such as `Could not find ref with POC 34` can be harmless if the live monitor continues scanning. Investigate only if a camera freezes, repeated read failures appear, or the failed count increases.
 
 ## Reboot Behavior
 

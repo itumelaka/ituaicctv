@@ -13,6 +13,7 @@ FastAPI backend for CCTV RTSP testing, snapshot capture, YOLO detection, person-
 - Old batch monitor task: `ITU AI CCTV Person Monitor`, confirmed `Disabled` and retained as backup
 - Live monitor command: `C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py`
 - Live monitor scans enabled cameras sequentially. Configured interval is 10 seconds, with real observed full-cycle time around 30 seconds for 12 enabled cameras.
+- Latest observed live monitor summary: `enabled=12 attention=0 failed=0 next_scan=10s`
 - Total known cameras: 13
 - Enabled cameras: 12
 - Disabled/offline camera: `block_f_cam_8 / ITU BLOCK F CAM8 / 192.168.40.20`
@@ -53,6 +54,15 @@ Telegram sends the saved evidence image, so new alerts use the clearer composite
 - Placeholder zones for makmal_cam_13 and kuarantin_cam_11 are present but disabled until calibrated against reviewed frames.
 - When an ignore zone is enabled, detections with a bounding-box center inside the polygon are suppressed before event logging, evidence saving, and Telegram alerting.
 - Event reviews are stored locally in ignored runtime data under `backend/data/event-reviews/`.
+- Production verification confirmed `/events/reviews`, `/events/latest-with-reviews`, `/dashboard/cameras`, and the `/dashboard-ui` review buttons.
+- Review statuses are `unreviewed`, `valid`, `false_positive`, `needs_follow_up`, `ignored`, and `reviewed`.
+
+## Telegram Group Alerts
+
+- Production Telegram alerts currently go to the internal `itunetmonitor` group.
+- Set `TELEGRAM_CHAT_ID` to the Telegram group chat ID in private `.env`; do not commit bot tokens or numeric chat IDs.
+- Use Telegram `getUpdates` after posting a message in the group to find the group chat ID.
+- Telegram group delivery was verified after deployment.
 
 Face readiness and internal recognition status:
 
@@ -131,7 +141,11 @@ GET /dashboard/events/latest?limit=10
 GET /dashboard/evidence
 GET /dashboard/evidence?limit=20
 GET /dashboard/live/{camera_id}/stream.mjpg
+GET /dashboard/live/{camera_id}/stream.mjpg?quality=standard
+GET /dashboard/live/{camera_id}/stream.mjpg?quality=hd
 GET /dashboard/live/{camera_id}/snapshot.jpg
+GET /dashboard/live/{camera_id}/snapshot.jpg?quality=standard
+GET /dashboard/live/{camera_id}/snapshot.jpg?quality=hd
 ```
 
 ### Dashboard UI
@@ -157,10 +171,20 @@ http://192.168.1.254:8000/dashboard-tv
 
 The TV dashboard includes a selectable MJPEG Live Camera View. The browser connects only to the backend; the backend proxies the selected camera RTSP stream and does not expose RTSP URLs, CCTV usernames, or CCTV passwords. The MJPEG stream is limited to 4 FPS and is intended for one selected camera/viewer, not all cameras simultaneously.
 
+Live view quality:
+
+- `quality=standard` uses the camera configured channel, usually Hikvision sub-stream `102`.
+- `quality=hd` uses Hikvision main-stream channel `101` where available. HD MJPEG allows a larger 1920px max width, but actual resolution depends on the camera main-stream settings and may still be 720p.
+- Invalid quality values return HTTP 400.
+- Quality selection is live-view only. It does not change detection channel, scheduler/live monitor behavior, evidence, Telegram alerts, event review, or ignore zones.
+- HD can increase CPU, bandwidth, and camera load.
+- MJPEG does not support audio. Audio requires camera audio support plus a future HLS/WebRTC/FFmpeg proxy.
+
 Live stream test URL:
 
 ```
 http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg
+http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg?quality=hd
 http://192.168.1.254:8000/dashboard/live/biosekuriti_cam_12/stream.mjpg
 http://192.168.1.254:8000/dashboard/live/makmal_cam_13/stream.mjpg
 ```
@@ -169,6 +193,7 @@ Snapshot fallback test URL:
 
 ```
 http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg
+http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg?quality=hd
 ```
 
 The live stream and snapshot fallback do not run YOLO, write event logs, save evidence images, or send Telegram alerts. Latest evidence in `/dashboard-tv` remains a separate historical evidence panel.
@@ -282,8 +307,8 @@ YOLO_CONFIDENCE=0.35
 PERSON_CONFIDENCE_THRESHOLD=0.60
 PERSON_EVENT_COOLDOWN_SECONDS=300
 
-TELEGRAM_BOT_TOKEN=your_bot_token_here
-TELEGRAM_CHAT_ID=your_chat_id_here
+TELEGRAM_BOT_TOKEN=<TELEGRAM_BOT_TOKEN>
+TELEGRAM_CHAT_ID=<TELEGRAM_CHAT_ID_OR_GROUP_CHAT_ID>
 ```
 
 Never commit `backend/.env`.
@@ -295,14 +320,16 @@ Alert dihantar secara automatik apabila `person_detected=True` dan cooldown tida
 Setup:
 
 1. Buat Telegram Bot melalui [@BotFather](https://t.me/BotFather) dan dapatkan token.
-2. Dapatkan Chat ID — hantar mesej ke bot anda kemudian buka:
+2. Dapatkan Chat ID — hantar mesej ke bot atau Telegram group anda kemudian buka:
    `https://api.telegram.org/bot<TOKEN>/getUpdates`
 3. Tambah dalam `backend/.env`:
 
 ```env
-TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
-TELEGRAM_CHAT_ID=987654321
+TELEGRAM_BOT_TOKEN=<TELEGRAM_BOT_TOKEN>
+TELEGRAM_CHAT_ID=<TELEGRAM_CHAT_ID_OR_GROUP_CHAT_ID>
 ```
+
+Untuk group alert, masukkan group chat ID ke `TELEGRAM_CHAT_ID`. Production sudah verified menghantar alert ke internal group `itunetmonitor`, tetapi numeric group chat ID dan bot token mesti kekal private.
 
 Jika `TELEGRAM_BOT_TOKEN` atau `TELEGRAM_CHAT_ID` kosong, alert akan dilog sebagai skipped dan tidak akan crash sistem.
 

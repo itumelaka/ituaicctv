@@ -4,6 +4,7 @@
 
 Production is now running from `C:\ituaicctv` on the Windows Server with backend dashboard at `http://192.168.1.254:8000/dashboard-ui`. GitHub Pages is no longer the primary dashboard. Latest deployed work includes:
 
+- e2e7f8f feat: add ignore zones and event review workflow
 - bd556ec fix: correct and rename additional CCTV cameras
 - aa62e5b feat: add additional CCTV cameras to inventory
 - 7b8271e fix: add tv dashboard link to normal dashboard
@@ -28,7 +29,12 @@ Operational foundation:
 - Fullscreen TV Command Center mode is available at `/dashboard-tv`.
 - TV mode now separates a selectable backend-proxied MJPEG live camera view from historical evidence snapshots.
 - Direct selected-camera stream endpoint is available at `/dashboard/live/{camera_id}/stream.mjpg` with a 4 FPS limit; `/dashboard/live/{camera_id}/snapshot.jpg` remains as fallback.
+- Live view quality selection supports `quality=standard` for the configured camera channel, usually 102, and `quality=hd` for Hikvision main-stream channel 101. Invalid quality values return HTTP 400. HD MJPEG allows a larger 1920px max width, but actual resolution depends on camera main-stream settings and may still be 720p. This is viewing only and does not change detection, alerts, evidence, event review, ignore zones, or live monitor behavior.
+- MJPEG live view has no audio. Audio depends on camera audio availability and a future HLS/WebRTC/FFmpeg proxy.
 - Near-live monitoring runs repeated sequential scan cycles. Configured interval is 10 seconds, but real full-cycle time is about 30 seconds because 12 enabled cameras are scanned sequentially.
+- Telegram group alerts are verified for the internal monitoring group. Bot token and numeric chat ID remain private configuration.
+- Event review / acknowledgement is deployed and verified through API endpoints and `/dashboard-ui` buttons, but it remains an internal local workflow with no user login/authentication yet.
+- Ignore-zone polygon support is deployed. Current kuarantin_cam_11 and makmal_cam_13 placeholders remain disabled until accurate coordinates are calibrated.
 
 ## Forward Backlog
 
@@ -39,22 +45,24 @@ Operational foundation:
 5. Vehicle detection and parking monitoring.
 6. Number plate recognition as a future module.
 7. Camera health AI: blur, dark, blocked, angle changed, stale frame.
-8. Human review workflow: event review metadata now supports valid, false positive, ignored, and follow-up statuses; future work should add richer filtering, notes, exports, and reviewer attribution.
+8. Human review workflow: event review metadata now supports valid, false positive, ignored, and follow-up statuses; future work should add unreviewed/false-positive/follow-up filters, notes, exports, review audit log, and authenticated users.
 9. AI risk score: confidence, zone, after-hours, camera importance.
 10. After-hours detection.
 11. Improve fullscreen command center / TV mode after real TV review.
 12. WebRTC/HLS/media-server upgrade for better live-view scaling if multiple viewers or cameras need streaming.
-13. Harden the live monitor operation with clearer status reporting, overlap protection, and CPU/network observation before lowering scan intervals.
+13. Harden the live monitor operation with clearer status reporting, overlap protection, CPU/network observation before lowering scan intervals, and camera-health alerts if failed counts increase.
 14. Face detection and safe opt-in face recognition roadmap, including high-resolution evidence capture before any identity pilot.
 15. Optional Telegram send-as-document evidence delivery to reduce Telegram photo compression.
 16. CSV-based private face enrollment mapping for staff/student sources, without hardcoding source folders in application code.
-17. Ignore-zone / polygon mask support for fixed false-positive objects such as tree/topiary and blue pipe.
+17. Calibrate and enable ignore-zone polygons only after screenshot/evidence review confirms coordinates.
+18. Add daily Telegram summary report to the internal monitoring group.
+19. Add audio-capable live view only if camera microphone/audio streams are available, likely through HLS/WebRTC/FFmpeg rather than MJPEG.
 
 ## Current Checkpoint
 
 Latest confirmed commit:
 
-8352f37
+e2e7f8f
 
 Checkpoint summary:
 
@@ -63,6 +71,9 @@ Checkpoint summary:
 - GitHub Pages is no longer the primary production dashboard; daily operation uses the Windows Server backend dashboard.
 - Backend service listens on 0.0.0.0:8000 with Windows Firewall inbound rule ITU AI CCTV Backend Port 8000.
 - Primary `ITU AI CCTV Live Monitor` task is Running. The old 5-minute `ITU AI CCTV Person Monitor` task is Disabled and retained as backup.
+- Event review / acknowledgement workflow is deployed and verified.
+- Ignore-zone polygon support is deployed, with kuarantin_cam_11 and makmal_cam_13 placeholders still disabled.
+- Telegram group alert delivery is verified for the internal monitoring group.
 - Evidence share is available at \\192.168.1.254\ituaicctv-evidence, mapped to C:\ituaicctv\backend\data\evidence.
 - Evidence images are saved only when person_detected=True; no_person events usually do not have evidence images.
 

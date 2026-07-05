@@ -19,6 +19,8 @@
 - Fullscreen TV Command Center mode is available at /dashboard-tv.
 - TV mode includes a selectable backend-proxied MJPEG live camera panel; latest evidence is shown separately as historical proof.
 - Direct stream endpoint /dashboard/live/{camera_id}/stream.mjpg is available for one selected camera/viewer at 4 FPS; /dashboard/live/{camera_id}/snapshot.jpg remains as fallback.
+- Live view supports `quality=standard` for the configured camera channel, usually 102, and `quality=hd` for Hikvision main-stream channel 101. Invalid quality values return HTTP 400. HD MJPEG allows a larger 1920px max width, but actual resolution depends on camera main-stream settings and may still be 720p. This is viewing only and does not change AI detection.
+- MJPEG live view has no audio. Audio would require camera audio support plus a future HLS/WebRTC/FFmpeg proxy.
 - Near-live monitor script scripts/monitor_person_live.py is the primary alerting path on production.
 - Configured live monitor scan interval is 10 seconds; observed full-cycle time is about 30 seconds across 12 enabled cameras.
 - Existing 5-minute Task Scheduler scan is Disabled and remains as backup.
@@ -29,10 +31,17 @@
 - [x] Add backend ignore-zone polygon mask support for camera-specific static false positives.
 - [x] Add disabled placeholder ignore-zone polygons for makmal_cam_13 and kuarantin_cam_11.
 - [x] Add local event review API/storage for valid, false positive, ignored, and follow-up decisions.
+- [x] Verify production event review / acknowledgement endpoints and dashboard buttons.
+- [x] Verify Telegram group alert delivery to the internal monitoring group.
 - [ ] Add minimum bounding box size filtering for person detections.
 - [ ] Calibrate makmal_cam_13 and kuarantin_cam_11 ignore-zone polygon points from reviewed production frames before enabling them.
 - [ ] Add a visual dashboard editor for drawing/testing ignore zones on camera snapshots.
-- [ ] Improve dashboard confidence display and review workflow with filters, reviewer notes, and exports.
+- [ ] Improve dashboard review workflow with filters for unreviewed only, false positive only, and follow-up only.
+- [ ] Add review audit log and authenticated users before treating review actions as controlled approvals.
+- [ ] Add daily Telegram summary report to the internal group.
+- [ ] Add camera health alert if live monitor failed count increases or a camera freezes.
+- [ ] Review HD live-view CPU/network impact before encouraging routine HD monitoring.
+- [ ] Add future audio-capable live view with HLS/WebRTC/FFmpeg only if cameras provide audio streams.
 - [ ] Add polygon zone intrusion detection per camera.
 - [ ] Add restricted zone alerts.
 - [ ] Add line crossing detection with direction.

@@ -3,7 +3,11 @@ import time
 import cv2
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
-from app.camera import _open_rtsp_stream, capture_frame_for_camera
+from app.camera import (
+    _open_rtsp_stream,
+    capture_frame_for_camera,
+    capture_frame_for_camera_channel,
+)
 from app.camera_registry import build_rtsp_url, get_camera_by_id, load_cameras, list_enabled_cameras
 from app.dashboard_health import build_dashboard_health
 from app.event_log import list_evidence_images
@@ -15,6 +19,12 @@ from app.events import (
     get_latest_dashboard_event_for_camera,
     get_latest_dashboard_events,
 )
+from app.live_view import (
+    InvalidLiveViewQuality,
+    LIVE_VIEW_STANDARD_QUALITY,
+    live_view_channel_for_quality,
+    live_view_max_width_for_quality,
+)
 
 router = APIRouter(
     prefix="/dashboard",
@@ -22,7 +32,6 @@ router = APIRouter(
 )
 
 TV_MJPEG_FPS = 4
-TV_MJPEG_MAX_WIDTH = 960
 TV_MJPEG_FRAME_DELAY_SECONDS = 1 / TV_MJPEG_FPS
 TV_MJPEG_MAX_READ_FAILURES = 30
 
@@ -166,7 +175,10 @@ def dashboard_camera_stats(camera_id: str):
 
 
 @router.get("/live/{camera_id}/snapshot.jpg")
-def dashboard_live_camera_snapshot(camera_id: str):
+def dashboard_live_camera_snapshot(
+    camera_id: str,
+    quality: str = Query(default=LIVE_VIEW_STANDARD_QUALITY),
+):
     try:
         camera = get_camera_by_id(camera_id)
     except KeyError:
@@ -181,13 +193,21 @@ def dashboard_live_camera_snapshot(camera_id: str):
             detail=f"Camera is disabled: {camera_id}"
         )
 
+    channel = _live_view_channel_or_400(quality)
+
     try:
-        frame = capture_frame_for_camera(camera)
+        if channel:
+            frame = capture_frame_for_camera_channel(camera, channel)
+        else:
+            frame = capture_frame_for_camera(camera)
         success, buffer = cv2.imencode(".jpg", frame)
     except RuntimeError as error:
         raise HTTPException(
             status_code=503,
-            detail=f"Live snapshot unavailable for {camera_id}: {error}"
+            detail=(
+                f"Live snapshot unavailable for {camera_id} "
+                f"quality={quality}: {error}"
+            )
         )
 
     if not success:
@@ -221,22 +241,42 @@ def _get_enabled_dashboard_camera(camera_id: str) -> dict:
     return camera
 
 
-def _resize_for_tv_mjpeg(frame):
+def _live_view_channel_or_400(quality: str) -> str | None:
+    try:
+        return live_view_channel_for_quality(quality)
+    except InvalidLiveViewQuality as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
+
+
+def _live_view_max_width_or_400(quality: str) -> int:
+    try:
+        return live_view_max_width_for_quality(quality)
+    except InvalidLiveViewQuality as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
+
+
+def _resize_for_tv_mjpeg(frame, max_width: int):
     height, width = frame.shape[:2]
 
-    if width <= TV_MJPEG_MAX_WIDTH:
+    if width <= max_width:
         return frame
 
-    scale = TV_MJPEG_MAX_WIDTH / width
+    scale = max_width / width
     resized_height = max(1, int(height * scale))
     return cv2.resize(
         frame,
-        (TV_MJPEG_MAX_WIDTH, resized_height),
+        (max_width, resized_height),
         interpolation=cv2.INTER_AREA
     )
 
 
-def _mjpeg_frame_generator(cap):
+def _mjpeg_frame_generator(cap, max_width: int):
     # MJPEG is intended for one selected TV camera, not all cameras at once.
     failures = 0
 
@@ -252,7 +292,7 @@ def _mjpeg_frame_generator(cap):
                 continue
 
             failures = 0
-            frame = _resize_for_tv_mjpeg(frame)
+            frame = _resize_for_tv_mjpeg(frame, max_width=max_width)
             success, buffer = cv2.imencode(".jpg", frame)
 
             if not success:
@@ -274,20 +314,25 @@ def _mjpeg_frame_generator(cap):
 
 
 @router.get("/live/{camera_id}/stream.mjpg")
-def dashboard_live_camera_stream(camera_id: str):
+def dashboard_live_camera_stream(
+    camera_id: str,
+    quality: str = Query(default=LIVE_VIEW_STANDARD_QUALITY),
+):
     camera = _get_enabled_dashboard_camera(camera_id)
-    rtsp_url = build_rtsp_url(camera)
+    channel = _live_view_channel_or_400(quality)
+    max_width = _live_view_max_width_or_400(quality)
+    rtsp_url = build_rtsp_url(camera, channel_override=channel)
     cap = _open_rtsp_stream(rtsp_url)
 
     if not cap.isOpened():
         cap.release()
         raise HTTPException(
             status_code=503,
-            detail=f"Live stream unavailable for {camera_id}"
+            detail=f"Live stream unavailable for {camera_id} quality={quality}"
         )
 
     return StreamingResponse(
-        _mjpeg_frame_generator(cap),
+        _mjpeg_frame_generator(cap, max_width=max_width),
         media_type="multipart/x-mixed-replace; boundary=frame",
         headers={"Cache-Control": "no-store"}
     )

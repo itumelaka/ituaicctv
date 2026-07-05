@@ -27,6 +27,7 @@ STATUS PRODUCTION TERKINI:
 - GitHub Pages bukan dashboard production utama; operasi harian guna
   dashboard backend Windows Server.
 - Latest important deployed commits:
+  e2e7f8f feat: add ignore zones and event review workflow
   bd556ec fix: correct and rename additional CCTV cameras
   aa62e5b feat: add additional CCTV cameras to inventory
   7b8271e fix: add tv dashboard link to normal dashboard
@@ -44,6 +45,11 @@ STATUS PRODUCTION TERKINI:
 - Live monitor scan enabled cameras sequentially.
 - Configured interval: 10 seconds between full scan cycles.
 - Observed cycle: around 30 seconds sebab scan 12 cameras ambil masa.
+- Latest monitor verification:
+  enabled=12 attention=0 failed=0 next_scan=10s
+- HEVC warning sekali-sekala seperti "Could not find ref with POC 34"
+  biasanya RTSP/decoder warning sahaja kalau monitor masih running dan
+  failed=0. Investigate kalau camera freeze atau failed count naik.
 - Python task: C:\ituaicctv\.venv312\Scripts\python.exe
 - Camera registry sekarang ada 12 enabled cameras.
 - Exit code 0 = ok / no attention / no person detected.
@@ -82,7 +88,24 @@ STATUS PRODUCTION TERKINI:
 - PERSON_CONFIDENCE_THRESHOLD default: 0.60
 - makmal_cam_13 threshold: 0.75 sebab tree/topiary false positive sekitar 0.62-0.63.
 - kuarantin_cam_11 threshold: 0.75 sebab fixed blue pipe false positive sekitar 0.65.
-- Future: ignore-zone / polygon mask untuk fixed object false positive.
+- Ignore-zone / polygon mask support sudah deployed untuk fixed object
+  false positive.
+- kuarantin_cam_11 ada 1 placeholder ignore zone, enabled 0.
+- makmal_cam_13 ada 1 placeholder ignore zone, enabled 0.
+- Jangan enable polygon sebelum coordinates tepat diuji guna screenshot/evidence.
+- Coordinates ignore-zone normalized 0.0 sampai 1.0. Bad polygon boleh suppress
+  real person alert.
+- Event review / acknowledgement sudah deployed dan verified:
+  /events/reviews
+  /events/latest-with-reviews
+  /dashboard/cameras
+- Dashboard UI show review status dan button Valid / False positive / Follow up.
+- Review data local JSON di backend/data/event-reviews/ dan ignored by Git.
+- Review workflow belum ada user login/auth; internal LAN operator workflow sahaja.
+- Telegram group alert sudah verified untuk internal group itunetmonitor.
+- TELEGRAM_CHAT_ID untuk group simpan dalam private .env sahaja. Jangan commit
+  bot token atau numeric chat ID.
+- Guna Telegram getUpdates selepas post dalam group untuk cari group chat ID.
 - Telegram alert include confidence dan threshold jika available.
 - Face readiness sudah implemented. Ia bukan identity recognition sendiri. Label boleh jadi FACE NOT SUITABLE / POSSIBLE / SUITABLE / UNAVAILABLE dan conservative by design.
 - Internal face recognition foundation privacy-gated. Code default FACE_RECOGNITION_ENABLED=false, tetapi production backend\.env sekarang enable:

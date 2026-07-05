@@ -19,6 +19,7 @@ Repository and runtime:
 
 Latest deployed checkpoints:
 
+- e2e7f8f feat: add ignore zones and event review workflow
 - bd556ec fix: correct and rename additional CCTV cameras
 - aa62e5b feat: add additional CCTV cameras to inventory
 - 7b8271e fix: add tv dashboard link to normal dashboard
@@ -40,6 +41,8 @@ Production server status:
 - Old 5-minute batch monitor task `ITU AI CCTV Person Monitor` is Disabled. It remains registered as a backup path but is not the primary alerting mode.
 - Person evidence includes advisory face readiness metadata when local OpenCV face detection is available. This does not identify people.
 - Internal staff/student face recognition foundation is privacy-gated. It is disabled by default in code, but production currently enables OpenCV LBPH recognition for approved test label `BURN`.
+- Latest live monitor verification showed `enabled=12 attention=0 failed=0 next_scan=10s`.
+- A one-time HEVC decoder warning such as `Could not find ref with POC 34` can appear during RTSP reads. Treat it as harmless if the monitor continues scanning and `failed=0`; investigate only if a camera freezes or failed counts increase.
 
 Camera and network status:
 
@@ -147,7 +150,10 @@ Get-SmbShareAccess -Name "ituaicctv-evidence"
 - Placeholder ignore-zone polygons exist for makmal_cam_13 and kuarantin_cam_11, but they are disabled by default until reviewed against real frames and calibrated.
 - Enabled ignore zones suppress person detections whose bounding-box center falls inside the configured polygon before events, evidence, or Telegram alerts are produced.
 - Event review metadata can be stored locally through `/events/reviews/{event_id}` with statuses such as `valid`, `false_positive`, `ignored`, and `needs_follow_up`.
+- Production verification confirmed `/events/reviews`, `/events/latest-with-reviews`, `/dashboard/cameras`, and dashboard review buttons work.
+- Dashboard operators can mark latest events as Valid, False positive, or Follow up from `/dashboard-ui`; review data is local JSON under ignored `backend/data/event-reviews/`.
 - Telegram person alerts include confidence and active threshold when available.
+- Telegram production alerts can be sent to a group by setting `TELEGRAM_CHAT_ID` to the group chat ID in private `.env`. Production currently uses the `itunetmonitor` group; keep bot tokens and numeric chat IDs out of public docs and commits.
 - New person evidence uses a clearer composite image: full CCTV frame with bounding boxes plus a zoom crop of the highest-confidence person.
 - High-resolution evidence is attempted after person detection. Detection can stay on lightweight channel 102, while evidence may try higher-resolution/main stream channel 101 when available.
 - High-resolution evidence no longer blindly scales low-resolution boxes onto a different frame. If a high-resolution frame is captured, person detection runs again on that frame and high-resolution boxes are used. If capture or re-detection fails, evidence falls back to the original detection frame and boxes.
@@ -165,10 +171,25 @@ Get-SmbShareAccess -Name "ituaicctv-evidence"
 - Telegram sends the saved evidence image, so new detections use the clearer composite.
 - Future improvement: optional Telegram send-as-document mode to reduce compression.
 
+## Event Review Operator Notes
+
+Use `/dashboard-ui` to review recent AI events. The latest-events cards show review status and provide quick buttons for Valid, False positive, and Follow up.
+
+Review status meanings:
+
+- `unreviewed`: no operator decision has been recorded yet.
+- `valid`: the event appears to be a real person alert.
+- `false_positive`: the event appears to be a mistaken person detection.
+- `needs_follow_up`: the event needs another check or operational action.
+- `ignored`: the event is intentionally ignored for operations.
+- `reviewed`: generic reviewed state when no more specific status is chosen.
+
+Review records are local operational JSON under ignored `backend/data/event-reviews/`. This workflow is internal only and does not currently include user login/authentication.
+
 Optional internal enrollment command:
 
 ```powershell
-python .\scripts\enroll_face.py --label BURN --images C:\temp\burn1.jpg C:\temp\burn2.jpg
+python .\scripts\enroll_face.py --label <APPROVED_INTERNAL_LABEL> --images <PRIVATE_FACE_IMAGE_01.jpg> <PRIVATE_FACE_IMAGE_02.jpg>
 ```
 
 Enrollment is local only and should be used only for approved internal staff/student. The script does not copy raw reference images; it writes embeddings under `backend/data/face-embeddings/` only when a suitable local embedding library is installed.
@@ -257,6 +278,7 @@ Private local face-photo source examples, not committed and not hardcoded in app
 - LIVE AI MONITORING badge
 - latest AI alert panel
 - selectable MJPEG Live Camera View proxied by the backend for one selected camera
+- Standard / HD live quality selector for the selected camera only
 - latest evidence snapshot in a smaller historical evidence panel
 - compact event timeline
 - compact camera health strip
@@ -266,13 +288,23 @@ Private local face-photo source examples, not committed and not hardcoded in app
 
 The browser does not connect to RTSP directly and never receives CCTV credentials. `/dashboard-tv` uses the backend MJPEG proxy for the selected live camera, while `/dashboard/live/{camera_id}/snapshot.jpg` remains available as a lightweight fallback/manual snapshot path. MJPEG is limited to 4 FPS and is intended for one selected TV view, not all cameras at once; future scaling work should consider WebRTC or HLS.
 
+Live quality options are for viewing only and do not change person detection, Telegram alerts, evidence, event review, ignore zones, or the live monitor:
+
+- `standard`: uses the camera configured channel, usually Hikvision sub-stream `102`.
+- `hd`: uses Hikvision main-stream channel `101` where available. HD MJPEG allows a larger 1920px max width, but actual resolution depends on the camera main-stream settings and may still be 720p. HD can increase backend CPU, camera load, and network bandwidth.
+- Invalid quality values return HTTP 400.
+
+MJPEG video does not include audio. Audio would require camera microphone/audio support and a future HLS/WebRTC/FFmpeg proxy.
+
 Production TV and live-view test URLs:
 
 - TV dashboard: http://192.168.1.254:8000/dashboard-tv
-- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg
+- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg?quality=standard
+- Direct MJPEG HD stream: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg?quality=hd
 - Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/biosekuriti_cam_12/stream.mjpg
 - Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/makmal_cam_13/stream.mjpg
-- Snapshot fallback: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg
+- Snapshot fallback: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg?quality=standard
+- Snapshot HD fallback: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg?quality=hd
 
 The MJPEG stream endpoint returns `multipart/x-mixed-replace` and does not run YOLO, save evidence, write event logs, or send Telegram alerts. Latest Evidence Snapshot on `/dashboard-tv` is historical proof and is separate from the live feed.
 
@@ -468,7 +500,11 @@ GET /dashboard/cameras/{camera_id}/stats
 GET /dashboard/events/latest
 GET /dashboard/events/latest?limit=10
 GET /dashboard/live/{camera_id}/stream.mjpg
+GET /dashboard/live/{camera_id}/stream.mjpg?quality=standard
+GET /dashboard/live/{camera_id}/stream.mjpg?quality=hd
 GET /dashboard/live/{camera_id}/snapshot.jpg
+GET /dashboard/live/{camera_id}/snapshot.jpg?quality=standard
+GET /dashboard/live/{camera_id}/snapshot.jpg?quality=hd
 
 Dashboard endpoints are lightweight read-only endpoints. They read existing camera configuration, event logs, and evidence image metadata only. They do not run YOLO detection. Per-camera dashboard endpoints validate camera_id against the configured camera list.
 

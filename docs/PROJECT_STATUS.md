@@ -17,6 +17,7 @@ Repository:
 
 Latest important deployed commits:
 
+- e2e7f8f feat: add ignore zones and event review workflow
 - bd556ec fix: correct and rename additional CCTV cameras
 - aa62e5b feat: add additional CCTV cameras to inventory
 - 7b8271e fix: add tv dashboard link to normal dashboard
@@ -35,6 +36,7 @@ Production service and scheduler:
 - Live monitor command: C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py
 - Live monitor runs through Windows Task Scheduler as a long-running task triggered at startup.
 - Configured scan interval is 10 seconds between full scan cycles; real observed cycle time is about 30 seconds because scanning 12 cameras takes time.
+- Latest verification showed `enabled=12 attention=0 failed=0 next_scan=10s`.
 - Old 5-minute scheduled monitor task `ITU AI CCTV Person Monitor` is Disabled, not deleted, and can be re-enabled as backup.
 - Camera registry now has 12 enabled cameras.
 - Near-live monitor default alert cooldown is 300 seconds.
@@ -82,7 +84,13 @@ Current AI and dashboard features:
 - Placeholder zones for makmal_cam_13 and kuarantin_cam_11 are disabled by default and must be calibrated from reviewed frames before enabling.
 - Enabled ignore zones suppress detections whose bounding-box center falls inside the polygon before alert/evidence creation.
 - Event review metadata is available through `/events/reviews/{event_id}` and is stored as ignored local runtime data under `backend/data/event-reviews/`.
+- Production verification confirmed `/events/reviews`, `/events/latest-with-reviews`, and `/dashboard/cameras`.
+- Dashboard UI shows event review status and Valid / False positive / Follow up buttons. Evidence gallery remained working after verification.
+- Test review succeeded with status `valid`, reviewer `Burn`, and a PowerShell test note.
+- Current ignore-zone placeholders: kuarantin_cam_11 has 1 configured / 0 enabled; makmal_cam_13 has 1 configured / 0 enabled.
 - Telegram person alerts include confidence and threshold when available.
+- Telegram group alert delivery was verified for the internal `itunetmonitor` group. Bot token and numeric group chat ID remain private configuration.
+- One HEVC/RTSP decoder warning, `Could not find ref with POC 34`, was observed once. Treat this as harmless if monitoring continues and failed counts stay at 0; investigate only if a camera freezes or failed counts increase.
 - Evidence image now uses clearer composite: full CCTV frame with bounding boxes plus zoomed crop of highest-confidence person.
 - High-resolution evidence is attempted after person detection. If a high-resolution frame is captured, person detection runs again on that frame and high-resolution boxes are used. If capture or re-detection fails, the system falls back to the original detection frame and boxes.
 - Person evidence now includes advisory face readiness metadata when local OpenCV face detection is available: detection availability, face count, best face box, quality, readiness, and reasons. This is not identity recognition.
@@ -211,6 +219,8 @@ Confirmed at this checkpoint:
 - /dashboard-tv includes a selectable backend-proxied MJPEG live camera view, camera dropdown, clickable camera cards, Restart stream button, and a separate latest evidence snapshot panel.
 - Direct MJPEG stream endpoint is available at /dashboard/live/{camera_id}/stream.mjpg and is limited to 4 FPS for one selected camera/viewer.
 - Snapshot fallback endpoint remains available at /dashboard/live/{camera_id}/snapshot.jpg.
+- Live view quality supports `quality=standard` for the configured camera channel, usually 102, and `quality=hd` for Hikvision main-stream channel 101. Invalid quality values return HTTP 400. HD MJPEG allows a larger 1920px max width, but actual resolution depends on camera main-stream settings and may still be 720p. This is viewing only and does not change AI detection, evidence, Telegram, event review, ignore zones, or live monitor behavior.
+- MJPEG live view has no audio; audio would require camera audio support and a future HLS/WebRTC/FFmpeg proxy.
 - Browser clients connect to the backend only; RTSP URLs, usernames, and passwords are not exposed to the frontend.
 - backend/app/dashboard_health.py exists.
 - tests/test_dashboard_health.py exists.
