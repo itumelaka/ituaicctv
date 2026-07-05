@@ -15,6 +15,8 @@
 - Ignore-zone polygons are camera configuration only. They should be calibrated from reviewed evidence and should not include private face images, embeddings, or identity data.
 - Telegram alerting can target a group by setting `TELEGRAM_CHAT_ID` in private `.env`. Production uses an internal Telegram group, but bot tokens and numeric chat IDs must not be committed.
 - Event review / acknowledgement is an internal local workflow only. There is no user login/authentication yet.
+- Face-recognition testing is approved internal use only. Do not commit private enrollment images, generated CCTV crops, embeddings, model files, or exact private source paths.
+- README is intentionally public-facing; detailed server operations, live-view, event-review, ignore-zone, and face-recognition notes are kept in focused docs.
 - Current camera inventory has 13 known cameras, 12 enabled cameras, and 1 disabled/offline camera. The mistaken 192.168.40.26 entry is not part of the current inventory.
 - Evidence share: \\192.168.1.254\ituaicctv-evidence
 - Normal evidence share access: Read for Everyone.

@@ -57,6 +57,8 @@ Operational foundation:
 17. Calibrate and enable ignore-zone polygons only after screenshot/evidence review confirms coordinates.
 18. Add daily Telegram summary report to the internal monitoring group.
 19. Add audio-capable live view only if camera microphone/audio streams are available, likely through HLS/WebRTC/FFmpeg rather than MJPEG.
+20. Add visual ignore-zone editor for calibrated polygon setup.
+21. Add private CSV enrollment mapping, face-recognition audit logs, and retention/deletion policy.
 
 ## Current Checkpoint
 

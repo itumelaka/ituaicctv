@@ -1,902 +1,99 @@
 # ITU AI CCTV
 
-Backend AI CCTV detection project for ITU Melaka using existing Hikvision CCTV infrastructure.
-
-The project is currently focused on local backend development, RTSP camera access, YOLO detection, person-only detection, event decision, event logging, and evidence snapshot preparation.
-
-## Current Production Status
-
-Repository and runtime:
-
-- GitHub repo: https://github.com/itumelaka/ituaicctv
-- Production server path: C:\ituaicctv
-- Local laptop development path: C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection
-- Production dashboard: http://192.168.1.254:8000/dashboard-ui
-- Fullscreen TV command center: http://192.168.1.254:8000/dashboard-tv
-- Normal dashboard includes a TV Mode link to /dashboard-tv.
-- TV command center includes a Normal dashboard link back to /dashboard-ui.
-- GitHub Pages is no longer the primary production dashboard. Daily operation uses the backend-served /dashboard-ui page.
-
-Latest deployed checkpoints:
-
-- e2e7f8f feat: add ignore zones and event review workflow
-- bd556ec fix: correct and rename additional CCTV cameras
-- aa62e5b feat: add additional CCTV cameras to inventory
-- 7b8271e fix: add tv dashboard link to normal dashboard
-- 6da444a docs: document tv dashboard mjpeg live stream
-- 073424a fix: improve dashboard tv live camera selection
-- b89afba feat: add mjpeg live camera stream to tv dashboard
-
-Production server status:
-
-- Windows Service: ITUAICCTVBackend
-- Service status: Running
-- Service StartType: Automatic
-- Backend listens on port 8000 and should auto-start after Windows Server reboot.
-- Primary monitor task: ITU AI CCTV Live Monitor
-- Live monitor state: Running
-- Live monitor command: C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py
-- Live monitor runs as a long-running Windows Task Scheduler task triggered at startup.
-- Live monitor scans enabled cameras sequentially. Configured interval is 10 seconds between full scan cycles; observed full-cycle time is about 30 seconds because scanning 12 cameras takes time.
-- Old 5-minute batch monitor task `ITU AI CCTV Person Monitor` is Disabled. It remains registered as a backup path but is not the primary alerting mode.
-- Person evidence includes advisory face readiness metadata when local OpenCV face detection is available. This does not identify people.
-- Internal staff/student face recognition foundation is privacy-gated. It is disabled by default in code, but production currently enables OpenCV LBPH recognition for approved test label `BURN`.
-- Latest live monitor verification showed `enabled=12 attention=0 failed=0 next_scan=10s`.
-- A one-time HEVC decoder warning such as `Could not find ref with POC 34` can appear during RTSP reads. Treat it as harmless if the monitor continues scanning and `failed=0`; investigate only if a camera freezes or failed counts increase.
-
-Camera and network status:
-
-- Total known cameras: 13
-- Enabled cameras: 12
-- Disabled/offline cameras: 1
-- Disabled/offline: block_f_cam_8 / ITU BLOCK F CAM8 / 192.168.40.20, because ping and RTSP port 554 are not reachable.
-- Confirmed additional cameras: kuarantin_cam_11 / ITU KUARANTIN CAM11 / 192.168.40.23, biosekuriti_cam_12 / ITU BIOSEKURITI CAM12 / 192.168.40.24, and makmal_cam_13 / ITU MAKMAL CAM13 / 192.168.40.25.
-- 192.168.40.26 is not part of the current inventory and was only a mistaken/stale entry.
-- Production server LAN IP: 192.168.1.254
-- Server source interface to CCTV subnet: Ethernet 2 / 192.168.1.254
-- GOVNET NIC: 10.65.28.254
-- CCTV subnet: 192.168.40.0/24
-- UDM Pro allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
-- Windows Firewall allows inbound TCP 8000 for dashboard/API.
-
-## Verify After Server Restart
-
-Run these on the Windows Server:
-
-```powershell
-Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
-Get-ScheduledTask |
-  Where-Object { $_.TaskName -like "ITU AI CCTV*" } |
-  Select-Object TaskName, State
-Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Live Monitor" |
-  Select-Object LastRunTime, LastTaskResult
-Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
-```
-
-Expected:
-
-- ITUAICCTVBackend is Running and Automatic.
-- ITU AI CCTV Live Monitor is Running.
-- ITU AI CCTV Person Monitor is Disabled.
-- LastTaskResult 267009 / 0x41301 for the live monitor means the long-running task is currently running.
-- /dashboard/health returns camera totals, scheduler latest run/summary, and per-camera health.
-
-Manual evidence checks:
-
-```powershell
-Get-ChildItem C:\ituaicctv\backend\data\evidence |
-  Sort-Object LastWriteTime -Descending |
-  Select-Object -First 10 Name, LastWriteTime, Length
-explorer "\\192.168.1.254\ituaicctv-evidence"
-```
-
-Near-live monitor manual run:
-
-```powershell
-C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py
-```
-
-The near-live monitor runs repeated sequential full-camera scan cycles. It reuses the existing person detection, evidence save, event, cooldown, and Telegram alert flow, but suppresses routine no_person event writes to avoid excessive event-log noise. It is not frame-by-frame video analytics and does not use the MJPEG TV stream. Watch CPU, network, and camera load before lowering `LIVE_MONITOR_INTERVAL_SECONDS` below 10 seconds. `LIVE_MONITOR_ALERT_COOLDOWN_SECONDS` defaults to 300 seconds.
-
-## Evidence Share Usage
-
-Production evidence:
-
-- Server folder: C:\ituaicctv\backend\data\evidence
-- SMB share: \\192.168.1.254\ituaicctv-evidence
-- Normal share access is read-only for Everyone.
-- Backend/server can still save evidence locally.
-- Use File Explorer for browsing if the browser shows a directory index.
-
-Open from laptop:
-
-```powershell
-explorer "\\192.168.1.254\ituaicctv-evidence"
-```
-
-Copy laptop evidence to server only during a controlled maintenance window:
-
-```powershell
-$source = "C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection\backend\data\evidence"
-$dest = "\\192.168.1.254\ituaicctv-evidence"
-robocopy $source $dest *.jpg /E /XO /R:2 /W:2
-```
-
-Temporary server-side write access, then revert to read-only:
-
-```powershell
-Grant-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -AccessRight Change -Force
-icacls "C:\ituaicctv\backend\data\evidence" /grant "*S-1-1-0:(OI)(CI)M"
-
-Revoke-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -Force
-Grant-SmbShareAccess -Name "ituaicctv-evidence" -AccountName "Everyone" -AccessRight Read -Force
-icacls "C:\ituaicctv\backend\data\evidence" /remove:g "*S-1-1-0"
-Get-SmbShareAccess -Name "ituaicctv-evidence"
-```
-
-## Exit Codes
-
-- 0 = ok / no attention required / no person detected.
-- 2 = attention required / person detected; this is an operational alert, not a crash.
-- Other non-zero failures should be checked in backend/data/task-logs/monitor_person_all.log.
-
-## Latest AI Features
-
-- YOLO person detection from Hikvision RTSP streams.
-- PERSON_CONFIDENCE_THRESHOLD defaults to 0.60. This reduces false positives but can miss distant or low-light people.
-- makmal_cam_13 uses `person_confidence_threshold: 0.75` because a tree/topiary was detected as a person around 0.62-0.63.
-- kuarantin_cam_11 uses `person_confidence_threshold: 0.75` because a fixed blue pipe was detected as a person around 0.65.
-- Higher per-camera thresholds are a temporary tuning approach. Optional camera `ignore_zones` polygon masks are now supported for fixed false-positive objects.
-- Placeholder ignore-zone polygons exist for makmal_cam_13 and kuarantin_cam_11, but they are disabled by default until reviewed against real frames and calibrated.
-- Enabled ignore zones suppress person detections whose bounding-box center falls inside the configured polygon before events, evidence, or Telegram alerts are produced.
-- Event review metadata can be stored locally through `/events/reviews/{event_id}` with statuses such as `valid`, `false_positive`, `ignored`, and `needs_follow_up`.
-- Production verification confirmed `/events/reviews`, `/events/latest-with-reviews`, `/dashboard/cameras`, and dashboard review buttons work.
-- Dashboard operators can mark latest events as Valid, False positive, or Follow up from `/dashboard-ui`; review data is local JSON under ignored `backend/data/event-reviews/`.
-- Telegram person alerts include confidence and active threshold when available.
-- Telegram production alerts can be sent to a group by setting `TELEGRAM_CHAT_ID` to the group chat ID in private `.env`. Production currently uses the `itunetmonitor` group; keep bot tokens and numeric chat IDs out of public docs and commits.
-- New person evidence uses a clearer composite image: full CCTV frame with bounding boxes plus a zoom crop of the highest-confidence person.
-- High-resolution evidence is attempted after person detection. Detection can stay on lightweight channel 102, while evidence may try higher-resolution/main stream channel 101 when available.
-- High-resolution evidence no longer blindly scales low-resolution boxes onto a different frame. If a high-resolution frame is captured, person detection runs again on that frame and high-resolution boxes are used. If capture or re-detection fails, evidence falls back to the original detection frame and boxes.
-- JPEG quality is improved, but Telegram/evidence may still look blurry if the person is far away, the face is small, the angle is high, lighting is poor, or the CCTV source detail is insufficient. Telegram photo compression can also reduce clarity.
-- The crop is labelled as person review evidence, not face identity evidence. Low-resolution sub-stream crops may be marked LOW-RES CROP / FACE ID NOT SUITABLE.
-- Face readiness labels are advisory only: not_available, not_suitable, possible, or suitable. Poor readiness is expected when faces are small, blurry, angled, far from camera, moving, poorly lit, or from low-resolution CCTV streams.
-- Face readiness metadata includes `face_detection_available`, `face_detected`, `face_count`, `best_face_box`, `face_quality`, `face_readiness`, `reasons`, and related metrics when available.
-- Evidence/Telegram may show `FACE: NOT SUITABLE`, `FACE: POSSIBLE`, `FACE: SUITABLE`, or `FACE DETECTION: UNAVAILABLE`.
-- Face readiness is conservative; high-angle CCTV, side profiles, blur, small faces, and poor lighting may return not_suitable or no_face_detected.
-- Internal face recognition labels are opt-in only. When `FACE_RECOGNITION_ENABLED=true` and a local embedding library plus approved enrolled embeddings are available, matching evidence may show an approved internal label such as `BURN`; otherwise recognition stays disabled/unavailable or `UNKNOWN`.
-- `UNKNOWN` only means no reliable internal match. It does not mean suspicious.
-- Future reliable face recognition should capture a high-resolution main-stream or snapshot frame after person_detected=True while keeping fast person detection on the sub-stream.
-- Composite evidence keeps the existing filename pattern: person_detected_<camera_id>_<timestamp>.jpg
-- If composite generation fails, the fallback is the boxed full-frame evidence image.
-- Telegram sends the saved evidence image, so new detections use the clearer composite.
-- Future improvement: optional Telegram send-as-document mode to reduce compression.
-
-## Event Review Operator Notes
-
-Use `/dashboard-ui` to review recent AI events. The latest-events cards show review status and provide quick buttons for Valid, False positive, and Follow up.
-
-Review status meanings:
-
-- `unreviewed`: no operator decision has been recorded yet.
-- `valid`: the event appears to be a real person alert.
-- `false_positive`: the event appears to be a mistaken person detection.
-- `needs_follow_up`: the event needs another check or operational action.
-- `ignored`: the event is intentionally ignored for operations.
-- `reviewed`: generic reviewed state when no more specific status is chosen.
-
-Review records are local operational JSON under ignored `backend/data/event-reviews/`. This workflow is internal only and does not currently include user login/authentication.
-
-Optional internal enrollment command:
-
-```powershell
-python .\scripts\enroll_face.py --label <APPROVED_INTERNAL_LABEL> --images <PRIVATE_FACE_IMAGE_01.jpg> <PRIVATE_FACE_IMAGE_02.jpg>
-```
-
-Enrollment is local only and should be used only for approved internal staff/student. The script does not copy raw reference images; it writes embeddings under `backend/data/face-embeddings/` only when a suitable local embedding library is installed.
-
-Face recognition config defaults:
-
-- `FACE_RECOGNITION_ENABLED=false`
-- `FACE_RECOGNITION_BACKEND=auto`
-- `FACE_REFERENCE_DIR=backend/data/face-reference`
-- `FACE_EMBEDDINGS_DIR=backend/data/face-embeddings`
-- `FACE_MATCH_THRESHOLD=0.60`
-
-Supported local backends:
-
-- `face_recognition`: uses the optional local `face_recognition` Python library if installed.
-- `opencv_lbph`: uses OpenCV LBPH if `opencv-contrib-python` provides `cv2.face.LBPHFaceRecognizer_create`.
-- `auto`: prefers `face_recognition`, then OpenCV LBPH, then safely reports recognition unavailable.
-
-OpenCV LBPH production dependency:
-
-```powershell
-C:\ituaicctv\.venv312\Scripts\python.exe -m pip install opencv-contrib-python==5.0.0.93
-C:\ituaicctv\.venv312\Scripts\python.exe -c "import cv2; print(hasattr(cv2, 'face'))"
-```
-
-OpenCV LBPH enrollment example:
-
-```powershell
-python .\scripts\enroll_face.py --label BURN --backend opencv_lbph --images C:\temp\burn1.jpg C:\temp\burn2.jpg
-```
-
-LBPH is a lightweight internal baseline, not high-security identity proof. Accuracy depends heavily on face size, lighting, angle, motion blur, and camera distance.
-
-Production face-recognition status:
-
-- Production currently has `opencv-contrib-python 5.0.0.93` and `numpy 2.4.6`.
-- `cv2.face` exists and `LBPHFaceRecognizer_create` exists on the production server.
-- The OpenCV Haar cascade file was manually added under the production venv at `cv2\data\haarcascade_frontalface_default.xml`; confirmed size was 930127 bytes.
-- Server tests after dependency install passed: `python -m compileall backend\app scripts` and `python -m unittest discover -s tests -p "test_*.py" -v`, result 17 tests OK.
-- A test internal label `BURN` has been enrolled with OpenCV LBPH using three private local samples. Generated private model files are under the ignored `backend/data/face-embeddings/` directory and must never be committed.
-- Production `.env` currently enables `FACE_RECOGNITION_ENABLED=true` and `FACE_RECOGNITION_BACKEND=opencv_lbph`. Keep `.env` private.
-
-Production BURN enrollment command used:
-
-```powershell
-C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\enroll_face.py `
-  --label BURN `
-  --backend opencv_lbph `
-  --images `
-  <PRIVATE_FACE_IMAGE_01.jpg> `
-  <PRIVATE_FACE_IMAGE_02.jpg> `
-  <PRIVATE_FACE_IMAGE_03.jpg>
-```
-
-Result: `Enrolled BURN: 3 LBPH face sample(s) saved.`
-
-Private local face-photo source examples, not committed and not hardcoded in application code:
-
-- Staff 2024 source folder: `H:\ITUNAS\~StartHere~\Pictures\2024\gambar staff 2024 januari\New folder` with about 160 image files.
-- Student A2 2025 source folder: `H:\ITUNAS\~StartHere~\Pictures\2025\A2 GAMBAR`.
-- Do not rename or alter original source folders.
-- Future design should use CSV enrollment mappings such as `label,group,role,image_path` and support multiple private source CSVs/folders.
-- Keep private enrollment data under ignored local paths: `backend/data/face-enrollment/`, `backend/data/face-reference/`, and `backend/data/face-embeddings/`.
-
-## Latest Dashboard UI
-
-/dashboard-ui is now a dark AI Command Center dashboard with:
-
-- LIVE AI MONITORING pulsing indicator
-- animated scan line
-- summary cards
-- AI Status / Health section
-- latest AI event card
-- event timeline
-- evidence gallery
-- camera grid cards
-- section scroll navigation
-- Refresh now loading state
-- hover/glow effects
-- person-detected pulse/glow
-- prefers-reduced-motion support
-
-/dashboard-tv is available for fullscreen office/security-monitor display. It reuses the same dashboard APIs and is optimized for 16:9 TV layouts with:
-
-- large readable status cards
-- LIVE AI MONITORING badge
-- latest AI alert panel
-- selectable MJPEG Live Camera View proxied by the backend for one selected camera
-- Standard / HD live quality selector for the selected camera only
-- latest evidence snapshot in a smaller historical evidence panel
-- compact event timeline
-- compact camera health strip
-- 30-second auto-refresh
-- Fullscreen button and F keyboard shortcut
-- R keyboard shortcut for refresh
-
-The browser does not connect to RTSP directly and never receives CCTV credentials. `/dashboard-tv` uses the backend MJPEG proxy for the selected live camera, while `/dashboard/live/{camera_id}/snapshot.jpg` remains available as a lightweight fallback/manual snapshot path. MJPEG is limited to 4 FPS and is intended for one selected TV view, not all cameras at once; future scaling work should consider WebRTC or HLS.
-
-Live quality options are for viewing only and do not change person detection, Telegram alerts, evidence, event review, ignore zones, or the live monitor:
-
-- `standard`: uses the camera configured channel, usually Hikvision sub-stream `102`.
-- `hd`: uses Hikvision main-stream channel `101` where available. HD MJPEG allows a larger 1920px max width, but actual resolution depends on the camera main-stream settings and may still be 720p. HD can increase backend CPU, camera load, and network bandwidth.
-- Invalid quality values return HTTP 400.
-
-MJPEG video does not include audio. Audio would require camera microphone/audio support and a future HLS/WebRTC/FFmpeg proxy.
-
-Production TV and live-view test URLs:
-
-- TV dashboard: http://192.168.1.254:8000/dashboard-tv
-- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg?quality=standard
-- Direct MJPEG HD stream: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/stream.mjpg?quality=hd
-- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/biosekuriti_cam_12/stream.mjpg
-- Direct MJPEG stream: http://192.168.1.254:8000/dashboard/live/makmal_cam_13/stream.mjpg
-- Snapshot fallback: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg?quality=standard
-- Snapshot HD fallback: http://192.168.1.254:8000/dashboard/live/kuarantin_cam_11/snapshot.jpg?quality=hd
-
-The MJPEG stream endpoint returns `multipart/x-mixed-replace` and does not run YOLO, save evidence, write event logs, or send Telegram alerts. Latest Evidence Snapshot on `/dashboard-tv` is historical proof and is separate from the live feed.
-
-Internal LAN access is currently HTTP, so browsers may show "Not secure". This is expected unless an HTTPS reverse proxy and certificate are configured.
-
-Dashboard navigation:
-
-- Refresh now reloads dashboard data.
-- Summary / Health / Latest events / Evidence / Cameras scroll to same-page sections.
-- Copy Evidence Folder Path may be blocked by browser clipboard permissions over HTTP; manually copy \\192.168.1.254\ituaicctv-evidence if needed.
-
-## Current Checkpoint
-
-Latest confirmed commit:
-
-8352f37
-
-Confirmed at this checkpoint:
-
-- Backend FastAPI works.
-- Hikvision RTSP works.
-- Multi-camera config has 13 known cameras.
-- 12 cameras are enabled.
-- 1 camera is disabled/offline: block_f_cam_8 / 192.168.40.20.
-- Disabled camera reason: ping and RTSP port 554 are not reachable.
-- GET /dashboard-ui is usable.
-- GET /dashboard/health is usable.
-- Dashboard UI includes auto-refresh, last updated time, next refresh countdown, quick links, improved badges, clickable evidence thumbnails, Health card, and per-camera health badges.
-- GET /dashboard/health includes a scheduler log summary from backend/data/task-logs/monitor_person_all.log when available.
-- Scheduler summary in GET /dashboard/health is usable.
-- Stale camera health logic in GET /dashboard/health is usable.
-- Scheduler BAT resolves the project root from its own script location.
-- Scheduler BAT uses .venv312 first, then .venv, then python from PATH.
-- backend/app/dashboard_health.py exists.
-- tests/test_dashboard_health.py exists.
-- Unit tests pass with: python -m unittest discover -s tests -p "test_*.py" -v
-- Compile check passes with: python -m compileall backend/app
-- sambung.txt is a private local handoff note and should not be committed.
-
-First production deployment (2026-07-03):
-
-- Backend deployed on the Windows Server as a Windows Service (ITUAICCTVBackend) via NSSM, auto-start enabled, confirmed Running.
-- Production backend path: C:\ituaicctv.
-- Server LAN IP: 192.168.1.254.
-- Production dashboard URL on LAN / Teleport: http://192.168.1.254:8000/dashboard-ui.
-- Local 127.0.0.1 dashboard URLs are only for browsing on the machine running the backend.
-- GitHub Pages is no longer the primary production dashboard; daily operation uses the Windows Server backend dashboard.
-- Firewall opens port 8000 for backend dashboard/API access.
-- Current primary monitor is `ITU AI CCTV Live Monitor`, confirmed Running. The older `ITU AI CCTV Person Monitor` batch task is Disabled and retained as backup.
-- Dashboard confirmed reachable across the LAN / Teleport.
-- Server setup PowerShell scripts fixed for Windows PowerShell 5.1 (project-root path, PS7-only null-conditional operator, non-ASCII em-dash) and SETUP_GUIDE.txt rewritten for a clean-server install.
-
-Production evidence and logs:
-
-- Evidence images are saved only when person_detected=True.
-- no_person events usually have evidence_path=null and no evidence image.
-- Person detection now uses PERSON_CONFIDENCE_THRESHOLD with a safer default of 0.60 for person-only detections and monitor alerts.
-- YOLO_CONFIDENCE remains available for general YOLO detection; tune PERSON_CONFIDENCE_THRESHOLD first when reducing false person alerts.
-- Telegram person alerts include the highest available person confidence and active threshold when the event contains detection confidence data.
-- Evidence snapshots for person events use the person snapshot path, which draws YOLO bounding boxes and confidence labels on the saved image.
-- Production evidence folder: C:\ituaicctv\backend\data\evidence.
-- Production task log folder: C:\ituaicctv\backend\data\task-logs.
-- Production service log folder: C:\ituaicctv\backend\data\service-logs.
-- Evidence SMB share: \\192.168.1.254\ituaicctv-evidence.
-- Share physical path: C:\ituaicctv\backend\data\evidence.
-- Dashboard includes Refresh Evidence and Copy Evidence Folder Path actions. If the browser blocks direct folder access, paste the UNC path into File Explorer.
-- Laptop evidence folders are not production evidence storage, and the laptop should not run the production scheduler while the server is the production backend.
-
-Latest successful server scheduler run:
-
-- Task: ITU AI CCTV Person Monitor.
-- Run started: Fri 03/07/2026 22:59:30.
-- Run ended: Fri 03/07/2026 23:00:03.
-- Enabled cameras: 9.
-- Attention/person: 0.
-- No action/no_person: 9.
-- Failed: 0.
-- Exit code: 0.
-- Server uses C:\ituaicctv\.venv312\Scripts\python.exe.
-- YOLOv8n downloaded successfully on the server during the first successful run.
-
-Next recommended work:
-
-1. Review recent person alerts at PERSON_CONFIDENCE_THRESHOLD=0.60 before lowering the threshold.
-2. Dashboard production polish and evidence review workflow
-3. Investigate block_f_cam_8 network/IP
-4. Avoid overlapping scheduler runs if check-all takes too long
-5. Later: face detection planning
-6. Later: number plate recognition planning
+Backend AI CCTV monitoring project for ITU Melaka using existing Hikvision CCTV cameras, YOLO person detection, evidence capture, Telegram alerting, and dashboard-based review.
 
 ## Current Status
 
-Completed:
-
-- FastAPI backend setup
-- Health check endpoint
-- RTSP frame capture
-- RTSP camera test endpoint
-- CCTV snapshot endpoint
-- YOLOv8n person detection
-- YOLO detection endpoint
-- YOLO snapshot endpoint with bounding boxes
-- Person-only detection endpoint
-- Person-only snapshot endpoint / person snapshot
-- Person event decision endpoint
-- Local event logging using JSONL
-- Evidence snapshot logic for person events
-- Evidence image save and view endpoint
-- Event stats endpoint
-- Multi-camera registry
-- Camera audit endpoint
-- Check-all monitor endpoint
-- Dashboard summary API
-- Dashboard health API
-- Scheduler-log health summary in GET /dashboard/health
-- Stale camera health logic in GET /dashboard/health
-- Lightweight dashboard API endpoints for cameras, latest events, and evidence
-- Per-camera dashboard endpoints for latest event and event stats
-- Simple browser dashboard UI
-- Dashboard auto-refresh and status UI polish
-- Dashboard health card with per-camera health badges
-- Dashboard stale/offline visual polish
-- CCTV sub-stream configured to H.264 for OpenCV compatibility
-- YOLOv8n running in CPU mode
-
-## Camera Status Summary
-
-Current configured camera status:
-
-- Total known cameras: 13
-- Enabled cameras: 12
-- Disabled/offline cameras: 1
-- Disabled/offline camera: block_f_cam_8 / 192.168.40.20
-- Status: offline
-- Reason: ping and RTSP port 554 are not reachable
-
-New confirmed Hikvision cameras:
-
-- kuarantin_cam_11 / ITU KUARANTIN CAM11 / 192.168.40.23 / channel 102 / enabled, confirmed VLC RTSP stream label KUARANTIN.
-- biosekuriti_cam_12 / ITU BIOSEKURITI CAM12 / 192.168.40.24 / channel 102 / enabled, confirmed VLC RTSP stream label BIOSEKURITI.
-- makmal_cam_13 / ITU MAKMAL CAM13 / 192.168.40.25 / channel 102 / enabled, confirmed VLC RTSP stream label MAKMAL.
-
-## Current Working Camera
-
-Camera Host : 192.168.40.21
-RTSP Port   : 554
-Channel     : 102
-Stream      : Sub-stream
-Codec       : H.264
-Resolution  : 640x360
-Bitrate     : 512 Kbps
-
-Do not use the high-resolution H.265 main stream for backend AI processing because OpenCV may fail to decode it reliably on Windows.
-
-## Backend Endpoints
-
-Health:
-
-GET /health
-
-Camera:
-
-GET /cameras/test
-GET /cameras/snapshot
-
-Detection:
-
-GET /detections/test
-GET /detections/yolo
-GET /detections/yolo/snapshot
-GET /detections/person
-GET /detections/person/snapshot
-
-Events:
-
-GET /events/person
-GET /events/logs
-GET /events/logs?limit=5
-GET /events/stats
-GET /events/evidence/{filename}
-
-Dashboard:
-
-GET /dashboard-ui
-GET /dashboard-tv
-GET /dashboard/summary
-GET /dashboard/health
-GET /dashboard/evidence
-GET /dashboard/evidence?limit=20
-GET /dashboard/cameras
-GET /dashboard/cameras/{camera_id}/latest-event
-GET /dashboard/cameras/{camera_id}/stats
-GET /dashboard/events/latest
-GET /dashboard/events/latest?limit=10
-GET /dashboard/live/{camera_id}/stream.mjpg
-GET /dashboard/live/{camera_id}/stream.mjpg?quality=standard
-GET /dashboard/live/{camera_id}/stream.mjpg?quality=hd
-GET /dashboard/live/{camera_id}/snapshot.jpg
-GET /dashboard/live/{camera_id}/snapshot.jpg?quality=standard
-GET /dashboard/live/{camera_id}/snapshot.jpg?quality=hd
-
-Dashboard endpoints are lightweight read-only endpoints. They read existing camera configuration, event logs, and evidence image metadata only. They do not run YOLO detection. Per-camera dashboard endpoints validate camera_id against the configured camera list.
-
-GET /dashboard/health also marks enabled cameras as active, stale, or no_recent_event based on the latest event/check time in backend/data/events.jsonl. The default stale threshold is 120 minutes. Disabled cameras with status offline are reported as offline.
-
-GET /dashboard/health currently includes:
-
-- camera totals
-- disabled/offline camera list
-- event health
-- scheduler summary
-- per-camera active/stale/no_recent_event/disabled/offline status
-- stale threshold minutes
-- stale_minutes
-- last_seen_source
-
-Current health status logic:
-
-- offline for disabled cameras with status offline
-- disabled for disabled cameras
-- active for enabled cameras with recent event/check
-- stale for enabled cameras with old event/check
-- no_recent_event for enabled cameras with no event/check yet
-
-Important dashboard URLs:
-
-- /dashboard-ui
-- /dashboard/summary
-- /dashboard/health
-- /dashboard/cameras
-- /dashboard/events/latest
-- /dashboard/evidence
-- /dashboard/cameras/{camera_id}/latest-event
-- /dashboard/cameras/{camera_id}/stats
-
-Dashboard UI:
-
-Open this URL after starting the backend:
-
-http://127.0.0.1:8000/dashboard-ui
-
-Health endpoint:
-
-http://127.0.0.1:8000/dashboard/health
-
-The dashboard UI is a simple browser page that consumes the dashboard API endpoints only. It shows camera totals, disabled cameras, latest events, clickable evidence thumbnails, camera status badges, per-camera event counts, a health card, scheduler latest run and summary, per-camera health badges, stale/offline counts, last seen source, stale minutes, health notes, last updated time, and a 30-second auto-refresh countdown.
-
-The page also includes quick links for:
-
-- Refresh now
-- /dashboard/health
-- /dashboard/summary
-- /dashboard/cameras
-- /dashboard/events/latest
-- /dashboard/evidence
-
-## Scheduler Status
-
-Windows Task Scheduler task:
-
-ITU AI CCTV Person Monitor
-
-Current status:
-
-- Intentionally Disabled
-- Uses the multi-camera monitor launcher
-- BAT launcher returns 0 to Task Scheduler so attention events are not marked as task failures
-- BAT launcher resolves the project root dynamically from its script location
-- Python selection order:
-  1. .venv312\Scripts\python.exe
-  2. .venv\Scripts\python.exe
-  3. python from PATH
-- This supports laptop environments where the old .venv is missing or broken but .venv312 exists
-
-Scheduler script paths:
-
-- backend/scripts/monitor_person_all_once.py
-- backend/scripts/run_monitor_person_all_once.bat
-- backend/scripts/run_monitor_person_all_once_hidden.vbs
-
-Scheduler log path:
-
-backend/data/task-logs/monitor_person_all.log
-
-GET /dashboard/health reads this log lightly and returns a scheduler block with:
-
-- status
-- latest_run_time
-- latest_summary
-- failed_count
-- person_detected_count
-- no_person_count
-- log_path
-- recent_lines
-
-Per-camera dashboard health includes:
-
-- health_status
-- last_event_time
-- stale_minutes
-- stale_threshold_minutes
-- last_seen_source
-
-Current expected healthy dashboard state:
-
-- total known cameras: 13
-- enabled: 12
-- disabled/offline: 1
-- active/stale counts depend on latest live monitor events and the configured stale threshold
-- live monitor task: ITU AI CCTV Live Monitor Running
-- old batch task: ITU AI CCTV Person Monitor Disabled
-
-Known disabled/offline camera note:
-
-- block_f_cam_8 / ITU BLOCK F CAM8 remains disabled/offline.
-- IP: 192.168.40.20.
-- Ping and RTSP port 554 are not reachable.
-- Do not treat this camera as a system failure unless it is intentionally re-enabled later.
-
-## Scheduler PowerShell Commands
-
-Check task state:
-
-Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
-
-Show task info:
-
-Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
-
-Enable the task:
-
-Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
-
-Disable the task:
-
-Disable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
-
-Start the task manually:
-
-Start-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
-
-Operational notes:
-
-- RTSP timeouts may happen temporarily if the CCTV network is unstable.
-- Avoid overlapping scheduler runs if check-all takes too long.
-- When working inside OneDrive, pause sync during coding or Git work if Git, virtualenv, or project files are being modified.
-- Never commit backend/.env, virtualenv folders, logs, evidence images, or local handoff notes.
-
-## Event Flow
-
-Current event flow:
-
-CCTV RTSP stream
-? Capture frame
-? Run YOLO person detection
-? Decide event type
-? Save event log
-? Save evidence snapshot only when person_detected is true
-
-Event log file:
-
-backend/data/events.jsonl
-
-Evidence folder:
-
-backend/data/evidence/
-
-Runtime logs and evidence images are ignored from Git.
-
-## Environment File
-
-Create local environment file:
-
-Copy-Item backend\.env.example backend\.env
-
-Example backend/.env:
-
-APP_NAME=ITU AI CCTV Backend
-APP_ENV=development
-
-CCTV_HOST=192.168.40.21
-CCTV_PORT=554
-CCTV_USERNAME=your_username
-CCTV_PASSWORD=your_password
-CCTV_CHANNEL=102
-
-Never commit real CCTV usernames or passwords.
-
-Security reminders:
-
-- backend/.env is local only
-- Never commit camera passwords
-- Dashboard responses must not expose RTSP credentials
-- Evidence images may contain real CCTV footage and must be handled carefully
-- Face readiness metadata is not identity recognition. The system must not store face databases, embeddings, reference images, or personal identity labels unless a future authorised recognition phase is explicitly approved.
-- Future face recognition requires clear policy, consent/authorisation, access control, audit logging, retention/deletion rules, and high-resolution face evidence.
-- Face reference images and embeddings under `backend/data/face-reference/` and `backend/data/face-embeddings/` are private local biometric data and must never be committed.
-- Keep Hikvision/NVR recording separate from AI evidence and face enrollment data.
-
-## Local Development
-
-Create virtual environment:
-
+- Production uses the backend-served dashboard for daily operation.
+- GitHub Pages is no longer the primary production dashboard.
+- Backend service: `ITUAICCTVBackend`
+- Primary monitor: `ITU AI CCTV Live Monitor`
+- Old 5-minute monitor: `ITU AI CCTV Person Monitor`, retained as disabled backup
+- Camera inventory: 13 known cameras, 12 enabled, 1 disabled/offline
+- Event review, ignore-zone groundwork, Telegram group alerting, and Standard/HD live view are deployed.
+
+## Key Features
+
+- RTSP camera access through the backend, without exposing CCTV credentials to browsers.
+- Near-live sequential person monitoring using YOLO.
+- Person evidence images with full-frame context and person crop.
+- Telegram alerts for person detections.
+- Normal dashboard for operators and evidence review.
+- Fullscreen TV Command Center for wall display.
+- Event review / acknowledgement statuses.
+- Per-camera confidence thresholds and disabled placeholder ignore-zone polygons for known static false positives.
+- Optional internal face-recognition foundation, privacy-gated and not identity proof.
+
+## Dashboards
+
+Production LAN examples:
+
+- Normal dashboard: `http://192.168.1.254:8000/dashboard-ui`
+- TV dashboard: `http://192.168.1.254:8000/dashboard-tv`
+
+The TV dashboard includes one selected MJPEG live camera stream at a time. Live view supports:
+
+- `quality=standard`: configured camera channel, usually Hikvision sub-stream `102`
+- `quality=hd`: Hikvision channel `101`, where available
+
+Invalid live-view quality values return HTTP 400. MJPEG is video-only and does not include audio.
+
+## Architecture Overview
+
+```text
+Hikvision CCTV cameras
+        |
+        v
+FastAPI backend on Windows Server
+        |
+        +-- YOLO person detection and evidence capture
+        +-- Near-live monitor task
+        +-- Telegram alert helper
+        +-- Dashboard APIs and MJPEG proxy
+        +-- Local event logs and review metadata
+        |
+        v
+Dashboard UI / TV Command Center / Telegram group
+```
+
+The browser connects to the backend only. RTSP URLs, CCTV usernames, and CCTV passwords are not exposed in frontend code.
+
+## Quick Start For Local Development
+
+```powershell
 python -m venv .venv
-
-Activate virtual environment:
-
-.\.venv\Scripts\Activate.ps1
-
-Install dependencies:
-
-python -m pip install -r backend\requirements.txt
-
-Run backend:
-
-cd backend
-python -m uvicorn app.main:app --reload
-
-Open API docs:
-
-http://127.0.0.1:8000/docs
-
-## Important Notes
-
-The original camera main stream used H.265 / HEVC at high resolution. OpenCV produced HEVC decode errors such as:
-
-PPS id out of range
-VPS does not exist
-SPS does not exist
-Stream timeout triggered
-
-Stable backend configuration:
-
-Video Encoding : H.264
-Resolution     : 640x360
-Channel        : 102
-
-This is lighter and more suitable for AI detection.
-
-## Next Milestones
-
-1. Dashboard production polish and evidence review workflow
-2. Investigate block_f_cam_8 network/IP
-3. Avoid overlapping scheduler runs if check-all takes too long
-4. Later: face detection planning
-5. Later: number plate recognition planning
-
-## Repository
-
-https://github.com/itumelaka/ituaicctv
-
-## GitHub Pages Dashboard
-
-Live dashboard URL:
-
-https://itumelaka.github.io/ituaicctv/
-
-The GitHub Pages site serves the full dashboard UI as a static PWA from the `docs/` folder.
-It is installable as a PWA on desktop and mobile (Add to Home Screen).
-
-The dashboard connects to the FastAPI backend over the LAN.
-Set the Backend URL in the dashboard header to your server IP, for example:
-
-```
-http://192.168.x.x:8000
+.\.venv\Scripts\activate
+pip install -r backend\requirements.txt
+uvicorn app.main:app --app-dir backend --reload
 ```
 
-The backend URL is saved in the browser's localStorage and remembered on next visit.
+Create local environment files from the examples and keep real secrets private. Do not commit `.env`, camera credentials, Telegram tokens, evidence, face data, embeddings, or models.
 
-CORS is enabled on the backend (`allow_origins=["*"]`) so any browser on the LAN can connect.
+## Production Operations
 
-## Windows Server Deployment
+Detailed production and operator notes live in the docs folder:
 
-Recommended setup for production:
+- [Project status](docs/PROJECT_STATUS.md)
+- [Operations](docs/OPERATIONS.md)
+- [Live view](docs/LIVE_VIEW.md)
+- [Event review](docs/EVENT_REVIEW.md)
+- [Ignore zones](docs/IGNORE_ZONES.md)
+- [Face recognition](docs/FACE_RECOGNITION.md)
+- [Security notes](docs/SECURITY_NOTES.md)
+- [Windows Task Scheduler](docs/WINDOWS_TASK_SCHEDULER.md)
+- [Roadmap](docs/ROADMAP.md)
+- [TODO](docs/TODO.md)
 
-```
-CCTV LAN
-  → Hikvision NVR / cameras
-  → Windows Server (bilik server)
-       → FastAPI backend (port 8000)
-       → Windows Task Scheduler (monitor every 5 min)
-  → Staff browser → https://itumelaka.github.io/ituaicctv/
-       → Backend URL set to http://<server-ip>:8000
-```
+Backend-specific endpoint and runtime notes are in [backend/README.md](backend/README.md).
 
-Steps to deploy on Windows Server:
+## Security And Privacy
 
-1. Install Python 3.12 on Windows Server.
+- Evidence, event review data, face images, face embeddings, and recognition models are private runtime data and ignored by Git.
+- Telegram bot tokens and numeric chat IDs must stay in private `.env` files.
+- CCTV credentials and RTSP URLs with credentials must never be committed.
+- Face recognition is optional, internal, privacy-gated, and not high-security identity proof.
+- `UNKNOWN` recognition means no reliable internal match; it does not mean suspicious.
 
-2. Clone the repository:
-   ```powershell
-   git clone https://github.com/itumelaka/ituaicctv.git
-   cd ituaicctv
-   ```
+## License
 
-3. Create virtual environment and install dependencies:
-   ```powershell
-   python -m venv .venv312
-   .\.venv312\Scripts\Activate.ps1
-   pip install -r backend\requirements.txt
-   ```
-
-4. Create `backend\.env` from example:
-   ```powershell
-   Copy-Item backend\.env.example backend\.env
-   ```
-   Fill in CCTV credentials, Telegram token, and chat ID.
-
-5. Allow port 8000 through Windows Firewall (LAN only):
-   ```powershell
-   New-NetFirewallRule -DisplayName "ITU AI CCTV Backend" -Direction Inbound -Protocol TCP -LocalPort 8000 -Action Allow
-   ```
-
-6. Run backend:
-   ```powershell
-   cd backend
-   python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-   ```
-
-7. Run deployment scripts (as Administrator):
-
-   ```powershell
-   # Install backend as Windows Service (auto-start on boot)
-   .\scripts\server\install_backend_service.ps1
-
-   # Open port 8000 in Windows Firewall (LAN only)
-   .\scripts\server\setup_firewall.ps1
-
-   # Setup Task Scheduler for periodic monitoring (every 5 min)
-   .\scripts\server\setup_task_scheduler.ps1
-   ```
-
-   Scripts require NSSM for the service installer.
-   Download NSSM: https://nssm.cc/download — place `nssm.exe` at `C:\nssm\nssm.exe`.
-
-8. Enable the monitoring task when ready:
-
-   ```powershell
-   Enable-ScheduledTask -TaskName "ITU AI CCTV Person Monitor"
-   ```
-
-9. Check server health anytime:
-
-   ```powershell
-   .\scripts\server\check_server.ps1
-   ```
-
-10. Open GitHub Pages dashboard in any browser on the LAN:
-    ```
-    https://itumelaka.github.io/ituaicctv/
-    ```
-    Set Backend URL to `http://<windows-server-ip>:8000`.
-
-## Monitor Endpoint
-
-Manual monitor check endpoint:
-
-GET /monitor/person/check
-
-This endpoint runs a complete person monitoring check:
-
-CCTV RTSP stream
-? Capture frame
-? Run person-only YOLO detection
-? Create event decision
-? Save event log
-? Save evidence snapshot if person_detected is true
-? Return recommended action
-
-Example no-person response:
-
-status          : ok
-monitor         : person
-action          : no_action
-next_step       : Continue monitoring.
-person_detected : false
-
-Example person-detected response:
-
-status          : ok
-monitor         : person
-action          : attention_required
-next_step       : Review evidence image and consider alert notification.
-person_detected : true
-evidence_path   : data/evidence/...
-
-## Project Documentation
-
-Additional project documentation:
-
-- docs/PROJECT_STATUS.md
-- docs/TODO.md
-- docs/ROADMAP.md
-- docs/SECURITY_NOTES.md
-- docs/WINDOWS_TASK_SCHEDULER.md
+Internal ITU Melaka operational project. Confirm sharing and deployment policy with the project owner before publishing sensitive operational details.

@@ -42,6 +42,9 @@
 - [ ] Add camera health alert if live monitor failed count increases or a camera freezes.
 - [ ] Review HD live-view CPU/network impact before encouraging routine HD monitoring.
 - [ ] Add future audio-capable live view with HLS/WebRTC/FFmpeg only if cameras provide audio streams.
+- [ ] Add visual ignore-zone polygon editor for reviewed dashboard snapshots.
+- [ ] Add CSV-based private face enrollment mapping, review audit logs, and retention/deletion policy.
+- [ ] Keep evaluating internal LBPH recognition with approved private samples; do not treat matches as high-security identity proof.
 - [ ] Add polygon zone intrusion detection per camera.
 - [ ] Add restricted zone alerts.
 - [ ] Add line crossing detection with direction.

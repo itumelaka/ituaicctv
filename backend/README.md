@@ -2,6 +2,14 @@
 
 FastAPI backend for CCTV RTSP testing, snapshot capture, YOLO detection, person-only detection, event decision, local logging, evidence snapshot, multi-camera monitoring, and dashboard UI.
 
+For public project overview, use the root `README.md`. Detailed operator notes are split into:
+
+- `docs/OPERATIONS.md`
+- `docs/LIVE_VIEW.md`
+- `docs/EVENT_REVIEW.md`
+- `docs/IGNORE_ZONES.md`
+- `docs/FACE_RECOGNITION.md`
+
 ## Current Production Runtime
 
 - Production path: `C:\ituaicctv`

@@ -15,6 +15,14 @@ Repository:
 - TV command center includes a Normal dashboard link back to /dashboard-ui.
 - GitHub Pages is no longer the primary dashboard. Production dashboard is served by backend /dashboard-ui.
 
+Documentation map:
+
+- Operations: docs/OPERATIONS.md
+- Live view: docs/LIVE_VIEW.md
+- Event review: docs/EVENT_REVIEW.md
+- Ignore zones: docs/IGNORE_ZONES.md
+- Face recognition: docs/FACE_RECOGNITION.md
+
 Latest important deployed commits:
 
 - e2e7f8f feat: add ignore zones and event review workflow
@@ -95,6 +103,7 @@ Current AI and dashboard features:
 - High-resolution evidence is attempted after person detection. If a high-resolution frame is captured, person detection runs again on that frame and high-resolution boxes are used. If capture or re-detection fails, the system falls back to the original detection frame and boxes.
 - Person evidence now includes advisory face readiness metadata when local OpenCV face detection is available: detection availability, face count, best face box, quality, readiness, and reasons. This is not identity recognition.
 - Internal staff/student face recognition foundation is privacy-gated and disabled by default in code. Production currently enables OpenCV LBPH recognition for the approved test label `BURN`; it only runs when face readiness is possible/suitable and local model/backend files are available.
+- Internal test label `BURN` enrollment was improved from 3 samples to 6 private local CCTV-derived samples. Some candidate samples were rejected because face detection/quality was not suitable. This remains internal testing only and is not high-security identity proof.
 - Local recognition backends now support `FACE_RECOGNITION_BACKEND=auto`, `face_recognition`, or `opencv_lbph`; OpenCV LBPH requires `opencv-contrib-python` so `cv2.face` is available.
 - /dashboard-ui is now a dark AI Command Center with LIVE AI MONITORING indicator, scan line, summary cards, AI Status / Health, latest AI event, event timeline, evidence gallery, camera cards, section scroll navigation, refresh loading state, hover/glow effects, person-detected pulse/glow, and prefers-reduced-motion support.
 
@@ -220,6 +229,7 @@ Confirmed at this checkpoint:
 - Direct MJPEG stream endpoint is available at /dashboard/live/{camera_id}/stream.mjpg and is limited to 4 FPS for one selected camera/viewer.
 - Snapshot fallback endpoint remains available at /dashboard/live/{camera_id}/snapshot.jpg.
 - Live view quality supports `quality=standard` for the configured camera channel, usually 102, and `quality=hd` for Hikvision main-stream channel 101. Invalid quality values return HTTP 400. HD MJPEG allows a larger 1920px max width, but actual resolution depends on camera main-stream settings and may still be 720p. This is viewing only and does not change AI detection, evidence, Telegram, event review, ignore zones, or live monitor behavior.
+- HD snapshot was confirmed at 3200x1800 on block_f_cam_7 where the camera main stream provided that resolution.
 - MJPEG live view has no audio; audio would require camera audio support and a future HLS/WebRTC/FFmpeg proxy.
 - Browser clients connect to the backend only; RTSP URLs, usernames, and passwords are not exposed to the frontend.
 - backend/app/dashboard_health.py exists.
