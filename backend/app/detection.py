@@ -374,31 +374,6 @@ def _build_person_evidence_frame(frame, detections):
         return boxed_frame
 
 
-def _scale_detections_for_frame(detections, source_frame, target_frame):
-    source_height, source_width = source_frame.shape[:2]
-    target_height, target_width = target_frame.shape[:2]
-
-    if source_width <= 0 or source_height <= 0:
-        return detections
-
-    scale_x = target_width / source_width
-    scale_y = target_height / source_height
-    scaled_detections = []
-
-    for detection in detections:
-        scaled_detection = detection.copy()
-        box = detection.get("box", {})
-        scaled_detection["box"] = {
-            "x1": round(float(box.get("x1", 0)) * scale_x, 2),
-            "y1": round(float(box.get("y1", 0)) * scale_y, 2),
-            "x2": round(float(box.get("x2", 0)) * scale_x, 2),
-            "y2": round(float(box.get("y2", 0)) * scale_y, 2),
-        }
-        scaled_detections.append(scaled_detection)
-
-    return scaled_detections
-
-
 def _encode_jpeg(frame) -> bytes:
     success, buffer = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
 
@@ -450,12 +425,28 @@ def build_person_evidence_jpeg_from_detection(
     if channel:
         try:
             high_res_frame = capture_frame_for_camera_channel(camera, channel)
-            evidence_detections = _scale_detections_for_frame(
-                detections,
-                source_frame=frame,
-                target_frame=high_res_frame,
+            high_res_detections = detect_objects(
+                high_res_frame,
+                class_name_filter=PERSON_CLASS_NAME,
+                confidence_threshold=_person_confidence_threshold(camera),
             )
-            evidence_frame = high_res_frame
+
+            if high_res_detections:
+                evidence_detections = high_res_detections
+                evidence_frame = high_res_frame
+            else:
+                camera_id = camera.get("id") if camera else "default_camera"
+                logger.warning(
+                    "High-resolution evidence re-detection found no person for "
+                    "%s channel %s; falling back to detection frame.",
+                    camera_id,
+                    channel,
+                )
+                print(
+                    "WARNING: High-resolution evidence re-detection found no "
+                    f"person for {camera_id} channel {channel}; falling back "
+                    "to detection frame."
+                )
         except Exception as error:
             camera_id = camera.get("id") if camera else "default_camera"
             logger.warning(

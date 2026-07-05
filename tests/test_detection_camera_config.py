@@ -19,6 +19,7 @@ fake_cv2.CAP_PROP_BUFFERSIZE = 0
 fake_cv2.IMWRITE_JPEG_QUALITY = 1
 fake_cv2.VideoCapture = lambda *_args, **_kwargs: None
 fake_cv2.FONT_HERSHEY_SIMPLEX = 0
+fake_cv2.imencode = lambda *_args, **_kwargs: (True, types.SimpleNamespace(tobytes=lambda: b"jpg"))
 sys.modules.setdefault("cv2", fake_cv2)
 
 fake_ultralytics = types.ModuleType("ultralytics")
@@ -48,25 +49,54 @@ class DetectionCameraConfigTests(unittest.TestCase):
             detection.settings.person_confidence_threshold,
         )
 
-    def test_scales_detection_boxes_for_high_resolution_evidence_frame(self):
-        detections = [
+    def test_high_resolution_evidence_uses_high_res_detection_boxes(self):
+        original_detection = {
+            "person_detected": True,
+            "detections": [
+                {
+                    "class_name": "person",
+                    "confidence": 0.91,
+                    "box": {"x1": 10, "y1": 20, "x2": 110, "y2": 220},
+                }
+            ],
+        }
+        high_res_detection = [
             {
                 "class_name": "person",
-                "confidence": 0.91,
-                "box": {"x1": 10, "y1": 20, "x2": 110, "y2": 220},
+                "confidence": 0.93,
+                "box": {"x1": 500, "y1": 300, "x2": 900, "y2": 980},
             }
         ]
+        captured = {}
 
-        scaled = detection._scale_detections_for_frame(
-            detections,
-            source_frame=_Frame(width=640, height=360),
-            target_frame=_Frame(width=1920, height=1080),
-        )
+        original_capture = detection.capture_frame_for_camera_channel
+        original_detect = detection.detect_objects
+        original_build = detection._build_person_evidence_frame
+
+        try:
+            detection.capture_frame_for_camera_channel = (
+                lambda _camera, _channel: _Frame(width=1920, height=1080)
+            )
+            detection.detect_objects = lambda *_args, **_kwargs: high_res_detection
+            detection._build_person_evidence_frame = lambda frame, detections: captured.update(
+                {"frame": frame, "detections": detections}
+            ) or frame
+
+            detection.build_person_evidence_jpeg_from_detection(
+                _Frame(width=640, height=360),
+                original_detection,
+                camera={"id": "cam_1", "channel": "102"},
+            )
+        finally:
+            detection.capture_frame_for_camera_channel = original_capture
+            detection.detect_objects = original_detect
+            detection._build_person_evidence_frame = original_build
 
         self.assertEqual(
-            scaled[0]["box"],
-            {"x1": 30.0, "y1": 60.0, "x2": 330.0, "y2": 660.0},
+            captured["detections"][0]["box"],
+            {"x1": 500, "y1": 300, "x2": 900, "y2": 980},
         )
+        self.assertEqual(captured["frame"].shape, (1080, 1920, 3))
 
 
 if __name__ == "__main__":
