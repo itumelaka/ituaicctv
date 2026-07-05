@@ -3,8 +3,8 @@ from app.camera_registry import list_enabled_cameras
 from app.events import evaluate_person_event, evaluate_person_event_for_camera
 
 
-def run_person_monitor_check() -> dict:
-    event = evaluate_person_event()
+def run_person_monitor_check(log_no_person: bool = True) -> dict:
+    event = evaluate_person_event(log_no_person=log_no_person)
     alert_sent = False
 
     if event.get("person_detected"):
@@ -27,8 +27,8 @@ def run_person_monitor_check() -> dict:
     }
 
 
-def run_person_monitor_check_for_camera(camera: dict) -> dict:
-    event = evaluate_person_event_for_camera(camera)
+def run_person_monitor_check_for_camera(camera: dict, log_no_person: bool = True) -> dict:
+    event = evaluate_person_event_for_camera(camera, log_no_person=log_no_person)
     alert_sent = False
 
     if event.get("person_detected"):
@@ -52,13 +52,16 @@ def run_person_monitor_check_for_camera(camera: dict) -> dict:
     }
 
 
-def run_person_monitor_check_all() -> dict:
+def run_person_monitor_check_all(log_no_person: bool = True) -> dict:
     cameras = list_enabled_cameras()
     results = []
 
     for camera in cameras:
         try:
-            result = run_person_monitor_check_for_camera(camera)
+            result = run_person_monitor_check_for_camera(
+                camera,
+                log_no_person=log_no_person,
+            )
         except Exception as error:
             result = {
                 "status": "failed",

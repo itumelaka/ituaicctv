@@ -54,7 +54,12 @@ def _is_person_event_in_cooldown(camera_id: str, current_time: datetime) -> bool
     return False
 
 
-def _build_person_event(detection_result: dict, snapshot_func, camera_context: dict | None = None) -> dict:
+def _build_person_event(
+    detection_result: dict,
+    snapshot_func,
+    camera_context: dict | None = None,
+    log_no_person: bool = True,
+) -> dict:
     detections_count = detection_result["detections_count"]
     person_detected = detection_result["person_detected"]
     current_time = datetime.now(timezone.utc)
@@ -114,26 +119,29 @@ def _build_person_event(detection_result: dict, snapshot_func, camera_context: d
         "cooldown_seconds": cooldown_seconds
     }
 
-    append_event_log(event)
+    if person_detected or log_no_person:
+        append_event_log(event)
 
     return event
 
 
-def evaluate_person_event() -> dict:
+def evaluate_person_event(log_no_person: bool = True) -> dict:
     detection_result = run_person_detection()
     return _build_person_event(
         detection_result=detection_result,
-        snapshot_func=run_person_snapshot_jpeg
+        snapshot_func=run_person_snapshot_jpeg,
+        log_no_person=log_no_person,
     )
 
 
-def evaluate_person_event_for_camera(camera: dict) -> dict:
+def evaluate_person_event_for_camera(camera: dict, log_no_person: bool = True) -> dict:
     detection_result = run_person_detection_for_camera(camera)
 
     return _build_person_event(
         detection_result=detection_result,
         snapshot_func=lambda: run_person_snapshot_jpeg_for_camera(camera),
-        camera_context=camera
+        camera_context=camera,
+        log_no_person=log_no_person,
     )
 
 

@@ -36,6 +36,9 @@ Production server status:
 - Task state: Ready
 - Scheduler Python: C:\ituaicctv\.venv312\Scripts\python.exe
 - Camera registry now has 12 enabled cameras. Latest confirmed scheduler logs before adding the newly labelled cameras show status ok, enabled=9, failed=0.
+- Optional near-live monitor script: scripts/monitor_person_live.py
+- Near-live monitor defaults: scan cycle every 10 seconds, per-camera alert cooldown 300 seconds.
+- Existing 5-minute Task Scheduler scan remains available as a backup until near-live monitoring is proven stable.
 
 Camera and network status:
 
@@ -79,6 +82,14 @@ Get-ChildItem C:\ituaicctv\backend\data\evidence |
   Select-Object -First 10 Name, LastWriteTime, Length
 explorer "\\192.168.1.254\ituaicctv-evidence"
 ```
+
+Optional near-live monitor manual run:
+
+```powershell
+C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py
+```
+
+The near-live monitor runs repeated sequential full-camera scan cycles. It reuses the existing person detection, evidence save, event, cooldown, and Telegram alert flow, but suppresses routine no_person event writes to avoid excessive log noise. It is not frame-by-frame video analytics and does not use the MJPEG TV stream. Watch CPU, network, and camera load before lowering `LIVE_MONITOR_INTERVAL_SECONDS` below 10 seconds. `LIVE_MONITOR_ALERT_COOLDOWN_SECONDS` defaults to 300 seconds.
 
 ## Evidence Share Usage
 

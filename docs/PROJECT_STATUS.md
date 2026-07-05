@@ -35,6 +35,9 @@ Production service and scheduler:
 - Scheduler Python: C:\ituaicctv\.venv312\Scripts\python.exe
 - Camera registry now has 12 enabled cameras.
 - Latest confirmed scheduler logs before adding the newly labelled cameras show status ok, enabled cameras 9, failed 0.
+- Optional near-live monitor script: scripts/monitor_person_live.py
+- Near-live monitor default scan interval is 10 seconds with a 300-second per-camera alert cooldown.
+- Existing 5-minute Task Scheduler scan remains available as backup until near-live monitoring is proven stable.
 - Exit code 0 means no person detected / no action.
 - Exit code 2 means attention required / person detected, not a crash.
 
@@ -95,6 +98,12 @@ Get-ChildItem C:\ituaicctv\backend\data\evidence |
   Sort-Object LastWriteTime -Descending |
   Select-Object -First 10 Name, LastWriteTime, Length
 explorer "\\192.168.1.254\ituaicctv-evidence"
+```
+
+Optional near-live monitor manual run:
+
+```powershell
+C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py
 ```
 
 ## Deployment Status

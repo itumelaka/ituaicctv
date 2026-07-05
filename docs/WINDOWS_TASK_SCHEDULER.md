@@ -100,6 +100,37 @@ Current camera summary:
 - Disabled camera: block_f_cam_8 / 192.168.40.20
 - Reason: ping and RTSP port 554 are not reachable
 
+## Optional Near-Live Monitor
+
+The 5-minute Windows Task Scheduler job remains in place and can stay as a backup. For near-live alerting, the project also includes an optional long-running monitor:
+
+```text
+scripts/monitor_person_live.py
+```
+
+Manual production run command:
+
+```powershell
+C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py
+```
+
+Default behavior:
+
+- Scans all enabled cameras sequentially every 10 seconds.
+- Uses `LIVE_MONITOR_INTERVAL_SECONDS` when set; default is 10.
+- Uses `LIVE_MONITOR_ALERT_COOLDOWN_SECONDS` when set; default is 300.
+- Reuses the existing person detection, evidence save, event, cooldown, and Telegram alert flow.
+- Suppresses routine no_person event writes to avoid excessive event-log noise.
+- Continues running when a single camera fails and prints compact cycle summaries.
+- Stops cleanly with Ctrl+C and exit code 0.
+
+Production service plan:
+
+- Optional future NSSM service name: ITUAICCTVLiveMonitor
+- Keep the existing Task Scheduler job until the live monitor is proven stable.
+- Watch CPU, network, and camera load before reducing the interval to 5 seconds.
+- MJPEG TV live stream is for viewing only and does not trigger AI detection.
+
 ## Script Exit Meaning
 
 The Python monitor script can report:

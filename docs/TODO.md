@@ -16,6 +16,9 @@
 - Fullscreen TV Command Center mode is available at /dashboard-tv.
 - TV mode includes a selectable backend-proxied MJPEG live camera panel; latest evidence is shown separately as historical proof.
 - Direct stream endpoint /dashboard/live/{camera_id}/stream.mjpg is available for one selected camera/viewer at 4 FPS; /dashboard/live/{camera_id}/snapshot.jpg remains as fallback.
+- Optional near-live monitor script is available at scripts/monitor_person_live.py.
+- Near-live monitor default scan interval is 10 seconds with a 300-second per-camera alert cooldown.
+- Existing 5-minute Task Scheduler scan remains as backup until near-live monitoring is proven stable.
 
 ## Current Production Backlog
 
@@ -34,6 +37,9 @@
 - [ ] Add AI risk score using confidence, zone, after-hours, and camera importance.
 - [ ] Add after-hours detection.
 - [x] Add fullscreen command center / TV mode.
+- [x] Add optional near-live continuous person monitor script.
+- [ ] Pilot near-live monitor on production as optional ITUAICCTVLiveMonitor service.
+- [ ] Watch CPU/network/camera load before reducing live monitor interval below 10 seconds.
 - [ ] Continue face detection and safe opt-in face recognition roadmap.
 - [ ] Add high-resolution main-stream/snapshot evidence capture after person_detected=True for future face detection.
 - [ ] Add explicit face evidence quality/readiness metadata before any recognition pilot.
@@ -124,6 +130,7 @@ Camera list:
 - [ ] Add camera readiness status
 - [ ] Add ready_for_ai field in cameras.json
 - [x] Add monitor all enabled cameras endpoint
+- [x] Add optional near-live continuous monitor script
 - [x] Add per-camera event stats
 - [x] Add per-camera latest event endpoint
 - [x] Add configurable PERSON_CONFIDENCE_THRESHOLD for person-only detection

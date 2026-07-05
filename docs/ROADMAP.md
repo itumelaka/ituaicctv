@@ -25,6 +25,9 @@ Operational foundation:
 - Fullscreen TV Command Center mode is available at `/dashboard-tv`.
 - TV mode now separates a selectable backend-proxied MJPEG live camera view from historical evidence snapshots.
 - Direct selected-camera stream endpoint is available at `/dashboard/live/{camera_id}/stream.mjpg` with a 4 FPS limit; `/dashboard/live/{camera_id}/snapshot.jpg` remains as fallback.
+- Optional near-live monitor script is available at `scripts/monitor_person_live.py`.
+- Near-live monitoring runs repeated sequential scan cycles every 10 seconds by default with a 300-second per-camera alert cooldown.
+- The existing 5-minute Windows Task Scheduler scan should remain as backup until the near-live monitor is proven stable.
 
 ## Forward Backlog
 
@@ -40,7 +43,8 @@ Operational foundation:
 10. After-hours detection.
 11. Improve fullscreen command center / TV mode after real TV review.
 12. WebRTC/HLS/media-server upgrade for better live-view scaling if multiple viewers or cameras need streaming.
-13. Face detection and safe opt-in face recognition roadmap, including high-resolution evidence capture before any identity pilot.
+13. Pilot the near-live monitor as an optional `ITUAICCTVLiveMonitor` Windows service after observing CPU, network, and camera load.
+14. Face detection and safe opt-in face recognition roadmap, including high-resolution evidence capture before any identity pilot.
 
 ## Current Checkpoint
 
@@ -132,6 +136,7 @@ Planned features:
 
 - Multi-camera monitor script
 - Windows Task Scheduler configuration - operational checkpoint completed
+- Optional near-live continuous monitor script - completed
 - Runtime cleanup script
 - Log rotation
 - Evidence retention policy
@@ -279,6 +284,7 @@ Planned features:
 - Windows Server setup
 - Production .env
 - Scheduled monitoring
+- Optional near-live continuous monitoring
 - Backup strategy
 - Access control
 - Documentation
