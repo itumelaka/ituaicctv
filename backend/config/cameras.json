@@ -97,8 +97,9 @@
     "host": "192.168.40.23",
     "port": 554,
     "channel": "102",
+    "person_confidence_threshold": 0.75,
     "enabled": true,
-    "notes": "Confirmed VLC RTSP stream label: KUARANTIN. Direct IP camera. Sub-stream channel 102."
+    "notes": "Confirmed VLC RTSP stream label: KUARANTIN. Direct IP camera. Sub-stream channel 102. Person threshold raised to 0.75 because a fixed blue pipe caused false positives around 0.65."
   },
   {
     "id": "biosekuriti_cam_12",
