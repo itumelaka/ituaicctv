@@ -13,7 +13,7 @@
 - New evidence image behavior: full-frame boxes plus zoom crop of highest-confidence person.
 - Evidence crop labels avoid implying face identity quality; low-resolution crops can be marked FACE ID NOT SUITABLE.
 - Face readiness metadata is advisory only and does not perform identity recognition or store face embeddings.
-- Optional internal staff/student recognition foundation is disabled by default and requires approved local enrollment before use.
+- Optional internal staff/student recognition foundation is disabled by default and supports `face_recognition` or OpenCV LBPH backends after approved local enrollment.
 - Dashboard is now the dark AI Command Center served by backend /dashboard-ui.
 - Fullscreen TV Command Center mode is available at /dashboard-tv.
 - TV mode includes a selectable backend-proxied MJPEG live camera panel; latest evidence is shown separately as historical proof.
@@ -49,6 +49,7 @@
 - [ ] Add optional Telegram send-as-document mode to reduce Telegram photo compression for evidence review.
 - [x] Add explicit face evidence quality/readiness metadata before any recognition pilot.
 - [x] Add disabled-by-default internal face recognition foundation and enrollment script scaffold.
+- [x] Add OpenCV LBPH backend option for local internal recognition when opencv-contrib-python is installed.
 - [ ] Confirm kuarantin_cam_11, biosekuriti_cam_12, and makmal_cam_13 in the next scheduler/dashboard health run.
 
 ## Production Verification Commands
@@ -161,7 +162,8 @@ Camera list:
 - [ ] Add privacy and consent notes
 - [ ] Design face enrolment flow
 - [x] Add local enrollment script scaffold for approved internal labels
-- [ ] Install/approve local face embedding dependency before real enrollment
+- [ ] Install/approve local face embedding dependency before real enrollment, for example opencv-contrib-python for LBPH or another approved local backend
+- [ ] Verify production LBPH support with `C:\ituaicctv\.venv312\Scripts\python.exe -c "import cv2; print(hasattr(cv2, 'face'))"`
 - [ ] Add face recognition pilot only for authorised internal staff/student
 - [ ] Add known persons database only as private local biometric data, never in Git
 - [ ] Add confidence threshold for identity matching

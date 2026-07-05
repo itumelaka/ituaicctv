@@ -23,7 +23,7 @@ Operational foundation:
 - New evidence is a composite full-frame-plus-zoom-crop image.
 - The person crop is review evidence only. Low-resolution sub-stream crops are not suitable proof for face identity recognition.
 - Face readiness metadata is now advisory groundwork only: local face detection availability, face count, best face box, quality, readiness, and reasons. It does not identify people.
-- Optional internal staff/student recognition foundation is config-controlled and disabled by default. It requires approved local enrollment and must not be used for visitors/public people.
+- Optional internal staff/student recognition foundation is config-controlled and disabled by default. It supports local backend selection with `auto`, `face_recognition`, and OpenCV LBPH when `opencv-contrib-python` provides `cv2.face`.
 - Fullscreen TV Command Center mode is available at `/dashboard-tv`.
 - TV mode now separates a selectable backend-proxied MJPEG live camera view from historical evidence snapshots.
 - Direct selected-camera stream endpoint is available at `/dashboard/live/{camera_id}/stream.mjpg` with a 4 FPS limit; `/dashboard/live/{camera_id}/snapshot.jpg` remains as fallback.
@@ -175,6 +175,7 @@ Operational constraints:
 - Camera placement, distance, lens angle, lighting, and source resolution can make face identity recognition unsuitable even when person detection is correct.
 - Current face readiness fields are advisory quality metadata only. They must not be interpreted as identity matches.
 - Current recognition plumbing is disabled by default through `FACE_RECOGNITION_ENABLED=false`. Recognition should only be enabled for approved internal staff/student enrollment.
+- `FACE_RECOGNITION_BACKEND=auto` prefers the optional `face_recognition` library, then OpenCV LBPH, then safely reports unavailable. LBPH is a lightweight local baseline, not high-security identity proof.
 - `UNKNOWN` means no reliable enrolled internal match, not suspicious behavior.
 - Recognition accuracy depends on camera distance, angle, lighting, motion blur, face size, and CCTV stream quality.
 

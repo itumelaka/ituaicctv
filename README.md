@@ -162,9 +162,31 @@ Enrollment is local only and should be used only for approved internal staff/stu
 Face recognition config defaults:
 
 - `FACE_RECOGNITION_ENABLED=false`
+- `FACE_RECOGNITION_BACKEND=auto`
 - `FACE_REFERENCE_DIR=backend/data/face-reference`
 - `FACE_EMBEDDINGS_DIR=backend/data/face-embeddings`
 - `FACE_MATCH_THRESHOLD=0.60`
+
+Supported local backends:
+
+- `face_recognition`: uses the optional local `face_recognition` Python library if installed.
+- `opencv_lbph`: uses OpenCV LBPH if `opencv-contrib-python` provides `cv2.face.LBPHFaceRecognizer_create`.
+- `auto`: prefers `face_recognition`, then OpenCV LBPH, then safely reports recognition unavailable.
+
+OpenCV LBPH production dependency:
+
+```powershell
+C:\ituaicctv\.venv312\Scripts\python.exe -m pip install opencv-contrib-python==5.0.0.93
+C:\ituaicctv\.venv312\Scripts\python.exe -c "import cv2; print(hasattr(cv2, 'face'))"
+```
+
+OpenCV LBPH enrollment example:
+
+```powershell
+python .\scripts\enroll_face.py --label BURN --backend opencv_lbph --images C:\temp\burn1.jpg C:\temp\burn2.jpg
+```
+
+LBPH is a lightweight internal baseline, not high-security identity proof. Accuracy depends heavily on face size, lighting, angle, motion blur, and camera distance.
 
 ## Latest Dashboard UI
 

@@ -78,7 +78,8 @@ Current AI and dashboard features:
 - Telegram person alerts include confidence and threshold when available.
 - Evidence image now uses clearer composite: full CCTV frame with bounding boxes plus zoomed crop of highest-confidence person.
 - Person evidence now includes advisory face readiness metadata when local OpenCV face detection is available: detection availability, face count, best face box, quality, readiness, and reasons. This is not identity recognition.
-- Optional internal staff/student face recognition foundation is available but disabled by default. It only runs when `FACE_RECOGNITION_ENABLED=true`, face readiness is possible/suitable, and local enrolled embeddings are available.
+- Optional internal staff/student face recognition foundation is available but disabled by default. It only runs when `FACE_RECOGNITION_ENABLED=true`, face readiness is possible/suitable, and local enrolled embeddings/models are available.
+- Local recognition backends now support `FACE_RECOGNITION_BACKEND=auto`, `face_recognition`, or `opencv_lbph`; OpenCV LBPH requires `opencv-contrib-python` so `cv2.face` is available.
 - /dashboard-ui is now a dark AI Command Center with LIVE AI MONITORING indicator, scan line, summary cards, AI Status / Health, latest AI event, event timeline, evidence gallery, camera cards, section scroll navigation, refresh loading state, hover/glow effects, person-detected pulse/glow, and prefers-reduced-motion support.
 
 ## How to Verify After Server Restart
@@ -146,6 +147,7 @@ Production evidence and logs:
 - Person evidence snapshots are generated through the person snapshot path, which draws bounding boxes and confidence labels.
 - Face readiness is stored with person evidence events when available, but the system does not store face identities, embeddings, reference images, or identity labels.
 - When enabled and matched, internal recognition metadata can include `recognized_label` and `recognition_confidence`; otherwise disabled/unavailable/unknown states are recorded without exposing biometric data.
+- OpenCV LBPH model files are private runtime biometric artifacts under `backend/data/face-embeddings/` and must not be committed.
 - Production evidence folder: C:\ituaicctv\backend\data\evidence.
 - Production task log folder: C:\ituaicctv\backend\data\task-logs.
 - Production service log folder: C:\ituaicctv\backend\data\service-logs.

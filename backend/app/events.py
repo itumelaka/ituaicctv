@@ -141,6 +141,9 @@ def _build_person_event(
         "face_recognition_available": (
             face_recognition.get("face_recognition_available") if face_recognition else False
         ),
+        "face_recognition_backend": (
+            face_recognition.get("face_recognition_backend") if face_recognition else "auto"
+        ),
         "recognition_attempted": (
             face_recognition.get("recognition_attempted") if face_recognition else False
         ),

@@ -33,6 +33,7 @@ class Settings:
     face_reference_dir: str = os.getenv("FACE_REFERENCE_DIR", "backend/data/face-reference")
     face_embeddings_dir: str = os.getenv("FACE_EMBEDDINGS_DIR", "backend/data/face-embeddings")
     face_match_threshold: float = float(os.getenv("FACE_MATCH_THRESHOLD", "0.60"))
+    face_recognition_backend: str = os.getenv("FACE_RECOGNITION_BACKEND", "auto")
 
     telegram_bot_token: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
     telegram_chat_id: str = os.getenv("TELEGRAM_CHAT_ID", "")

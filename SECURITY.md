@@ -148,6 +148,8 @@ An optional internal staff/student recognition foundation exists but is disabled
 
 Face reference images and embeddings are biometric data. Keep `backend/data/face-reference/` and `backend/data/face-embeddings/` private on the production server, never expose them through dashboard routes or shares, and never commit them to Git. Any recognition phase must include clear authorization or consent, access control, audit logs, retention/deletion rules, and private local storage on the production server.
 
+OpenCV LBPH is a lightweight local baseline when `opencv-contrib-python` is installed. It is not high-security identity proof and must not be used as the sole basis for disciplinary or enforcement action. Camera distance, lighting, angle, and face size can produce wrong or unknown results.
+
 ## Responsible Use
 
 Sistem ini bertujuan membantu keselamatan dan operasi institut. Ia tidak patut digunakan untuk pemantauan individu secara berlebihan, pengecaman identiti tanpa kebenaran, atau penggunaan yang melanggar polisi organisasi.

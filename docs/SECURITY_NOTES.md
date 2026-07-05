@@ -145,6 +145,7 @@ Rules:
 
 - Current face readiness metadata is advisory only. It may report face detection availability, face count, a best face box, quality, readiness, and quality reasons, but it must not identify anyone.
 - Optional face recognition is internal staff/student only, config-controlled, and disabled by default. Do not enable it unless authorization, consent/policy, access control, audit logs, and retention/deletion rules are ready.
+- OpenCV LBPH requires `opencv-contrib-python` and is a lightweight local baseline, not high-security identity proof.
 - Use face recognition only with clear authorization, consent, or written policy.
 - Do not store random unknown face identities by default.
 - Do not expose any face database, crop folder, embedding store, or identity mapping publicly.
