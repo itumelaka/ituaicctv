@@ -86,9 +86,11 @@ class DetectionCameraConfigTests(unittest.TestCase):
             detection.detect_objects = lambda *_args, **_kwargs: high_res_detection
             detection._crop_detection = lambda frame, _detection: frame
             detection.assess_face_readiness = lambda _image: {"face_readiness": "not_available"}
-            detection._build_person_evidence_frame = lambda frame, detections, face_readiness=None: captured.update(
-                {"frame": frame, "detections": detections}
-            ) or frame
+            detection._build_person_evidence_frame = (
+                lambda frame, detections, face_readiness=None, face_recognition=None: captured.update(
+                    {"frame": frame, "detections": detections}
+                ) or frame
+            )
 
             detection.build_person_evidence_from_detection(
                 _Frame(width=640, height=360),

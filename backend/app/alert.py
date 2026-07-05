@@ -101,6 +101,14 @@ def send_person_alert(event: dict) -> bool:
         if reasons:
             caption += f"\nReason: {', '.join(reasons[:3])}"
 
+    if event.get("face_recognition_enabled") and event.get("recognition_attempted"):
+        label = event.get("recognized_label") or "UNKNOWN"
+        caption += f"\nRecognized: {label}"
+
+        confidence = event.get("recognition_confidence")
+        if isinstance(confidence, (int, float)) and label != "UNKNOWN":
+            caption += f" ({float(confidence):.2f})"
+
     sent = _send_photo(caption=caption, image_path=evidence_path)
 
     if sent:

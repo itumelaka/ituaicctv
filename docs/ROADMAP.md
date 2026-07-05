@@ -23,6 +23,7 @@ Operational foundation:
 - New evidence is a composite full-frame-plus-zoom-crop image.
 - The person crop is review evidence only. Low-resolution sub-stream crops are not suitable proof for face identity recognition.
 - Face readiness metadata is now advisory groundwork only: local face detection availability, face count, best face box, quality, readiness, and reasons. It does not identify people.
+- Optional internal staff/student recognition foundation is config-controlled and disabled by default. It requires approved local enrollment and must not be used for visitors/public people.
 - Fullscreen TV Command Center mode is available at `/dashboard-tv`.
 - TV mode now separates a selectable backend-proxied MJPEG live camera view from historical evidence snapshots.
 - Direct selected-camera stream endpoint is available at `/dashboard/live/{camera_id}/stream.mjpg` with a 4 FPS limit; `/dashboard/live/{camera_id}/snapshot.jpg` remains as fallback.
@@ -146,7 +147,7 @@ Planned features:
 
 ## Phase 4 - Face Detection and Recognition
 
-Status: Planned, with non-identifying face readiness groundwork started
+Status: Foundation started; operational recognition remains opt-in and policy-gated
 
 Goal:
 
@@ -160,7 +161,7 @@ Phased approach:
 
 1. Face detection/readiness only, no identity recognition.
 2. Face crop saving linked to existing person detection evidence.
-3. Opt-in known-person recognition using approved reference images only.
+3. Opt-in internal staff/student recognition using approved reference images only.
 4. Dashboard review and human confirmation before any operational identity action.
 
 Operational constraints:
@@ -173,6 +174,9 @@ Operational constraints:
 - Person detection can stay on a lightweight sub-stream, but reliable face review or recognition requires a higher-resolution evidence frame or snapshot after person_detected=True.
 - Camera placement, distance, lens angle, lighting, and source resolution can make face identity recognition unsuitable even when person detection is correct.
 - Current face readiness fields are advisory quality metadata only. They must not be interpreted as identity matches.
+- Current recognition plumbing is disabled by default through `FACE_RECOGNITION_ENABLED=false`. Recognition should only be enabled for approved internal staff/student enrollment.
+- `UNKNOWN` means no reliable enrolled internal match, not suspicious behavior.
+- Recognition accuracy depends on camera distance, angle, lighting, motion blur, face size, and CCTV stream quality.
 
 Proposed future private folders, documented only:
 
@@ -188,6 +192,7 @@ Before Phase 4 implementation:
 - Treat face_recognition_ready as false until a suitable face is detected in high-resolution evidence. Low-resolution person crops may support human review but should not be used for identity decisions.
 - Define retention, approval, access, and audit rules for any face data.
 - Add a formal face enrolment workflow only after policy approval. It should cover reference-image consent, private storage, access control, audit trail, deletion, and human confirmation.
+- Keep Hikvision/NVR recording separate from AI evidence, face references, and embedding storage.
 
 ## Phase 5 - Vehicle and Number Plate Recognition
 

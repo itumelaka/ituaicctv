@@ -142,9 +142,11 @@ Do not leave Change/Modify access open after copying.
 
 ## Face Readiness and Recognition Boundaries
 
-Current face-related behavior is limited to advisory face readiness metadata on person evidence. If local OpenCV face detection is available, the system may mark whether a face-like region was detected and whether the crop appears poor, possible, or suitable for human review. This does not identify a person.
+Current face readiness behavior is advisory metadata on person evidence. If local OpenCV face detection is available, the system may mark whether a face-like region was detected and whether the crop appears poor, possible, or suitable for human review.
 
-Do not add a face database, embeddings, reference images, identity labels, or automatic identity comparison without a separate approved face recognition phase. Any future recognition phase must include clear authorization or consent, access control, audit logs, retention/deletion rules, and private local storage on the production server.
+An optional internal staff/student recognition foundation exists but is disabled by default. It must only be enabled with `FACE_RECOGNITION_ENABLED=true` after clear authorization and only for approved internal reference images. Unknown visitors/public people must not be identified.
+
+Face reference images and embeddings are biometric data. Keep `backend/data/face-reference/` and `backend/data/face-embeddings/` private on the production server, never expose them through dashboard routes or shares, and never commit them to Git. Any recognition phase must include clear authorization or consent, access control, audit logs, retention/deletion rules, and private local storage on the production server.
 
 ## Responsible Use
 

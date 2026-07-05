@@ -144,12 +144,15 @@ Face work must be phased and privacy-first:
 Rules:
 
 - Current face readiness metadata is advisory only. It may report face detection availability, face count, a best face box, quality, readiness, and quality reasons, but it must not identify anyone.
+- Optional face recognition is internal staff/student only, config-controlled, and disabled by default. Do not enable it unless authorization, consent/policy, access control, audit logs, and retention/deletion rules are ready.
 - Use face recognition only with clear authorization, consent, or written policy.
 - Do not store random unknown face identities by default.
 - Do not expose any face database, crop folder, embedding store, or identity mapping publicly.
 - Never commit face images, face embeddings, or personal identity data to Git.
 - Keep face reference data local and private on the production server.
 - Telegram alerts should avoid unnecessary personal data. Prefer a generic review alert unless policy explicitly allows names.
+- `UNKNOWN` means no reliable enrolled internal match. It must not be treated as suspicious by itself.
+- Keep Hikvision/NVR recording separate from AI evidence, face references, and face embeddings.
 
 Proposed future private folders:
 

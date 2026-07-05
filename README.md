@@ -40,6 +40,7 @@ Production server status:
 - Near-live monitor defaults: scan cycle every 10 seconds, per-camera alert cooldown 300 seconds.
 - Existing 5-minute Task Scheduler scan remains available as a backup until near-live monitoring is proven stable.
 - Person evidence includes advisory face readiness metadata when local OpenCV face detection is available. This does not identify people.
+- Optional internal staff/student face recognition foundation is present but disabled by default with `FACE_RECOGNITION_ENABLED=false`.
 
 Camera and network status:
 
@@ -143,10 +144,27 @@ Get-SmbShareAccess -Name "ituaicctv-evidence"
 - The crop is labelled as person review evidence, not face identity evidence. Low-resolution sub-stream crops may be marked LOW-RES CROP / FACE ID NOT SUITABLE.
 - Face readiness labels are advisory only: not_available, not_suitable, possible, or suitable. Poor readiness is expected when faces are small, blurry, angled, far from camera, moving, poorly lit, or from low-resolution CCTV streams.
 - Face recognition readiness is false by default until a face is detected from suitable high-resolution evidence. No identity recognition or face database is implemented.
+- Internal face recognition labels are opt-in only. When `FACE_RECOGNITION_ENABLED=true` and a local embedding library plus approved enrolled embeddings are available, matching evidence may show an approved internal label such as `BURN`; otherwise recognition stays disabled/unavailable or `UNKNOWN`.
+- `UNKNOWN` only means no reliable internal match. It does not mean suspicious.
 - Future reliable face recognition should capture a high-resolution main-stream or snapshot frame after person_detected=True while keeping fast person detection on the sub-stream.
 - Composite evidence keeps the existing filename pattern: person_detected_<camera_id>_<timestamp>.jpg
 - If composite generation fails, the fallback is the boxed full-frame evidence image.
 - Telegram sends the saved evidence image, so new detections use the clearer composite.
+
+Optional internal enrollment command:
+
+```powershell
+python .\scripts\enroll_face.py --label BURN --images C:\temp\burn1.jpg C:\temp\burn2.jpg
+```
+
+Enrollment is local only and should be used only for approved internal staff/student. The script does not copy raw reference images; it writes embeddings under `backend/data/face-embeddings/` only when a suitable local embedding library is installed.
+
+Face recognition config defaults:
+
+- `FACE_RECOGNITION_ENABLED=false`
+- `FACE_REFERENCE_DIR=backend/data/face-reference`
+- `FACE_EMBEDDINGS_DIR=backend/data/face-embeddings`
+- `FACE_MATCH_THRESHOLD=0.60`
 
 ## Latest Dashboard UI
 
@@ -580,6 +598,8 @@ Security reminders:
 - Evidence images may contain real CCTV footage and must be handled carefully
 - Face readiness metadata is not identity recognition. The system must not store face databases, embeddings, reference images, or personal identity labels unless a future authorised recognition phase is explicitly approved.
 - Future face recognition requires clear policy, consent/authorisation, access control, audit logging, retention/deletion rules, and high-resolution face evidence.
+- Face reference images and embeddings under `backend/data/face-reference/` and `backend/data/face-embeddings/` are private local biometric data and must never be committed.
+- Keep Hikvision/NVR recording separate from AI evidence and face enrollment data.
 
 ## Local Development
 

@@ -69,6 +69,7 @@ def _build_person_event(
 
     evidence_path = None
     face_readiness = None
+    face_recognition = None
     cooldown_active = False
     cooldown_seconds = settings.person_event_cooldown_seconds
     camera_id = _get_camera_id(camera_context)
@@ -87,7 +88,7 @@ def _build_person_event(
                 if detection_frame is None:
                     raise RuntimeError("Detection frame unavailable for composite evidence.")
 
-                image_bytes, face_readiness = build_person_evidence_from_detection(
+                image_bytes, face_readiness, face_recognition = build_person_evidence_from_detection(
                     detection_frame,
                     detection_result,
                     camera=camera_context,
@@ -134,6 +135,24 @@ def _build_person_event(
         "confidence_threshold": detection_result.get("confidence_threshold"),
         "evidence_path": evidence_path,
         "face_readiness": face_readiness,
+        "face_recognition_enabled": (
+            face_recognition.get("face_recognition_enabled") if face_recognition else False
+        ),
+        "face_recognition_available": (
+            face_recognition.get("face_recognition_available") if face_recognition else False
+        ),
+        "recognition_attempted": (
+            face_recognition.get("recognition_attempted") if face_recognition else False
+        ),
+        "recognized_label": (
+            face_recognition.get("recognized_label") if face_recognition else None
+        ),
+        "recognition_confidence": (
+            face_recognition.get("recognition_confidence") if face_recognition else None
+        ),
+        "recognition_reason": (
+            face_recognition.get("recognition_reason") if face_recognition else "disabled"
+        ),
         "cooldown_active": cooldown_active,
         "cooldown_seconds": cooldown_seconds
     }

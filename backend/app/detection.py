@@ -8,6 +8,7 @@ from app.camera import (
     capture_frame_for_camera_channel,
 )
 from app.config import settings
+from app.face_recognition import recognize_face
 
 logger = logging.getLogger(__name__)
 
@@ -392,6 +393,27 @@ def _face_label(face_readiness: dict | None) -> str:
     return "FACE: NOT SUITABLE"
 
 
+def _recognition_label(face_recognition: dict | None) -> str | None:
+    if not face_recognition:
+        return None
+
+    if not face_recognition.get("recognition_attempted"):
+        return None
+
+    label = face_recognition.get("recognized_label")
+    if not label:
+        return None
+
+    confidence = face_recognition.get("recognition_confidence")
+    if isinstance(confidence, (int, float)) and label != "UNKNOWN":
+        return f"{label} {float(confidence):.2f}"
+
+    if label == "UNKNOWN":
+        return None
+
+    return str(label)
+
+
 def _person_box_size(detection):
     box = detection["box"]
     width = max(0, float(box["x2"]) - float(box["x1"]))
@@ -515,12 +537,32 @@ def _build_person_crop_panel(frame, detection, face_readiness: dict | None = Non
     return panel
 
 
-def _build_person_evidence_frame(frame, detections, face_readiness: dict | None = None):
+def _build_person_evidence_frame(
+    frame,
+    detections,
+    face_readiness: dict | None = None,
+    face_recognition: dict | None = None,
+):
     boxed_frame = _draw_detections(frame.copy(), detections)
     main_detection = _highest_confidence_detection(detections)
 
     if main_detection is None:
         return boxed_frame
+
+    recognition_label = _recognition_label(face_recognition)
+    if recognition_label:
+        box = main_detection["box"]
+        x1 = max(0, int(box["x1"]))
+        y1 = max(24, int(box["y1"]))
+        cv2.putText(
+            boxed_frame,
+            recognition_label,
+            (x1, y1 - 8),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.85,
+            (0, 255, 255),
+            2,
+        )
 
     try:
         crop_panel = _build_person_crop_panel(
@@ -579,7 +621,7 @@ def build_person_evidence_from_detection(
     frame,
     detection_result: dict,
     camera: dict | None = None,
-) -> tuple[bytes, dict]:
+) -> tuple[bytes, dict, dict]:
     evidence_frame = frame
     detections = detection_result.get("detections", [])
     evidence_detections = detections
@@ -628,13 +670,15 @@ def build_person_evidence_from_detection(
     main_detection = _highest_confidence_detection(evidence_detections)
     person_crop = _crop_detection(evidence_frame, main_detection) if main_detection else None
     face_readiness = assess_face_readiness(person_crop)
+    face_recognition = recognize_face(person_crop, face_readiness)
 
     evidence_frame = _build_person_evidence_frame(
         evidence_frame,
         evidence_detections,
         face_readiness=face_readiness,
+        face_recognition=face_recognition,
     )
-    return _encode_jpeg(evidence_frame), face_readiness
+    return _encode_jpeg(evidence_frame), face_readiness, face_recognition
 
 
 def build_person_evidence_jpeg_from_detection(
@@ -642,7 +686,7 @@ def build_person_evidence_jpeg_from_detection(
     detection_result: dict,
     camera: dict | None = None,
 ) -> bytes:
-    image_bytes, _ = build_person_evidence_from_detection(
+    image_bytes, _, _ = build_person_evidence_from_detection(
         frame,
         detection_result,
         camera=camera,

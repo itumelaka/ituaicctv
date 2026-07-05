@@ -46,6 +46,14 @@ fake_detection.build_person_evidence_from_detection = (
             "face_readiness": "not_available",
             "reasons": ["face_detection_unavailable"],
         },
+        {
+            "face_recognition_enabled": False,
+            "face_recognition_available": False,
+            "recognition_attempted": False,
+            "recognized_label": None,
+            "recognition_confidence": None,
+            "recognition_reason": "disabled",
+        },
     )
 )
 fake_detection.run_person_detection_with_frame = _with_frame
