@@ -87,6 +87,7 @@ def _event_detection_metadata(detection_result: dict, evidence_metadata: dict | 
             "detections_count": len(person_detections),
             "detections": detections,
             "person_detections": person_detections,
+            "evidence_source": evidence_metadata.get("evidence_source"),
         }
 
     detections = detection_result["detections"]
@@ -95,6 +96,7 @@ def _event_detection_metadata(detection_result: dict, evidence_metadata: dict | 
         "detections_count": len(person_detections),
         "detections": detections,
         "person_detections": person_detections,
+        "evidence_source": "detection_frame",
     }
 
 
@@ -199,6 +201,7 @@ def _build_person_event(
         "detections_count": detection_metadata["detections_count"],
         "detections": detection_metadata["detections"],
         "person_detections": detection_metadata["person_detections"],
+        "evidence_source": detection_metadata["evidence_source"],
         "confidence_threshold": detection_result.get("confidence_threshold"),
         "evidence_path": evidence_path,
         "face_readiness": face_readiness,

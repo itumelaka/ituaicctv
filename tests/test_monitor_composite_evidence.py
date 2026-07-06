@@ -124,6 +124,7 @@ class MonitorCompositeEvidenceTests(unittest.TestCase):
         }
         evidence_metadata = {
             "detections_count": 2,
+            "evidence_source": "hd_scaled_bbox",
             "detections": [
                 {
                     "class_name": "person",
@@ -179,6 +180,7 @@ class MonitorCompositeEvidenceTests(unittest.TestCase):
             {"x1": 920, "y1": 320, "x2": 1200, "y2": 960},
         )
         self.assertEqual(result["event"]["detections"], evidence_metadata["detections"])
+        self.assertEqual(result["event"]["evidence_source"], "hd_scaled_bbox")
         self.assertEqual(result["event"]["message"], "Person detected in CCTV frame (2 detection(s)).")
         self.assertEqual(appended_events[0]["person_detections"], evidence_metadata["person_detections"])
 

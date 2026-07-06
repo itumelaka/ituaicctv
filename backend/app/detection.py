@@ -392,6 +392,45 @@ def _crop_detection(frame, detection, padding: int = PERSON_CROP_PADDING_PX):
     return frame[y1:y2, x1:x2].copy()
 
 
+def _scale_detection_box(detection: dict, scale_x: float, scale_y: float) -> dict:
+    box = detection["box"]
+    scaled_detection = {
+        **detection,
+        "box": {
+            "x1": round(float(box["x1"]) * scale_x, 2),
+            "y1": round(float(box["y1"]) * scale_y, 2),
+            "x2": round(float(box["x2"]) * scale_x, 2),
+            "y2": round(float(box["y2"]) * scale_y, 2),
+        },
+    }
+    scaled_detection["evidence_bbox_source"] = "scaled_from_detection_frame"
+    return scaled_detection
+
+
+def _scaled_detections_for_frame(
+    detections: list[dict],
+    source_frame,
+    target_frame,
+) -> list[dict]:
+    source_height, source_width = source_frame.shape[:2]
+    target_height, target_width = target_frame.shape[:2]
+
+    if source_width <= 0 or source_height <= 0:
+        return []
+
+    scale_x = target_width / source_width
+    scale_y = target_height / source_height
+    scaled_detections = [
+        _scale_detection_box(detection, scale_x, scale_y)
+        for detection in detections
+    ]
+
+    return [
+        detection for detection in scaled_detections
+        if _crop_detection(target_frame, detection) is not None
+    ]
+
+
 def _default_face_readiness(
     available: bool,
     quality: str = "unknown",
@@ -856,6 +895,7 @@ def build_person_evidence_from_detection(
     evidence_frame = frame
     detections = detection_result.get("detections", [])
     evidence_detections = detections
+    evidence_source = "detection_frame"
     channel = _evidence_channel(camera)
 
     if channel:
@@ -879,25 +919,52 @@ def build_person_evidence_from_detection(
             if high_res_detections:
                 evidence_detections = high_res_detections
                 evidence_frame = high_res_frame
+                evidence_source = "hd_redetect"
             else:
+                scaled_detections = _scaled_detections_for_frame(
+                    detections,
+                    frame,
+                    high_res_frame,
+                )
                 camera_id = camera.get("id") if camera else "default_camera"
                 ignored_note = (
                     f" {len(ignored_high_res_detections)} high-resolution "
                     "detection(s) were inside enabled ignore zones."
                     if ignored_high_res_detections else ""
                 )
-                logger.warning(
-                    "High-resolution evidence re-detection found no person for "
-                    "%s channel %s; falling back to detection frame.%s",
-                    camera_id,
-                    channel,
-                    ignored_note,
-                )
-                print(
-                    "WARNING: High-resolution evidence re-detection found no "
-                    f"person for {camera_id} channel {channel}; falling back "
-                    f"to detection frame.{ignored_note}"
-                )
+                if scaled_detections:
+                    evidence_detections = scaled_detections
+                    evidence_frame = high_res_frame
+                    evidence_source = "hd_scaled_bbox"
+                    logger.warning(
+                        "High-resolution evidence re-detection found no person "
+                        "for %s channel %s; using scaled detection boxes on the "
+                        "high-resolution frame.%s",
+                        camera_id,
+                        channel,
+                        ignored_note,
+                    )
+                    print(
+                        "WARNING: High-resolution evidence re-detection found "
+                        f"no person for {camera_id} channel {channel}; using "
+                        "scaled detection boxes on the high-resolution frame."
+                        f"{ignored_note}"
+                    )
+                else:
+                    logger.warning(
+                        "High-resolution evidence re-detection found no person "
+                        "for %s channel %s and scaled crops were invalid; "
+                        "falling back to detection frame.%s",
+                        camera_id,
+                        channel,
+                        ignored_note,
+                    )
+                    print(
+                        "WARNING: High-resolution evidence re-detection found "
+                        f"no person for {camera_id} channel {channel} and "
+                        "scaled crops were invalid; falling back to detection "
+                        f"frame.{ignored_note}"
+                    )
         except Exception as error:
             camera_id = camera.get("id") if camera else "default_camera"
             logger.warning(
@@ -930,6 +997,7 @@ def build_person_evidence_from_detection(
         "detections": [target["detection"] for target in person_targets],
         "person_detections": [target["metadata"] for target in person_targets],
         "detections_count": len(person_targets),
+        "evidence_source": evidence_source,
     }
     return _encode_jpeg(evidence_frame), face_readiness, face_recognition, evidence_metadata
 

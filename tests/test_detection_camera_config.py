@@ -199,7 +199,7 @@ class DetectionCameraConfigTests(unittest.TestCase):
                 ) or frame
             )
 
-            detection.build_person_evidence_from_detection(
+            _image, _readiness, _recognition, metadata = detection.build_person_evidence_from_detection(
                 _Frame(width=640, height=360),
                 original_detection,
                 camera={"id": "cam_1", "channel": "102"},
@@ -216,6 +216,114 @@ class DetectionCameraConfigTests(unittest.TestCase):
             {"x1": 500, "y1": 300, "x2": 900, "y2": 980},
         )
         self.assertEqual(captured["frame"].shape, (1080, 1920, 3))
+        self.assertEqual(metadata["evidence_source"], "hd_redetect")
+        self.assertEqual(metadata["person_detections"][0]["bbox"], {"x1": 500, "y1": 300, "x2": 900, "y2": 980})
+
+    def test_high_resolution_evidence_uses_scaled_detection_boxes_when_redetect_fails(self):
+        original_detection = {
+            "person_detected": True,
+            "detections": [
+                {
+                    "class_name": "person",
+                    "confidence": 0.91,
+                    "box": {"x1": 10, "y1": 20, "x2": 110, "y2": 220},
+                },
+                {
+                    "class_name": "person",
+                    "confidence": 0.84,
+                    "box": {"x1": 200, "y1": 30, "x2": 300, "y2": 230},
+                },
+            ],
+            "confidence_threshold": 0.60,
+        }
+        captured = {}
+
+        original_capture = detection.capture_frame_for_camera_channel
+        original_detect = detection.detect_objects
+        original_build = detection._build_person_evidence_frame
+        original_assess = detection.assess_face_readiness
+        original_crop = detection._crop_detection
+
+        try:
+            detection.capture_frame_for_camera_channel = (
+                lambda _camera, _channel: _Frame(width=1920, height=1080)
+            )
+            detection.detect_objects = lambda *_args, **_kwargs: []
+            detection._crop_detection = lambda frame, _detection: frame
+            detection.assess_face_readiness = lambda _image: {"face_readiness": "not_available"}
+            detection._build_person_evidence_frame = (
+                lambda frame, detections, face_readiness=None, face_recognition=None, confidence_threshold=None: captured.update(
+                    {"frame": frame, "detections": detections}
+                ) or frame
+            )
+
+            _image, _readiness, _recognition, metadata = detection.build_person_evidence_from_detection(
+                _Frame(width=640, height=360),
+                original_detection,
+                camera={"id": "cam_1", "channel": "102"},
+            )
+        finally:
+            detection.capture_frame_for_camera_channel = original_capture
+            detection.detect_objects = original_detect
+            detection._build_person_evidence_frame = original_build
+            detection.assess_face_readiness = original_assess
+            detection._crop_detection = original_crop
+
+        self.assertEqual(captured["frame"].shape, (1080, 1920, 3))
+        self.assertEqual(metadata["evidence_source"], "hd_scaled_bbox")
+        self.assertEqual(metadata["detections_count"], 2)
+        self.assertEqual(
+            captured["detections"][0]["box"],
+            {"x1": 30.0, "y1": 60.0, "x2": 330.0, "y2": 660.0},
+        )
+        self.assertEqual(metadata["person_detections"][0]["bbox"], captured["detections"][0]["box"])
+        self.assertEqual(captured["detections"][0]["evidence_bbox_source"], "scaled_from_detection_frame")
+
+    def test_high_resolution_evidence_falls_back_when_scaled_crop_is_invalid(self):
+        original_detection = {
+            "person_detected": True,
+            "detections": [
+                {
+                    "class_name": "person",
+                    "confidence": 0.91,
+                    "box": {"x1": 110, "y1": 20, "x2": 10, "y2": 220},
+                }
+            ],
+            "confidence_threshold": 0.60,
+        }
+        captured = {}
+
+        original_capture = detection.capture_frame_for_camera_channel
+        original_detect = detection.detect_objects
+        original_build = detection._build_person_evidence_frame
+        original_assess = detection.assess_face_readiness
+
+        try:
+            detection.capture_frame_for_camera_channel = (
+                lambda _camera, _channel: _Frame(width=1920, height=1080)
+            )
+            detection.detect_objects = lambda *_args, **_kwargs: []
+            detection.assess_face_readiness = lambda _image: {"face_readiness": "not_available"}
+            detection._build_person_evidence_frame = (
+                lambda frame, detections, face_readiness=None, face_recognition=None, confidence_threshold=None: captured.update(
+                    {"frame": frame, "detections": detections}
+                ) or frame
+            )
+
+            _image, _readiness, _recognition, metadata = detection.build_person_evidence_from_detection(
+                _Frame(width=640, height=360),
+                original_detection,
+                camera={"id": "cam_1", "channel": "102"},
+            )
+        finally:
+            detection.capture_frame_for_camera_channel = original_capture
+            detection.detect_objects = original_detect
+            detection._build_person_evidence_frame = original_build
+            detection.assess_face_readiness = original_assess
+
+        self.assertEqual(captured["frame"].shape, (360, 640, 3))
+        self.assertEqual(metadata["evidence_source"], "detection_frame")
+        self.assertEqual(metadata["person_detections"][0]["bbox"], {"x1": 110, "y1": 20, "x2": 10, "y2": 220})
 
     def test_person_crop_panel_shows_top_three_people_by_confidence(self):
         detections = [
