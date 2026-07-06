@@ -26,8 +26,13 @@ CSV_HEADERS = [
 ]
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 TRUE_VALUES = {"1", "true", "yes", "y", "on", "approved"}
-IDENTITY_ASSIGNMENTS_PATH = Path(
-    "backend/data/face-enrollment/identity-assignments/identity_assignments.json"
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+IDENTITY_ASSIGNMENTS_PATH = (
+    BACKEND_DIR
+    / "data"
+    / "face-enrollment"
+    / "identity-assignments"
+    / "identity_assignments.json"
 )
 
 

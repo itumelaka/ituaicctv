@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 import sys
 import tempfile
 import types
@@ -272,6 +273,38 @@ class FaceEnrollmentTests(unittest.TestCase):
         self.assertTrue(stored["assignments"][0]["approved_for_training"])
         self.assertIn("created_at", stored["assignments"][0])
         self.assertIn("updated_at", stored["assignments"][0])
+
+    def test_identity_assignment_storage_path_is_backend_anchored(self):
+        expected_path = (
+            BACKEND_PATH
+            / "data"
+            / "face-enrollment"
+            / "identity-assignments"
+            / "identity_assignments.json"
+        )
+
+        self.assertTrue(self.original_assignments_path.is_absolute())
+        self.assertEqual(self.original_assignments_path, expected_path)
+
+    def test_identity_assignment_save_uses_configured_path_when_cwd_is_backend(self):
+        storage_path = self.base / "runtime" / "identity_assignments.json"
+        face_enrollment.IDENTITY_ASSIGNMENTS_PATH = storage_path
+        original_cwd = Path.cwd()
+
+        try:
+            os.chdir(BACKEND_PATH)
+            face_enrollment.save_identity_assignment(
+                {
+                    "event_id": "event-from-backend-cwd",
+                    "evidence_filename": "event-from-backend-cwd.jpg",
+                    "assigned_label": "Backend Cwd Person",
+                }
+            )
+        finally:
+            os.chdir(original_cwd)
+
+        self.assertTrue(storage_path.exists())
+        self.assertFalse((BACKEND_PATH / "runtime" / "identity_assignments.json").exists())
 
     def test_identity_assignment_post_preserves_person_specific_fields(self):
         response = face_enrollment_route.face_identity_assignment(
