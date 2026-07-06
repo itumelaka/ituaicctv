@@ -41,6 +41,12 @@ New multi-person evidence events include synced `person_detections` metadata:
 - `confidence`
 - `bbox`
 
+Evidence can also include `evidence_source`:
+
+- `hd_redetect`
+- `hd_scaled_bbox`
+- `detection_frame`
+
 Existing old events are not migrated and may not have multi-person target metadata.
 
 ## Storage

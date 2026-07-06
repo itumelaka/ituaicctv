@@ -17,6 +17,7 @@ Backend AI CCTV monitoring project for ITU Melaka using existing Hikvision CCTV 
 - RTSP camera access through the backend, without exposing CCTV credentials to browsers.
 - Near-live sequential person monitoring using YOLO.
 - Person evidence images with full-frame context, all detected person boxes, and up to three top-confidence person crops.
+- HD evidence fallback can use scaled main-stream crops when HD re-detection misses a person.
 - Telegram alerts for person detections.
 - Normal dashboard for operators and evidence review.
 - Fullscreen TV Command Center for wall display.

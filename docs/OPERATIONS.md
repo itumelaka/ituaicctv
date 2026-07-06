@@ -39,6 +39,14 @@ New person evidence composites show the full frame with all detected person boxe
 
 Dashboard Assign Identity is available for unknown/unrecognized evidence events. Single-person events use `PERSON 1`; multi-person events require the operator to choose `PERSON 1`, `PERSON 2`, or `PERSON 3` based on metadata. Assignments are stored locally as human review records and do not train the face model.
 
+HD evidence behavior:
+
+- `hd_redetect`: channel 101/main-stream capture succeeded and YOLO found valid persons on the HD frame.
+- `hd_scaled_bbox`: HD capture succeeded, HD re-detection found no person, and scaled sub-stream boxes produced valid HD crops.
+- `detection_frame`: HD capture failed or scaled crops were invalid, so the original detection frame was used.
+
+The HD scaled-bbox fallback can improve face readiness when the sub-stream crop was too small. It does not guarantee identity recognition and may still return `UNKNOWN`.
+
 ## Telegram Group Alerts
 
 Production Telegram group alerting has been verified for the internal `itunetmonitor` group.
@@ -61,6 +69,8 @@ The following are private runtime data and must not be committed:
 - face embeddings
 - generated recognition models
 - service/task logs
+
+If an accidental `backend/backend/` runtime folder appears from the old identity-assignment path bug, do not commit it. Stop the backend first, verify current writes go to `backend/data/`, move any needed private runtime data to the correct folder, and delete the stray folder locally.
 
 ## Operator Links
 

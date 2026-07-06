@@ -22,11 +22,13 @@ Operational foundation:
 - One camera remains disabled/offline: `block_f_cam_8 / ITU BLOCK F CAM8`.
 - Newly confirmed enabled cameras: `kuarantin_cam_11` / `192.168.40.23`, `biosekuriti_cam_12` / `192.168.40.24`, and `makmal_cam_13` / `192.168.40.25`.
 - Evidence is saved only for `person_detected=True`.
-- New evidence is a composite full-frame-plus-zoom-crop image.
+- New evidence is a composite image with full-frame boxes and up to three top-confidence person crops.
+- HD evidence uses `evidence_source` values: `hd_redetect`, `hd_scaled_bbox`, or `detection_frame`.
+- If HD re-detection fails but HD capture succeeds, scaled sub-stream boxes can be used for clearer HD crops before falling back to the detection frame.
 - The person crop is review evidence only. Low-resolution sub-stream crops are not suitable proof for face identity recognition.
 - Face readiness metadata is now advisory groundwork only: local face detection availability, face count, best face box, quality, readiness, and reasons. It does not identify people.
 - Optional internal staff/student recognition foundation is config-controlled and disabled by default. It supports local backend selection with `auto`, `face_recognition`, and OpenCV LBPH when `opencv-contrib-python` provides `cv2.face`.
-- Production currently has OpenCV LBPH available and a test internal label `BURN` enrolled. This remains approved internal-use only and is not high-security identity proof.
+- Production can use OpenCV LBPH for approved local labels. This remains approved internal-use only and is not high-security identity proof.
 - Fullscreen TV Command Center mode is available at `/dashboard-tv`.
 - TV mode now separates a selectable backend-proxied MJPEG live camera view from historical evidence snapshots.
 - Direct selected-camera stream endpoint is available at `/dashboard/live/{camera_id}/stream.mjpg` with a 4 FPS limit; `/dashboard/live/{camera_id}/snapshot.jpg` remains as fallback.
@@ -46,6 +48,7 @@ Recent completed production work:
 - Persistent local identity assignment storage path fix.
 - Multi-person evidence composite with up to three top-confidence crops.
 - Synced multi-person event metadata for evidence crops.
+- HD evidence scaled-bbox fallback after failed HD re-detection.
 - Live monitor status JSON and `/dashboard/health` live monitor support.
 
 Current privacy principle: face enrollment stays local-only, uses no paid API, performs no cloud recognition, and does not upload staff/student images externally. Dashboard assignments are human review records only until a future approved-training workflow exists.

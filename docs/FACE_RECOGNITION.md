@@ -6,9 +6,8 @@ Face recognition is optional, internal, privacy-gated, and not high-security ide
 
 - OpenCV LBPH backend is deployed for approved internal testing.
 - Production can enable the backend through private `.env`.
-- The approved internal test label `BURN` has been enrolled with private local samples.
-- The test enrollment was improved from 3 samples to 6 samples using private CCTV-derived crops.
-- Some CCTV-derived samples were rejected because face detection or quality was not suitable.
+- Approved internal test labels can be enrolled with private local samples.
+- Some private candidate samples may be rejected because face detection or quality is not suitable.
 
 Do not include private sample filenames, generated crop filenames, enrollment images, embeddings, or model contents in public docs or Git.
 
@@ -123,6 +122,14 @@ Recommended label examples are neutral local IDs such as `STAFF_001`, `STUDENT_0
 ## Multi-Person Evidence Metadata
 
 New evidence composites show up to the top three detected person crops, ordered by confidence, while the main frame keeps all detected person boxes. New event metadata includes `person_detections` with `crop_rank`, `confidence`, and `bbox`, synced to the rendered evidence crops.
+
+Evidence metadata also includes `evidence_source`:
+
+- `hd_redetect`: HD/main-stream capture succeeded and YOLO found valid persons on the HD frame.
+- `hd_scaled_bbox`: HD/main-stream capture succeeded, HD re-detection found no person, and scaled sub-stream boxes produced valid HD crops.
+- `detection_frame`: the system used the original detection frame because HD capture failed or scaled HD crops were invalid.
+
+The HD scaled-bbox fallback can improve face readiness from `not_suitable` to `possible` or `suitable` when the original sub-stream crop was too small. It does not guarantee identity recognition; a clear face can still return `UNKNOWN` when the local model does not match.
 
 Assign Identity uses event metadata, not image pixel analysis. Existing old events are not migrated, so older evidence may not have multi-person target metadata.
 

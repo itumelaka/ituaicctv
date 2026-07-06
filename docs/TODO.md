@@ -14,7 +14,7 @@
 - New evidence image behavior: full-frame boxes plus up to three top-confidence person crops.
 - Evidence crop labels avoid implying face identity quality; low-resolution crops can be marked FACE ID NOT SUITABLE.
 - Face readiness metadata is advisory only and does not perform identity recognition or store face embeddings.
-- Internal staff/student recognition foundation is disabled by default in code and supports `face_recognition` or OpenCV LBPH backends after approved local enrollment. Production currently enables OpenCV LBPH for enrolled test label BURN.
+- Internal staff/student recognition foundation is disabled by default in code and supports `face_recognition` or OpenCV LBPH backends after approved local enrollment.
 - Dashboard is now the dark AI Command Center served by backend /dashboard-ui.
 - Fullscreen TV Command Center mode is available at /dashboard-tv.
 - TV mode includes a selectable backend-proxied MJPEG live camera panel; latest evidence is shown separately as historical proof.
@@ -31,6 +31,8 @@
 - Identity assignments persist under backend/data/face-enrollment/identity-assignments/identity_assignments.json.
 - Assignments are human review records only and do not auto-train the face model.
 - New multi-person evidence metadata is synced to the rendered evidence crops.
+- HD evidence metadata uses `evidence_source`: `hd_redetect`, `hd_scaled_bbox`, or `detection_frame`.
+- HD scaled-bbox fallback can improve face readiness when HD re-detection fails but the HD frame is available.
 
 ## Recently Completed Production Work
 
@@ -41,6 +43,7 @@
 - [x] Persistent identity assignment storage path fix
 - [x] Multi-person evidence composite
 - [x] Metadata sync for multi-person evidence
+- [x] HD evidence scaled-bbox fallback after failed HD re-detection
 - [x] Live monitor health status support
 
 ## Current Production Backlog
@@ -210,7 +213,7 @@ Camera list:
 - [x] Add local enrollment script scaffold for approved internal labels
 - [x] Install/approve local face embedding dependency for LBPH: opencv-contrib-python 5.0.0.93 on production
 - [x] Verify production LBPH support with `C:\ituaicctv\.venv312\Scripts\python.exe -c "import cv2; print(hasattr(cv2, 'face'))"`
-- [x] Enroll test internal label BURN with OpenCV LBPH using private local photos
+- [x] Support approved internal labels with OpenCV LBPH using private local photos
 - [ ] Add face recognition pilot only for authorised internal staff/student
 - [ ] Add known persons database only as private local biometric data, never in Git
 - [ ] Add confidence threshold for identity matching

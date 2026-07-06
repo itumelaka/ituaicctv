@@ -54,11 +54,22 @@ For new detections, the evidence image is a clearer composite:
 - crop labels such as `PERSON 1`, confidence, and active threshold where useful
 - metadata in new event JSON synced to the rendered crops through `person_detections`
 - `person_detections` includes `crop_rank`, `confidence`, and `bbox`
+- `evidence_source` records whether evidence used `hd_redetect`, `hd_scaled_bbox`, or `detection_frame`
 - fallback to boxed full-frame evidence if composite generation fails
 
 Telegram sends the saved evidence image, so new alerts use the clearer composite image automatically.
 
 Existing old events are not migrated. New events after deployment include synced multi-person evidence metadata. If YOLO detects only one person in a crowded or overlapping scene, the dashboard can only assign the detected `PERSON 1`; future tuning may require a stronger local model or tracker for selected cameras.
+
+HD evidence flow:
+
+1. Detect person on the configured camera stream, usually sub-stream `102`.
+2. Try HD/main-stream re-detection on channel `101`.
+3. If HD re-detection finds valid persons, use HD detections.
+4. If HD re-detection finds no person but the HD frame exists, scale the original detection boxes to the HD frame and use valid scaled crops.
+5. If scaled crops are invalid, fall back to the original detection frame.
+
+The scaled HD fallback can improve face readiness from `not_suitable` to `possible` or `suitable` when the sub-stream crop was too small. Recognition can still return `UNKNOWN` if the local model does not match.
 
 ## False Positive Review and Ignore Zones
 
@@ -83,7 +94,7 @@ Face readiness and internal recognition status:
 - Face readiness / face quality assessment is implemented and conservative. It is not identity recognition by itself.
 - OpenCV LBPH is available on production through `opencv-contrib-python 5.0.0.93`; `cv2.face` and `LBPHFaceRecognizer_create` are available.
 - Production currently enables `FACE_RECOGNITION_ENABLED=true` and `FACE_RECOGNITION_BACKEND=opencv_lbph` in private `.env`.
-- Test internal label `BURN` is enrolled using three private local samples. Generated LBPH model/label files live under the ignored `backend/data/face-embeddings/` directory and must never be committed.
+- Approved internal test labels can be enrolled using private local samples. Generated LBPH model and label files live under the ignored `backend/data/face-embeddings/` directory and must never be committed.
 - `UNKNOWN` means no reliable internal match and does not mean suspicious.
 - Face Enrollment Manager supports local placeholder CSV templates, reviewed draft CSV generation, batch OpenCV/LBPH enrollment, and JSON reject reports through `scripts/manage_face_enrollment.py`.
 - Real enrollment CSV files, face images, identity data, reject reports with private paths, and generated model files must stay private and out of Git.
@@ -198,6 +209,8 @@ backend/data/face-embeddings/
 ```
 
 Do not commit enrollment CSVs, crops, assignments, face images, embeddings, recognition models, evidence, logs, `.env`, `.venv`, or `.venv312`.
+
+If an older path bug creates an accidental `backend/backend/` runtime folder, treat it as private runtime output. Do not commit it. Stop the service first, verify no current process is writing there, move any needed private runtime files to the correct `backend/data/` location, then remove the stray folder locally.
 
 Full HTML dashboard served directly by the backend. Auto-refreshes every 30 seconds. Loads data from all dashboard endpoints.
 

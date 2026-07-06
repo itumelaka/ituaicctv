@@ -24,6 +24,7 @@ Current production feature summary:
 - `/dashboard/health` prefers the live monitor status JSON and falls back to the old `monitor_person_all.log`.
 - Evidence composites show the full frame with all detected person boxes plus up to three top-confidence person crops.
 - New event metadata is synced to rendered evidence crops through `person_detections` with `crop_rank`, `confidence`, and `bbox`.
+- Evidence metadata includes `evidence_source`: `hd_redetect`, `hd_scaled_bbox`, or `detection_frame`.
 - Dashboard Assign Identity is available for unknown/unrecognized evidence events and supports person-specific targets for multi-person events.
 - Identity assignments persist locally under `backend/data/face-enrollment/identity-assignments/identity_assignments.json`.
 - Face Enrollment Manager is local-only and uses private CSV/OpenCV LBPH workflows. It does not use paid APIs, cloud recognition, or external image upload.
@@ -113,11 +114,12 @@ Current AI and dashboard features:
 - Telegram person alerts include confidence and threshold when available.
 - Telegram group alert delivery was verified for the internal `itunetmonitor` group. Bot token and numeric group chat ID remain private configuration.
 - One HEVC/RTSP decoder warning, `Could not find ref with POC 34`, was observed once. Treat this as harmless if monitoring continues and failed counts stay at 0; investigate only if a camera freezes or failed counts increase.
-- Evidence image now uses clearer composite: full CCTV frame with bounding boxes plus zoomed crop of highest-confidence person.
+- Evidence image now uses clearer composite output: full CCTV frame with all detected person boxes plus up to three top-confidence person crops.
+- HD evidence first tries channel 101 re-detection. If HD re-detection fails but the HD frame was captured, the system can scale original sub-stream boxes onto the HD frame for clearer crops before falling back to the original detection frame.
 - High-resolution evidence is attempted after person detection. If a high-resolution frame is captured, person detection runs again on that frame and high-resolution boxes are used. If capture or re-detection fails, the system falls back to the original detection frame and boxes.
 - Person evidence now includes advisory face readiness metadata when local OpenCV face detection is available: detection availability, face count, best face box, quality, readiness, and reasons. This is not identity recognition.
-- Internal staff/student face recognition foundation is privacy-gated and disabled by default in code. Production currently enables OpenCV LBPH recognition for the approved test label `BURN`; it only runs when face readiness is possible/suitable and local model/backend files are available.
-- Internal test label `BURN` enrollment was improved from 3 samples to 6 private local CCTV-derived samples. Some candidate samples were rejected because face detection/quality was not suitable. This remains internal testing only and is not high-security identity proof.
+- Internal staff/student face recognition foundation is privacy-gated and disabled by default in code. Production can enable OpenCV LBPH recognition for approved local labels; it only runs when face readiness is possible/suitable and local model/backend files are available.
+- Approved local enrollment remains internal testing only and is not high-security identity proof. Some candidate samples may be rejected because face detection/quality is not suitable.
 - Local recognition backends now support `FACE_RECOGNITION_BACKEND=auto`, `face_recognition`, or `opencv_lbph`; OpenCV LBPH requires `opencv-contrib-python` so `cv2.face` is available.
 - /dashboard-ui is now a dark AI Command Center with LIVE AI MONITORING indicator, scan line, summary cards, AI Status / Health, latest AI event, event timeline, evidence gallery, camera cards, section scroll navigation, refresh loading state, hover/glow effects, person-detected pulse/glow, and prefers-reduced-motion support.
 

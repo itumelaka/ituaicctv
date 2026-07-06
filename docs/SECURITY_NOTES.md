@@ -126,6 +126,8 @@ Evidence images may contain real CCTV footage. Handle them carefully:
 
 Evidence images are saved only for person_detected=True events. no_person events usually have no evidence image.
 
+If an accidental `backend/backend/` runtime folder appears from an older path bug, treat it as private runtime data. Do not commit it, and clean it up only after verifying the active service writes to `backend/data/`.
+
 ## Evidence Share Maintenance
 
 Copy laptop evidence to the server only when needed:
@@ -166,7 +168,7 @@ Rules:
 - Current face readiness metadata is advisory only. It may report face detection availability, face count, a best face box, quality, readiness, and quality reasons, but it must not identify anyone.
 - Optional face recognition is internal staff/student only, config-controlled, and disabled by default. Do not enable it unless authorization, consent/policy, access control, audit logs, and retention/deletion rules are ready.
 - OpenCV LBPH requires `opencv-contrib-python` and is a lightweight local baseline, not high-security identity proof.
-- Production currently has OpenCV LBPH available and a test internal label BURN enrolled from private local photos.
+- Production can use OpenCV LBPH with approved internal labels from private local photos.
 - Use face recognition only with clear authorization, consent, or written policy.
 - Do not store random unknown face identities by default.
 - Do not expose any face database, crop folder, embedding store, or identity mapping publicly.
