@@ -1,3 +1,4 @@
+import json
 import sys
 import tempfile
 import unittest
@@ -167,6 +168,74 @@ Run ended: Fri 03/07/2026 10:35:52.27
         self.assertIn("status=ok", scheduler["latest_summary"])
         self.assertIn("failed=0", scheduler["latest_summary"])
         self.assertLessEqual(len(scheduler["recent_lines"]), 8)
+
+    def test_scheduler_summary_prefers_live_monitor_status_file(self):
+        live_status = {
+            "status": "running",
+            "started_at": "2026-07-06T08:00:00+00:00",
+            "last_scan_at": "2026-07-06T08:01:00+00:00",
+            "enabled_cameras_count": 12,
+            "attention_required_count": 1,
+            "failed_count": 0,
+            "no_action_count": 11,
+            "scan_interval_seconds": 10,
+            "latest_error": None,
+        }
+        old_log_text = """Run started: Fri 03/07/2026 10:35:34.23
+Compact JSON:
+{"status": "old", "enabled_cameras_count": 9, "attention_required_count": 0, "no_action_count": 9, "failed_count": 0}
+"""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            live_status_path = Path(temp_dir) / "live_monitor_status.json"
+            log_path = Path(temp_dir) / "monitor_person_all.log"
+            live_status_path.write_text(json.dumps(live_status), encoding="utf-8")
+            log_path.write_text(old_log_text, encoding="utf-8")
+
+            scheduler = parse_scheduler_log_summary(
+                live_status_path=live_status_path,
+                log_path=log_path,
+            )
+
+        self.assertEqual(scheduler["status"], "running")
+        self.assertEqual(scheduler["monitor"], "live")
+        self.assertEqual(scheduler["latest_run_time"], "2026-07-06T08:01:00+00:00")
+        self.assertEqual(scheduler["started_at"], "2026-07-06T08:00:00+00:00")
+        self.assertEqual(scheduler["last_scan_at"], "2026-07-06T08:01:00+00:00")
+        self.assertEqual(scheduler["enabled_cameras_count"], 12)
+        self.assertEqual(scheduler["person_detected_count"], 1)
+        self.assertEqual(scheduler["no_person_count"], 11)
+        self.assertEqual(scheduler["failed_count"], 0)
+        self.assertEqual(scheduler["scan_interval_seconds"], 10)
+        self.assertIn("mode=live", scheduler["latest_summary"])
+        self.assertIn("attention=1", scheduler["latest_summary"])
+
+    def test_scheduler_summary_falls_back_to_old_batch_log_when_live_status_missing(self):
+        log_text = """Run started: Fri 03/07/2026 10:35:34.23
+Compact JSON:
+{"status": "ok", "mode": "check_all", "enabled_cameras_count": 9, "attention_required_count": 0, "no_action_count": 9, "failed_count": 0}
+"""
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            scheduler = parse_scheduler_log_summary(
+                live_status_path=Path(temp_dir) / "missing-live-status.json",
+                log_path=Path(temp_dir) / "monitor_person_all.log",
+            )
+
+            self.assertEqual(scheduler["status"], "missing")
+
+            log_path = Path(temp_dir) / "monitor_person_all.log"
+            log_path.write_text(log_text, encoding="utf-8")
+            scheduler = parse_scheduler_log_summary(
+                live_status_path=Path(temp_dir) / "missing-live-status.json",
+                log_path=log_path,
+            )
+
+        self.assertEqual(scheduler["status"], "ok")
+        self.assertEqual(scheduler["latest_run_time"], "Fri 03/07/2026 10:35:34.23")
+        self.assertEqual(scheduler["failed_count"], 0)
+        self.assertEqual(scheduler["person_detected_count"], 0)
+        self.assertEqual(scheduler["no_person_count"], 9)
 
     def test_missing_scheduler_log_returns_unknown_values(self):
         with tempfile.TemporaryDirectory() as temp_dir:

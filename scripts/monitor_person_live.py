@@ -1,3 +1,4 @@
+import json
 import sys
 import time
 from datetime import datetime, timezone
@@ -12,6 +13,8 @@ if str(BACKEND_ROOT) not in sys.path:
 from app.config import settings
 from app.monitor import run_person_monitor_check_all
 
+STATUS_FILE = BACKEND_ROOT / "data" / "task-logs" / "live_monitor_status.json"
+
 
 def _positive_int(value: int, default: int) -> int:
     try:
@@ -24,6 +27,37 @@ def _positive_int(value: int, default: int) -> int:
 
 def _utc_timestamp() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _write_status_file(status: dict) -> None:
+    STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = STATUS_FILE.with_suffix(".json.tmp")
+    temp_path.write_text(
+        json.dumps(status, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    temp_path.replace(STATUS_FILE)
+
+
+def _status_from_result(
+    result: dict,
+    *,
+    started_at: str,
+    interval_seconds: int,
+    status: str = "running",
+    latest_error: str | None = None,
+) -> dict:
+    return {
+        "status": status,
+        "started_at": started_at,
+        "last_scan_at": _utc_timestamp(),
+        "enabled_cameras_count": result.get("enabled_cameras_count", 0),
+        "attention_required_count": result.get("attention_required_count", 0),
+        "failed_count": result.get("failed_count", 0),
+        "no_action_count": result.get("no_action_count", 0),
+        "scan_interval_seconds": interval_seconds,
+        "latest_error": latest_error,
+    }
 
 
 def _print_cycle_summary(result: dict, interval_seconds: int) -> None:
@@ -92,6 +126,20 @@ def main() -> int:
 
     settings.person_event_cooldown_seconds = cooldown_seconds
 
+    started_at = _utc_timestamp()
+    last_status = {
+        "status": "starting",
+        "started_at": started_at,
+        "last_scan_at": None,
+        "enabled_cameras_count": 0,
+        "attention_required_count": 0,
+        "failed_count": 0,
+        "no_action_count": 0,
+        "scan_interval_seconds": interval_seconds,
+        "latest_error": None,
+    }
+    _write_status_file(last_status)
+
     print("ITU AI CCTV - Near-Live Person Monitor", flush=True)
     print(
         "interval={interval}s alert_cooldown={cooldown}s mode=sequential".format(
@@ -107,7 +155,21 @@ def main() -> int:
             try:
                 result = run_person_monitor_check_all(log_no_person=False)
                 _print_cycle_summary(result, interval_seconds)
+                last_status = _status_from_result(
+                    result,
+                    started_at=started_at,
+                    interval_seconds=interval_seconds,
+                )
+                _write_status_file(last_status)
             except Exception as error:
+                last_status = {
+                    **last_status,
+                    "status": "error",
+                    "last_scan_at": _utc_timestamp(),
+                    "scan_interval_seconds": interval_seconds,
+                    "latest_error": str(error),
+                }
+                _write_status_file(last_status)
                 print(
                     "[{timestamp}] live_monitor_cycle_failed error={error} next_scan={interval}s".format(
                         timestamp=_utc_timestamp(),
@@ -120,6 +182,12 @@ def main() -> int:
             _sleep_interruptibly(interval_seconds)
 
     except KeyboardInterrupt:
+        _write_status_file({
+            **last_status,
+            "status": "stopped",
+            "last_scan_at": _utc_timestamp(),
+            "scan_interval_seconds": interval_seconds,
+        })
         print("\nLive monitor stopped cleanly.", flush=True)
         return 0
 

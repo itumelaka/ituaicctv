@@ -23,6 +23,7 @@
 - MJPEG live view has no audio. Audio would require camera audio support plus a future HLS/WebRTC/FFmpeg proxy.
 - Near-live monitor script scripts/monitor_person_live.py is the primary alerting path on production.
 - Configured live monitor scan interval is 10 seconds; observed full-cycle time is about 30 seconds across 12 enabled cameras.
+- Live monitor writes lightweight health status to backend/data/task-logs/live_monitor_status.json for /dashboard/health.
 - Existing 5-minute Task Scheduler scan is Disabled and remains as backup.
 
 ## Current Production Backlog
@@ -39,6 +40,7 @@
 - [ ] Improve dashboard review workflow with filters for unreviewed only, false positive only, and follow-up only.
 - [ ] Add review audit log and authenticated users before treating review actions as controlled approvals.
 - [ ] Add daily Telegram summary report to the internal group.
+- [ ] Design Telegram health alert cooldowns for live monitor stopped, failed cameras, and stale cameras.
 - [ ] Add camera health alert if live monitor failed count increases or a camera freezes.
 - [ ] Review HD live-view CPU/network impact before encouraging routine HD monitoring.
 - [ ] Add future audio-capable live view with HLS/WebRTC/FFmpeg only if cameras provide audio streams.

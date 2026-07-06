@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 BASE_DIR = Path(__file__).resolve().parents[1]
+LIVE_MONITOR_STATUS_FILE = BASE_DIR / "data" / "task-logs" / "live_monitor_status.json"
 SCHEDULER_LOG_FILE = BASE_DIR / "data" / "task-logs" / "monitor_person_all.log"
 STALE_THRESHOLD_MINUTES = 120
 
@@ -20,6 +21,13 @@ def _empty_scheduler_summary(status: str) -> dict[str, Any]:
         "log_path": "data/task-logs/monitor_person_all.log",
         "recent_lines": [],
     }
+
+
+def _relative_task_log_path(path: Path) -> str:
+    try:
+        return path.relative_to(BASE_DIR).as_posix()
+    except ValueError:
+        return path.as_posix()
 
 
 def _safe_log_line(line: str) -> str:
@@ -147,10 +155,88 @@ def _build_latest_summary(
     )
 
 
+def _parse_live_monitor_status(status_path: Path = LIVE_MONITOR_STATUS_FILE) -> dict[str, Any] | None:
+    if not status_path.exists() or not status_path.is_file():
+        return None
+
+    try:
+        status_data = json.loads(status_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {
+            "status": "unreadable",
+            "latest_run_time": None,
+            "latest_summary": None,
+            "failed_count": None,
+            "person_detected_count": None,
+            "no_person_count": None,
+            "log_path": _relative_task_log_path(status_path),
+            "recent_lines": [],
+            "monitor": "live",
+            "started_at": None,
+            "last_scan_at": None,
+            "enabled_cameras_count": None,
+            "attention_required_count": None,
+            "scan_interval_seconds": None,
+            "latest_error": "live_monitor_status_unreadable",
+        }
+
+    failed_count = _get_int(status_data.get("failed_count"))
+    attention_required_count = _get_int(status_data.get("attention_required_count"))
+    no_action_count = _get_int(status_data.get("no_action_count"))
+    enabled_cameras_count = _get_int(status_data.get("enabled_cameras_count"))
+    scan_interval_seconds = _get_int(status_data.get("scan_interval_seconds"))
+    status = str(status_data.get("status") or "unknown")
+    summary_parts = [f"status={status}", "mode=live"]
+
+    if enabled_cameras_count is not None:
+        summary_parts.append(f"enabled={enabled_cameras_count}")
+
+    if attention_required_count is not None:
+        summary_parts.append(f"attention={attention_required_count}")
+
+    if no_action_count is not None:
+        summary_parts.append(f"no_action={no_action_count}")
+
+    if failed_count is not None:
+        summary_parts.append(f"failed={failed_count}")
+
+    if scan_interval_seconds is not None:
+        summary_parts.append(f"interval={scan_interval_seconds}s")
+
+    latest_error = status_data.get("latest_error")
+    if latest_error:
+        summary_parts.append("latest_error=yes")
+
+    return {
+        "status": status,
+        "latest_run_time": status_data.get("last_scan_at") or status_data.get("started_at"),
+        "latest_summary": ", ".join(summary_parts),
+        "failed_count": failed_count,
+        "person_detected_count": attention_required_count,
+        "no_person_count": no_action_count,
+        "log_path": _relative_task_log_path(status_path),
+        "recent_lines": [],
+        "monitor": "live",
+        "started_at": status_data.get("started_at"),
+        "last_scan_at": status_data.get("last_scan_at"),
+        "enabled_cameras_count": enabled_cameras_count,
+        "attention_required_count": attention_required_count,
+        "no_action_count": no_action_count,
+        "scan_interval_seconds": scan_interval_seconds,
+        "latest_error": _safe_log_line(str(latest_error)) if latest_error else None,
+    }
+
+
 def parse_scheduler_log_summary(
+    live_status_path: Path = LIVE_MONITOR_STATUS_FILE,
     log_path: Path = SCHEDULER_LOG_FILE,
     recent_line_count: int = 8,
 ) -> dict[str, Any]:
+    live_status = _parse_live_monitor_status(live_status_path)
+
+    if live_status:
+        return live_status
+
     lines = _read_scheduler_log_lines(log_path)
 
     if not lines:
