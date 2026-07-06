@@ -5,7 +5,9 @@
 - Production backend path: `C:\ituaicctv`
 - Backend dashboard: `http://192.168.1.254:8000/dashboard-ui`
 - TV dashboard: `http://192.168.1.254:8000/dashboard-tv`
+- WebRTC gateway: `http://192.168.1.254:8889/{camera_id}/`
 - Backend service: `ITUAICCTVBackend`, running
+- MediaMTX service: `MediaMTX`, running as `MediaMTX WebRTC Gateway`
 - Primary monitor task: `ITU AI CCTV Live Monitor`, running
 - Old monitor task: `ITU AI CCTV Person Monitor`, disabled and retained as backup
 - Live monitor status file: `backend/data/task-logs/live_monitor_status.json`
@@ -14,6 +16,48 @@
 - Disabled/offline camera: `block_f_cam_8 / 192.168.40.20`
 
 GitHub Pages is not the primary production dashboard. Daily operation uses the backend-served dashboard.
+
+## MediaMTX WebRTC Gateway
+
+`/dashboard-tv` uses MediaMTX WebRTC Smooth as the default live mode for one selected camera at a time. MJPEG Fallback remains available through the backend. Snapshot/evidence/crops remain separate and continue to use backend HD paths where available.
+
+Production gateway details:
+
+- Install folder: `C:\Tools\mediamtx`
+- Executable: `C:\Tools\mediamtx\mediamtx.exe`
+- Config: `C:\Tools\mediamtx\mediamtx.yml`
+- Logs: `C:\Tools\mediamtx\logs\mediamtx.out.log` and `C:\Tools\mediamtx\logs\mediamtx.err.log`
+- Tested version: `v1.19.2`
+- Service name: `MediaMTX`
+- Display name: `MediaMTX WebRTC Gateway`
+- Service wrapper: `C:\Tools\nssm\win64\nssm.exe`
+
+MediaMTX runs as a Windows service through NSSM because direct `sc.exe` service start was not suitable for the console executable. The service should auto-start and restart on failure.
+
+Ports:
+
+- TCP `8889`: WebRTC HTTP/player used by the dashboard
+- UDP `8189`: WebRTC ICE
+- TCP `8888`: HLS listener
+- TCP `8554`: RTSP listener
+
+Useful checks:
+
+```powershell
+Get-Service MediaMTX, ITUAICCTVBackend
+Test-NetConnection 127.0.0.1 -Port 8889
+Test-NetConnection 192.168.1.254 -Port 8889
+Get-Content C:\Tools\mediamtx\logs\mediamtx.out.log -Tail 80
+Get-Content C:\Tools\mediamtx\logs\mediamtx.err.log -Tail 80
+Restart-Service MediaMTX
+Restart-Service ITUAICCTVBackend
+```
+
+If the MediaMTX WebRTC page works on server localhost but not from LAN, check Windows Firewall for TCP `8889` and UDP `8189`.
+
+Camera path names in MediaMTX should match backend `camera_id` values. Exclude disabled/offline `block_f_cam_8`. Use placeholder-only RTSP source examples in docs and tickets; never paste real credentials. Password symbols must be URL-encoded, for example `@` -> `%40`, `#` -> `%23`, and `!` -> `%21`.
+
+Browser WebRTC works best with H.264. MediaMTX logs should show `2 tracks (H264, G711)` for a working camera. H.265/HEVC may produce `codecs not supported by client`. `makmal_cam_13` was observed as `1 track (H265)` and needs sub-stream channel `102` changed to H.264.
 
 ## Live Monitor
 

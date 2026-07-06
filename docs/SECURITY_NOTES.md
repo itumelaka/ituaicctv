@@ -10,7 +10,9 @@
 - Old 5-minute ITU AI CCTV Person Monitor task is Disabled and retained as backup.
 - Live monitor status is stored in private runtime data at `backend/data/task-logs/live_monitor_status.json`.
 - Backend listens on port 8000.
+- MediaMTX WebRTC gateway runs as Windows service `MediaMTX` / `MediaMTX WebRTC Gateway`.
 - Windows Firewall allows inbound TCP 8000 for dashboard/API.
+- Windows Firewall should allow LAN access to MediaMTX TCP 8889 and UDP 8189 for WebRTC viewing.
 - UDM Pro allows server 192.168.1.254 to CCTV subnet 192.168.40.0/24 on TCP 554.
 - Event review decisions are local operational metadata and are stored under ignored runtime data in `backend/data/event-reviews/`.
 - Ignore-zone polygons are camera configuration only. They should be calibrated from reviewed evidence and should not include private face images, embeddings, or identity data.
@@ -27,13 +29,14 @@
 - Temporary Change access is allowed only during controlled copy operations and must be reverted to Read.
 - NTFS Everyone Modify was removed after copy cleanup.
 - Browser may show a directory index if opening the UNC/share path; use File Explorer for folder browsing.
-- `/dashboard-tv` includes a selectable backend-proxied MJPEG live camera view.
+- `/dashboard-tv` defaults to MediaMTX WebRTC Smooth for one selected camera and keeps backend-proxied MJPEG Fallback.
 - Browser access is internal HTTP, so browsers may show "Not secure" unless HTTPS, a reverse proxy, and a certificate are configured.
 
 Verify production access:
 
 ```powershell
 Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-Service MediaMTX | Select-Object Name, Status, StartType
 Get-ScheduledTask -TaskName "ITU AI CCTV Person Monitor" | Select-Object TaskName, State
 Get-ScheduledTaskInfo -TaskName "ITU AI CCTV Person Monitor"
 Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 8
@@ -85,9 +88,13 @@ Rules:
 - Evidence links should use the local evidence-serving endpoint, such as /events/evidence/{filename}, not direct camera URLs.
 - Scheduler log health summaries must stay credential-safe. If log lines ever contain credential-like fields or RTSP URLs, dashboard health output should mask them before display.
 - The TV MJPEG endpoint `/dashboard/live/{camera_id}/stream.mjpg` must remain a backend proxy. The browser must never receive RTSP URLs, CCTV usernames, or CCTV passwords.
+- The MediaMTX WebRTC iframe must use only the dashboard hostname, port `8889`, and `camera_id` path. It must never include RTSP source URLs, CCTV usernames, or CCTV passwords.
+- MediaMTX source paths and logs under `C:\Tools\mediamtx` are production operational files. Do not commit MediaMTX config, logs, or screenshots that expose credentials.
 - The MJPEG stream is intended for one selected camera/viewer on the TV dashboard. Avoid opening many browser tabs or streaming many cameras at once.
 - The snapshot fallback `/dashboard/live/{camera_id}/snapshot.jpg` returns one JPEG frame and should also remain credential-safe.
 - Future public or wider LAN exposure should use HTTPS through a reverse proxy or certificate-backed deployment.
+
+Safe RTSP examples must remain placeholder-only. To avoid committing credential-shaped URLs, document source structure as: RTSP scheme, `USERNAME`, `ENCODED_PASSWORD`, `HOST`, port `554`, and `/Streaming/Channels/102`. RTSP passwords with symbols must be URL-encoded, for example `@` -> `%40`, `#` -> `%23`, and `!` -> `%21`.
 
 ## CCTV User Account
 

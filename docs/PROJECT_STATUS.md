@@ -11,6 +11,7 @@ Repository:
 - Local laptop dev path: C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection
 - Production dashboard: http://192.168.1.254:8000/dashboard-ui
 - TV command center: http://192.168.1.254:8000/dashboard-tv
+- MediaMTX WebRTC gateway: http://192.168.1.254:8889/{camera_id}/
 - Normal dashboard includes a TV Mode link to /dashboard-tv.
 - TV command center includes a Normal dashboard link back to /dashboard-ui.
 - GitHub Pages is no longer the primary dashboard. Production dashboard is served by backend /dashboard-ui.
@@ -18,6 +19,7 @@ Repository:
 Current production feature summary:
 
 - Backend is served by FastAPI through the `ITUAICCTVBackend` Windows service.
+- MediaMTX runs as the `MediaMTX` Windows service, display name `MediaMTX WebRTC Gateway`.
 - Primary production monitor is `ITU AI CCTV Live Monitor`.
 - Old batch monitor `ITU AI CCTV Person Monitor` is intentionally disabled and retained as backup.
 - Live monitor writes `backend/data/task-logs/live_monitor_status.json`.
@@ -29,6 +31,7 @@ Current production feature summary:
 - Identity assignments persist locally under `backend/data/face-enrollment/identity-assignments/identity_assignments.json`.
 - Face Enrollment Manager is local-only and uses private CSV/OpenCV LBPH workflows. It does not use paid APIs, cloud recognition, or external image upload.
 - Assignment records are human review records only. They do not auto-train the face model.
+- `/dashboard-tv` defaults to MediaMTX WebRTC Smooth for one selected camera at a time. MJPEG Fallback, backend HD snapshots, and the HD evidence pipeline remain available and separate.
 
 Documentation map:
 
@@ -54,6 +57,12 @@ Production service and scheduler:
 - Service status: Running
 - Service StartType: Automatic
 - Backend listens on port 8000 and should auto-start after Windows Server reboot.
+- MediaMTX service name: MediaMTX
+- MediaMTX display name: MediaMTX WebRTC Gateway
+- MediaMTX version tested: v1.19.2
+- MediaMTX install path: C:\Tools\mediamtx
+- MediaMTX WebRTC port: TCP 8889, with ICE on UDP 8189
+- MediaMTX service uses NSSM and should auto-start/restart on failure.
 - Primary monitor task: ITU AI CCTV Live Monitor
 - Live monitor state: Running
 - Live monitor command: C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py

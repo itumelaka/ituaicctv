@@ -17,9 +17,11 @@
 - Internal staff/student recognition foundation is disabled by default in code and supports `face_recognition` or OpenCV LBPH backends after approved local enrollment.
 - Dashboard is now the dark AI Command Center served by backend /dashboard-ui.
 - Fullscreen TV Command Center mode is available at /dashboard-tv.
+- MediaMTX runs as the production WebRTC gateway service `MediaMTX` / `MediaMTX WebRTC Gateway`.
 - TV mode includes a selectable single-camera live panel; latest evidence is shown separately as historical proof.
 - TV mode uses an iVMS-style single-camera live monitor layout with camera dropdown, WebRTC Smooth/MJPEG Fallback toggle, MJPEG Smooth Live/HD Live toggle, restart stream, HD snapshot, and fullscreen controls.
 - WebRTC Smooth uses the MediaMTX gateway on port 8889. MediaMTX path names should match dashboard `camera_id` values, and RTSP credentials are not exposed to the browser.
+- MediaMTX WebRTC uses TCP 8889 for the player and UDP 8189 for ICE; HLS TCP 8888 and RTSP TCP 8554 are available at the gateway but are not the current dashboard path.
 - Direct stream endpoint /dashboard/live/{camera_id}/stream.mjpg is available for one selected camera/viewer at 4 FPS; /dashboard/live/{camera_id}/snapshot.jpg remains as fallback.
 - Live view supports `quality=standard` for the configured camera channel, usually 102, and `quality=hd` for Hikvision main-stream channel 101. Invalid quality values return HTTP 400. HD MJPEG allows a larger 1920px max width, but actual resolution depends on camera main-stream settings and may still be 720p. This is viewing only and does not change AI detection.
 - /dashboard-tv defaults the selected camera stream to WebRTC Smooth for better TV performance. MJPEG Fallback remains available, with Smooth Live/Standard as its default and HD Live available if detail is needed.
@@ -51,6 +53,7 @@
 - [x] HD evidence scaled-bbox fallback after failed HD re-detection
 - [x] Live monitor health status support
 - [x] MediaMTX WebRTC Smooth mode integration for /dashboard-tv
+- [x] MediaMTX Windows service setup through NSSM
 
 ## Current Production Backlog
 
@@ -68,8 +71,11 @@
 - [ ] Add daily Telegram summary report to the internal group.
 - [ ] Design optional critical-only Telegram health alert cooldowns for live monitor stopped, failed cameras, and stale cameras. Do not spam normal health status.
 - [ ] Add camera health alert if live monitor failed count increases or a camera freezes.
-- [ ] Add remaining camera paths to MediaMTX for WebRTC Smooth.
-- [ ] Run MediaMTX as a Windows service after production paths are finalized.
+- [ ] Verify all enabled camera paths in MediaMTX for WebRTC Smooth and keep disabled/offline `block_f_cam_8` excluded.
+- [ ] Fix `makmal_cam_13` sub-stream channel 102 to H.264 for browser WebRTC compatibility.
+- [ ] Optionally force MediaMTX WebRTC ICE/announce address if some LAN clients see unusable 169.254.x.x candidates.
+- [ ] Add dashboard UI health/status indicator for MediaMTX availability.
+- [ ] Add documentation for adding a new camera path to MediaMTX.
 - [ ] Review HD MJPEG fallback CPU/network impact before encouraging routine HD monitoring.
 - [ ] Add future audio-capable live view only if cameras provide audio streams.
 - [ ] Add visual ignore-zone polygon editor for reviewed dashboard snapshots.

@@ -15,6 +15,7 @@ Production is now running from `C:\ituaicctv` on the Windows Server with backend
 Operational foundation:
 
 - Backend service `ITUAICCTVBackend` is Running and Automatic.
+- MediaMTX service `MediaMTX` / `MediaMTX WebRTC Gateway` is the production WebRTC gateway for `/dashboard-tv`.
 - Primary alerting task `ITU AI CCTV Live Monitor` is Running as a startup-triggered long-running Windows Task Scheduler task.
 - Old 5-minute scheduler task `ITU AI CCTV Person Monitor` is Disabled and retained only as backup.
 - Live monitor writes `backend/data/task-logs/live_monitor_status.json`, and `/dashboard/health` prefers this status file with fallback to the old batch monitor log.
@@ -30,10 +31,11 @@ Operational foundation:
 - Optional internal staff/student recognition foundation is config-controlled and disabled by default. It supports local backend selection with `auto`, `face_recognition`, and OpenCV LBPH when `opencv-contrib-python` provides `cv2.face`.
 - Production can use OpenCV LBPH for approved local labels. This remains approved internal-use only and is not high-security identity proof.
 - Fullscreen TV Command Center mode is available at `/dashboard-tv`.
-- TV mode now separates a selectable backend-proxied MJPEG live camera view from historical evidence snapshots.
+- TV mode now defaults to MediaMTX WebRTC Smooth for one selected camera, keeps MJPEG Fallback, and separates live viewing from historical evidence snapshots.
+- MediaMTX path names should match backend `camera_id` values; disabled/offline `block_f_cam_8` should remain excluded.
 - Direct selected-camera stream endpoint is available at `/dashboard/live/{camera_id}/stream.mjpg` with a 4 FPS limit; `/dashboard/live/{camera_id}/snapshot.jpg` remains as fallback.
 - Live view quality selection supports `quality=standard` for the configured camera channel, usually 102, and `quality=hd` for Hikvision main-stream channel 101. Invalid quality values return HTTP 400. HD MJPEG allows a larger 1920px max width, but actual resolution depends on camera main-stream settings and may still be 720p. This is viewing only and does not change detection, alerts, evidence, event review, ignore zones, or live monitor behavior.
-- MJPEG live view has no audio. Audio depends on camera audio availability and a future HLS/WebRTC/FFmpeg proxy.
+- Dashboard live view has no audio. Audio depends on camera audio availability and future WebRTC/MediaMTX handling.
 - Near-live monitoring runs repeated sequential scan cycles. Configured interval is 10 seconds, but real full-cycle time is about 30 seconds because 12 enabled cameras are scanned sequentially.
 - Telegram group alerts are verified for the internal monitoring group. Bot token and numeric chat ID remain private configuration.
 - Event review / acknowledgement is deployed and verified through API endpoints and `/dashboard-ui` buttons, but it remains an internal local workflow with no user login/authentication yet.
@@ -50,6 +52,7 @@ Recent completed production work:
 - Synced multi-person event metadata for evidence crops.
 - HD evidence scaled-bbox fallback after failed HD re-detection.
 - Live monitor status JSON and `/dashboard/health` live monitor support.
+- MediaMTX WebRTC Smooth mode for `/dashboard-tv`, with MJPEG Fallback and backend HD snapshots retained.
 
 Current privacy principle: face enrollment stays local-only, uses no paid API, performs no cloud recognition, and does not upload staff/student images externally. Dashboard assignments are human review records only until a future approved-training workflow exists.
 
@@ -66,7 +69,7 @@ Current privacy principle: face enrollment stays local-only, uses no paid API, p
 9. AI risk score: confidence, zone, after-hours, camera importance.
 10. After-hours detection.
 11. Improve fullscreen command center / TV mode after real TV review.
-12. WebRTC/HLS/media-server upgrade for better live-view scaling if multiple viewers or cameras need streaming.
+12. MediaMTX hardening: verify all enabled camera paths, fix H.264 sub-stream settings such as `makmal_cam_13`, add a dashboard health/status indicator for gateway availability, and consider explicit ICE/announce address if LAN clients see unusable link-local candidates.
 13. Harden the live monitor operation with overlap protection, CPU/network observation before lowering scan intervals, and optional critical-only Telegram health alerts with cooldown.
 14. Approved assignment-to-training-sample workflow with manual review before any model update.
 15. Cleanup/manage identity assignment records UI.
@@ -77,7 +80,7 @@ Current privacy principle: face enrollment stays local-only, uses no paid API, p
 20. Optional Telegram send-as-document evidence delivery to reduce Telegram photo compression.
 21. Calibrate and enable ignore-zone polygons only after screenshot/evidence review confirms coordinates.
 22. Add daily Telegram summary report to the internal monitoring group.
-23. Add audio-capable live view only if camera microphone/audio streams are available, likely through HLS/WebRTC/FFmpeg rather than MJPEG.
+23. Add audio-capable live view only if camera microphone/audio streams are available and the MediaMTX/WebRTC path is validated.
 24. Add visual ignore-zone editor for calibrated polygon setup.
 25. Add face-recognition audit logs and retention/deletion policy.
 

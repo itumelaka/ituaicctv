@@ -10,7 +10,7 @@ Backend AI CCTV monitoring project for ITU Melaka using existing Hikvision CCTV 
 - Primary monitor: `ITU AI CCTV Live Monitor`
 - Old 5-minute monitor: `ITU AI CCTV Person Monitor`, retained as disabled backup
 - Camera inventory: 13 known cameras, 12 enabled, 1 disabled/offline
-- Event review, ignore-zone groundwork, Telegram group alerting, Standard/HD live view, live monitor health, and local face enrollment tools are deployed.
+- Event review, ignore-zone groundwork, Telegram group alerting, WebRTC/MJPEG live view, live monitor health, and local face enrollment tools are deployed.
 
 ## Key Features
 
@@ -20,7 +20,7 @@ Backend AI CCTV monitoring project for ITU Melaka using existing Hikvision CCTV 
 - HD evidence fallback can use scaled main-stream crops when HD re-detection misses a person.
 - Telegram alerts for person detections.
 - Normal dashboard for operators and evidence review.
-- Fullscreen TV Command Center for wall display.
+- Fullscreen TV Command Center for wall display, with MediaMTX WebRTC Smooth live mode by default and MJPEG fallback.
 - Event review / acknowledgement statuses.
 - Per-camera confidence thresholds and disabled placeholder ignore-zone polygons for known static false positives.
 - Optional internal face-recognition foundation, privacy-gated and not identity proof.
@@ -34,12 +34,13 @@ Production LAN examples:
 - Normal dashboard: `http://192.168.1.254:8000/dashboard-ui`
 - TV dashboard: `http://192.168.1.254:8000/dashboard-tv`
 
-The TV dashboard includes one selected MJPEG live camera stream at a time. Live view supports:
+The TV dashboard shows one selected camera at a time. WebRTC Smooth is the default live mode through MediaMTX, and MJPEG Fallback remains available. Live view supports:
 
-- `quality=standard`: configured camera channel, usually Hikvision sub-stream `102`
-- `quality=hd`: Hikvision channel `101`, where available
+- WebRTC Smooth: `http://<dashboard-host>:8889/{camera_id}/`
+- MJPEG Fallback `quality=standard`: configured camera channel, usually Hikvision sub-stream `102`
+- MJPEG Fallback `quality=hd`: Hikvision channel `101`, where available
 
-Invalid live-view quality values return HTTP 400. MJPEG is video-only and does not include audio.
+The snapshot button remains backend HD through `/dashboard/live/{camera_id}/snapshot.jpg?quality=hd`. Live view is video-only and does not include audio.
 
 ## Architecture Overview
 
@@ -52,7 +53,7 @@ FastAPI backend on Windows Server
         +-- YOLO person detection and evidence capture
         +-- Near-live monitor task
         +-- Telegram alert helper
-        +-- Dashboard APIs and MJPEG proxy
+        +-- Dashboard APIs, MediaMTX WebRTC viewer, and MJPEG proxy fallback
         +-- Local event logs and review metadata
         +-- Local-only face enrollment and identity assignment records
         |

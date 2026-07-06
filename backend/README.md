@@ -16,7 +16,9 @@ For public project overview, use the root `README.md`. Detailed operator notes a
 - Development path: `C:\Users\burnk\OneDrive\Documents-assets\ai-cctv-detection`
 - Production dashboard: `http://192.168.1.254:8000/dashboard-ui`
 - TV command center: `http://192.168.1.254:8000/dashboard-tv`
+- WebRTC gateway: `http://192.168.1.254:8889/{camera_id}/`
 - Backend service: `ITUAICCTVBackend`, confirmed `Running`, `Automatic`
+- MediaMTX service: `MediaMTX`, display name `MediaMTX WebRTC Gateway`
 - Primary monitor task: `ITU AI CCTV Live Monitor`, confirmed `Running`
 - Old batch monitor task: `ITU AI CCTV Person Monitor`, confirmed `Disabled` and retained as backup
 - Live monitor command: `C:\ituaicctv\.venv312\Scripts\python.exe C:\ituaicctv\scripts\monitor_person_live.py`
@@ -29,15 +31,69 @@ For public project overview, use the root `README.md`. Detailed operator notes a
 - Disabled/offline camera: `block_f_cam_8 / ITU BLOCK F CAM8 / 192.168.40.20`
 - Evidence share: `\\192.168.1.254\ituaicctv-evidence`
 
+MediaMTX production gateway:
+
+- Install folder: `C:\Tools\mediamtx`
+- Executable: `C:\Tools\mediamtx\mediamtx.exe`
+- Config: `C:\Tools\mediamtx\mediamtx.yml`
+- Logs: `C:\Tools\mediamtx\logs\mediamtx.out.log` and `C:\Tools\mediamtx\logs\mediamtx.err.log`
+- Tested version: `v1.19.2`
+- Runs as a Windows service through NSSM because direct `sc.exe` service start was not suitable for the console executable.
+- NSSM path: `C:\Tools\nssm\win64\nssm.exe`
+- Expected service behavior: auto-start and restart on failure.
+
 Verify after server restart:
 
 ```powershell
 Get-Service ITUAICCTVBackend | Select-Object Name, Status, StartType
+Get-Service MediaMTX | Select-Object Name, Status, StartType
 Get-ScheduledTask |
   Where-Object { $_.TaskName -like "ITU AI CCTV*" } |
   Select-Object TaskName, State
 Invoke-RestMethod http://127.0.0.1:8000/dashboard/health | ConvertTo-Json -Depth 6
 ```
+
+## MediaMTX WebRTC Live View
+
+`/dashboard-tv` defaults to MediaMTX WebRTC Smooth mode for one selected camera at a time. The browser viewer URL is built from the dashboard hostname:
+
+```text
+http://<dashboard-host>:8889/{camera_id}/
+```
+
+MediaMTX path names should match backend `camera_id` values. The dashboard does not expose RTSP source URLs, usernames, or passwords. The MJPEG fallback remains available through:
+
+```text
+GET /dashboard/live/{camera_id}/stream.mjpg?quality=standard
+GET /dashboard/live/{camera_id}/stream.mjpg?quality=hd
+GET /dashboard/live/{camera_id}/snapshot.jpg?quality=hd
+```
+
+The snapshot button always prefers HD through the backend, and evidence/crops continue to use the existing HD evidence pipeline. WebRTC live viewing does not change detection, Telegram, face recognition, event review, live monitor, or camera configuration behavior.
+
+MediaMTX ports:
+
+- TCP `8889`: WebRTC HTTP/player used by the dashboard.
+- UDP `8189`: WebRTC ICE.
+- TCP `8888`: HLS listener.
+- TCP `8554`: RTSP listener.
+
+If the MediaMTX WebRTC page works on server localhost but not from LAN, check Windows Firewall rules for TCP `8889` and UDP `8189`.
+
+Safe MediaMTX camera source examples must stay placeholder-only. Document the source structure as: RTSP scheme, `USERNAME`, `ENCODED_PASSWORD`, `HOST`, port `554`, and `/Streaming/Channels/102`. Do not commit real CCTV usernames, passwords, or credential-bearing RTSP URLs. Password symbols must be URL-encoded; for example `@` becomes `%40`, `#` becomes `%23`, and `!` becomes `%21`.
+
+Browser WebRTC works best when camera sub-streams use H.264. MediaMTX logs for a healthy camera normally show `2 tracks (H264, G711)`. H.265/HEVC sub-streams may fail in the browser with `codecs not supported by client`.
+
+Recommended Hikvision sub-stream settings for WebRTC:
+
+- Video Encoding: H.264
+- H.264+ / H.265+ / Smart Codec: Off
+- Resolution: 1280x720 or lower
+- FPS: 15 to 20
+- Bitrate: 512 to 1024 Kbps
+- I-frame interval: 30 for 15 FPS, or 40 for 20 FPS
+
+Main stream can remain HD for snapshot/evidence, with H.264 preferred, 3200x1800 where supported, and H.264+ Off recommended.
 
 ## Latest Evidence Behavior
 

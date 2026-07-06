@@ -33,6 +33,77 @@ The MediaMTX path name should match the dashboard `camera_id`. RTSP source URLs 
 
 WebRTC quality is controlled by the MediaMTX/camera path for now. The Smooth Live / HD Live quality toggle applies only to MJPEG Fallback mode.
 
+Production MediaMTX notes:
+
+- Tested version: `v1.19.2`
+- Windows service name: `MediaMTX`
+- Display name: `MediaMTX WebRTC Gateway`
+- Install folder: `C:\Tools\mediamtx`
+- Config file: `C:\Tools\mediamtx\mediamtx.yml`
+- Logs: `C:\Tools\mediamtx\logs\mediamtx.out.log` and `C:\Tools\mediamtx\logs\mediamtx.err.log`
+- Service wrapper: NSSM at `C:\Tools\nssm\win64\nssm.exe`
+
+MediaMTX ports:
+
+- TCP `8889`: WebRTC HTTP/player used by `/dashboard-tv`
+- UDP `8189`: WebRTC ICE
+- TCP `8888`: HLS listener
+- TCP `8554`: RTSP listener
+
+Firewall rules must allow LAN access to TCP `8889` and UDP `8189` for WebRTC viewing.
+
+## Camera Paths
+
+MediaMTX path names should match backend `camera_id` values. Enabled production camera paths should exclude disabled/offline `block_f_cam_8`.
+
+Current enabled camera host/channel inventory for MediaMTX path setup:
+
+| MediaMTX path / camera_id | Host | Channel |
+| --- | --- | --- |
+| `block_e_cam_1` | `192.168.40.13` | `102` |
+| `block_e_cam_2` | `192.168.40.14` | `102` |
+| `block_e_cam_3` | `192.168.40.15` | `102` |
+| `block_e_cam_4` | `192.168.40.16` | `102` |
+| `block_e_cam_5` | `192.168.40.17` | `102` |
+| `block_f_cam_6` | `192.168.40.18` | `102` |
+| `block_f_cam_7` | `192.168.40.19` | `102` |
+| `block_f_cam_9` | `192.168.40.21` | `102` |
+| `block_f_cam_10` | `192.168.40.22` | `102` |
+| `kuarantin_cam_11` | `192.168.40.23` | `102` |
+| `biosekuriti_cam_12` | `192.168.40.24` | `102` |
+| `makmal_cam_13` | `192.168.40.25` | `102` |
+
+Use placeholder-only source examples. To avoid committing credential-shaped URLs, document the source structure as: RTSP scheme, `USERNAME`, `ENCODED_PASSWORD`, `HOST`, port `554`, and `/Streaming/Channels/102`.
+
+Do not document real usernames or passwords. Password symbols must be URL-encoded; for example `@` becomes `%40`, `#` becomes `%23`, and `!` becomes `%21`.
+
+## Codec Requirements
+
+Browser WebRTC works best with H.264. A healthy MediaMTX camera log usually shows:
+
+```text
+2 tracks (H264, G711)
+```
+
+H.265/HEVC sub-streams may fail in the browser with:
+
+```text
+codecs not supported by client
+```
+
+`makmal_cam_13` was observed as `1 track (H265)` and needs sub-stream channel `102` changed to H.264.
+
+Recommended Hikvision sub-stream settings for WebRTC:
+
+- Video Encoding: H.264
+- H.264+ / H.265+ / Smart Codec: Off
+- Resolution: 1280x720 or lower
+- FPS: 15 to 20
+- Bitrate: 512 to 1024 Kbps
+- I-frame interval: 30 for 15 FPS, or 40 for 20 FPS
+
+Main stream can remain HD for snapshot/evidence. H.264 is preferred, 3200x1800 can remain where supported, and H.264+ Off is recommended.
+
 ## Quality Modes
 
 - `standard`: used by MJPEG Fallback Smooth Live. It uses the configured camera channel, usually Hikvision sub-stream `102`.
