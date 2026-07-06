@@ -273,6 +273,10 @@ Camera list:
 - [x] Add selectable MJPEG live camera stream to /dashboard-tv
 - [x] Improve /dashboard-tv as iVMS-style single-camera live monitor with HD/Standard toggle
 - [x] Document MJPEG live stream endpoint, snapshot fallback, security, and performance limits
+- [x] Add live-mode badge (WebRTC smooth/MJPEG fallback), camera identity beside it, HD tags, and clearer panel header separation to /dashboard-tv
+- [x] Always show disabled/offline cameras (eg block_f_cam_8) in the /dashboard-tv camera selector as a disabled option instead of hiding them
+- [x] Add prominent makmal_cam_13 "may need MJPEG Fallback" hint in /dashboard-tv WebRTC mode (frontend-only flag, remove once channel 102 is H.264)
+- [x] Add advisory WebRTC-unavailable timeout banner with one-click MJPEG switch to /dashboard-tv (timeout-only heuristic; does not detect codec-mismatch blank video)
 - [ ] Consider WebRTC or HLS upgrade for better TV stream scaling and lower CPU/network usage
 - [ ] Consider multi-camera grid only after performance testing; avoid 13 simultaneous MJPEG streams for now
 - [ ] Search by camera

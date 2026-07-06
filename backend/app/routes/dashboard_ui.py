@@ -2295,6 +2295,12 @@ def dashboard_tv():
       text-transform: uppercase;
     }
 
+    .panel-label {
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
     .metric-value {
       margin-top: 8px;
       font-size: clamp(34px, 3.5vw, 66px);
@@ -2802,7 +2808,7 @@ def dashboard_tv():
           <div id="latestEventFields" class="event-fields"></div>
         </div>
         <div class="panel">
-          <div class="panel-label">Camera Health Strip</div>
+          <div class="panel-label">Camera Health</div>
           <div id="cameraStrip" class="camera-strip"></div>
         </div>
       </section>
@@ -2810,7 +2816,11 @@ def dashboard_tv():
       <section class="right-stack">
         <div class="panel live-camera-panel">
           <div class="live-panel-head">
-            <div class="panel-label">Live Camera View</div>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0;">
+              <div class="panel-label">Live Monitor</div>
+              <span id="liveModeBadge" class="badge muted"><span class="dot" aria-hidden="true"></span>Loading</span>
+              <span id="liveCameraIdentity" class="status-text" style="color: var(--muted); font-weight: 800;">-</span>
+            </div>
             <div class="live-controls">
               <select id="cameraSelector" aria-label="Select live camera"></select>
               <div class="quality-toggle" role="group" aria-label="Live mode">
@@ -2824,6 +2834,14 @@ def dashboard_tv():
             </div>
           </div>
           <div id="liveCameraInfo" class="metric-detail">Select a camera for WebRTC Smooth view. WebRTC Smooth uses MediaMTX gateway on port 8889. MJPEG Fallback remains available. Snapshot/Evidence remain HD.</div>
+          <div id="makmalHint" class="metric-detail hidden" style="border: 1px solid rgba(255, 200, 87, 0.45); background: rgba(255, 200, 87, 0.14); border-radius: 8px; padding: 8px 10px; color: var(--warn); font-weight: 800;">Notice: makmal_cam_13 may need MJPEG Fallback. Known H.265 sub-stream issue can leave WebRTC Smooth blank even though the player loads. TODO: remove this hint once makmal_cam_13 channel 102 is confirmed re-encoded to H.264.</div>
+          <div id="webrtcFallbackBanner" class="metric-detail hidden" style="border: 1px solid rgba(255, 200, 87, 0.5); background: rgba(255, 200, 87, 0.14); border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+            <span>Smooth live unavailable for this camera. Switch to MJPEG fallback.</span>
+            <span style="display: flex; gap: 8px;">
+              <button type="button" id="webrtcFallbackSwitchButton">Switch to MJPEG</button>
+              <button type="button" id="webrtcFallbackDismissButton">Dismiss</button>
+            </span>
+          </div>
           <div class="live-frame-wrap">
             <iframe id="webrtcFrame" class="webrtc-frame" title="MediaMTX WebRTC live stream" loading="eager" referrerpolicy="no-referrer"></iframe>
             <img id="liveCameraImage" class="live-camera-img" alt="Selected live camera stream">
@@ -2833,14 +2851,14 @@ def dashboard_tv():
             <span id="liveFrameStatus" class="metric-detail live-status-line"><span id="liveStatusDot" class="live-status-dot" aria-hidden="true"></span><span id="liveStatusText">WebRTC Smooth | selected camera only | MJPEG Fallback available.</span></span>
             <div class="live-controls">
               <button type="button" id="refreshFrameButton">Restart stream</button>
-              <button type="button" id="snapshotButton">Snapshot HD</button>
+              <button type="button" id="snapshotButton">Snapshot (HD)</button>
               <button type="button" id="fullscreenLiveButton">Fullscreen</button>
             </div>
           </div>
           <div id="healthNotes" class="metric-detail">Loading production health...</div>
         </div>
         <div class="panel evidence-panel">
-          <div class="panel-label">Latest Evidence Snapshot</div>
+          <div class="panel-label" style="display: flex; align-items: center; gap: 8px;">Latest AI Evidence<span class="badge neutral" style="font-size: 11px; min-height: 20px; padding: 2px 8px;">HD</span></div>
           <div id="evidencePreview"></div>
           <div id="evidenceMeta" class="metric-detail">Historical proof, not a live feed.</div>
         </div>
@@ -2855,6 +2873,7 @@ def dashboard_tv():
       <section class="panel">
         <div class="panel-label">Dashboard Status</div>
         <div id="errorBox" class="metric-detail">Data stream initializing.</div>
+        <div class="metric-detail" style="margin-top: 6px; color: var(--muted);">Smooth live via MediaMTX (port 8889)</div>
       </section>
     </footer>
   </div>
@@ -2879,6 +2898,7 @@ def dashboard_tv():
     let latestCamerasData = null;
     let latestEventsData = null;
     let latestHealthData = null;
+    let webrtcFallbackTimer = null;
 
     const el = (id) => document.getElementById(id);
 
@@ -3016,17 +3036,42 @@ def dashboard_tv():
       if (forceRefresh) restartLiveCameraStream();
     }
 
+    function healthDotColor(status) {
+      if (status === "active") return "#37e48b";
+      if (status === "offline" || status === "failed") return "#ff5f6d";
+      if (status === "disabled") return "#9fb1c4";
+      return "#ffc857";
+    }
+
     function renderCameraSelector(camerasData, eventsData, summary) {
       const selector = el("cameraSelector");
       const cameras = camerasData?.cameras || [];
-      const selectableCameras = cameras.filter((camera) => cameraIsSelectable(camera));
-      const dropdownCameras = selectableCameras.length ? selectableCameras : cameras;
+      const anySelectable = cameras.some((camera) => cameraIsSelectable(camera));
       selector.innerHTML = "";
 
-      dropdownCameras.forEach((camera) => {
+      if (!cameras.length || !anySelectable) {
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = cameras.length
+          ? "No camera available (all disabled/offline)"
+          : "No cameras configured";
+        selector.appendChild(placeholder);
+        selector.disabled = true;
+        selectedCameraId = "";
+        updateLiveCameraPanel();
+        return;
+      }
+
+      selector.disabled = false;
+
+      // Always list every known camera, including disabled/offline ones (eg block_f_cam_8),
+      // as a visibly disabled option rather than hiding it from the dropdown.
+      cameras.forEach((camera) => {
         const selectable = cameraIsSelectable(camera);
+        const status = cameraHealthStatus(camera);
         const option = document.createElement("option");
         option.value = camera.camera_id;
+        option.style.color = healthDotColor(status);
         option.textContent = selectable
           ? `${cameraDisplayName(camera)} (${camera.camera_id})`
           : `${cameraDisplayName(camera)} (${camera.camera_id}) - disabled/offline`;
@@ -3041,6 +3086,31 @@ def dashboard_tv():
 
       selector.value = selectedCameraId;
       updateLiveCameraPanel();
+    }
+
+    function hideWebrtcFallbackBanner() {
+      clearTimeout(webrtcFallbackTimer);
+      webrtcFallbackTimer = null;
+      el("webrtcFallbackBanner").classList.add("hidden");
+    }
+
+    function updateModeBadge(camera) {
+      const badgeEl = el("liveModeBadge");
+      const identityEl = el("liveCameraIdentity");
+
+      if (!camera) {
+        badgeEl.className = "badge muted";
+        badgeEl.innerHTML = '<span class="dot" aria-hidden="true"></span>No camera selected';
+        identityEl.textContent = "-";
+        return;
+      }
+
+      const isWebrtc = selectedLiveMode === "webrtc";
+      badgeEl.className = isWebrtc ? "badge ok" : "badge warn";
+      badgeEl.innerHTML = isWebrtc
+        ? '<span class="dot" aria-hidden="true"></span>WebRTC smooth &middot; live'
+        : '<span class="dot" aria-hidden="true"></span>MJPEG fallback';
+      identityEl.textContent = `${cameraDisplayName(camera)} (${camera.camera_id})`;
     }
 
     function updateLiveCameraPanel() {
@@ -3059,9 +3129,12 @@ def dashboard_tv():
         card.classList.toggle("selected", card.dataset.cameraId === selectedCameraId);
       });
 
+      updateModeBadge(camera);
+
       if (!camera) {
         el("liveCameraInfo").textContent = "No enabled camera is available for live view.";
         el("liveStatusText").textContent = "WebRTC Smooth and MJPEG Fallback are selected-camera only | no audio.";
+        el("makmalHint").classList.add("hidden");
         return;
       }
 
@@ -3074,6 +3147,10 @@ def dashboard_tv():
       el("liveStatusText").textContent = selectedLiveMode === "webrtc"
         ? "WebRTC Smooth uses MediaMTX gateway on port 8889. If this camera is not configured yet, use MJPEG Fallback. Snapshot/Evidence remain HD."
         : "Live: MJPEG Fallback | Smooth/HD applies to fallback only | Snapshot: HD | Evidence/Crops: HD when available | no audio.";
+
+      // TODO: remove this makmal_cam_13 hint once channel 102 is confirmed re-encoded to H.264 (see docs/LIVE_VIEW.md).
+      const showMakmalHint = camera.camera_id === "makmal_cam_13" && selectedLiveMode === "webrtc";
+      el("makmalHint").classList.toggle("hidden", !showMakmalHint);
     }
 
     function mediamtxWebrtcUrl(cameraId) {
@@ -3093,6 +3170,7 @@ def dashboard_tv():
       frame.removeAttribute("src");
       frame.classList.remove("ready");
       frame.onload = null;
+      hideWebrtcFallbackBanner();
     }
 
     function clearMjpegImage() {
@@ -3123,7 +3201,9 @@ def dashboard_tv():
 
       updateLiveCameraPanel();
       clearMjpegImage();
+      hideWebrtcFallbackBanner();
       const streamUrl = `${mediamtxWebrtcUrl(camera.camera_id)}?t=${Date.now()}`;
+      const armedCameraId = camera.camera_id;
       streamedCameraId = camera.camera_id;
       streamedLiveMode = selectedLiveMode;
       status.textContent = "Reconnecting... WebRTC Smooth | MediaMTX gateway on port 8889 | selected camera only. If this camera is not configured yet, use MJPEG Fallback.";
@@ -3136,8 +3216,21 @@ def dashboard_tv():
         frame.classList.add("ready");
         statusDot.classList.add("ready");
         status.textContent = `Live: WebRTC Smooth | ${new Date().toLocaleTimeString()} | MediaMTX 8889 | Snapshot: HD | Evidence/Crops: HD when available | selected camera only | no audio | MJPEG Fallback available if stream path is not configured.`;
+        // Note: onload only confirms the MediaMTX player shell loaded, not that the
+        // video track is actually playing (eg an H.265 sub-stream can load blank).
+        // This is why the fallback banner alone cannot catch the makmal_cam_13 codec case.
+        hideWebrtcFallbackBanner();
       };
       frame.src = streamUrl;
+
+      // Advisory-only timeout: if the WebRTC shell hasn't loaded within ~9s, suggest
+      // MJPEG Fallback. This detects an unconfigured/unreachable MediaMTX path; it
+      // cannot detect a loaded-but-blank codec-mismatch stream (see note in onload above).
+      webrtcFallbackTimer = setTimeout(() => {
+        if (selectedLiveMode === "webrtc" && selectedCameraId === armedCameraId && !frame.classList.contains("ready")) {
+          el("webrtcFallbackBanner").classList.remove("hidden");
+        }
+      }, 9000);
     }
 
     function restartMjpegStream() {
@@ -3441,6 +3534,13 @@ def dashboard_tv():
         updateLiveCameraPanel();
         if (selectedLiveMode === "mjpeg") restartLiveCameraStream();
       });
+    });
+    el("webrtcFallbackDismissButton").addEventListener("click", hideWebrtcFallbackBanner);
+    el("webrtcFallbackSwitchButton").addEventListener("click", () => {
+      hideWebrtcFallbackBanner();
+      selectedLiveMode = "mjpeg";
+      updateLiveCameraPanel();
+      restartLiveCameraStream();
     });
     el("snapshotButton").addEventListener("click", openSelectedSnapshot);
     el("fullscreenLiveButton").addEventListener("click", fullscreenLivePanel);

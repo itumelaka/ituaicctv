@@ -121,9 +121,27 @@ The TV live monitor includes:
 - WebRTC Smooth / MJPEG Fallback live mode toggle
 - Smooth Live / HD Live quality toggle for MJPEG Fallback
 - camera name, camera ID, safe host metadata, selected live mode, and live status
+- a compact live-mode badge ("WebRTC smooth · live" in green, or "MJPEG fallback" in amber) plus the selected camera display name and `camera_id`, shown beside the panel title
 - restart stream button
-- snapshot button that defaults to HD even when live display is Smooth
+- snapshot button that defaults to HD even when live display is Smooth, labeled `Snapshot (HD)`
+- an `HD` tag on the Latest AI Evidence panel header
 - fullscreen button when supported by the browser
+
+### Camera Selector Behavior
+
+The camera dropdown always lists every known camera, including disabled/offline ones (for example `block_f_cam_8`). Disabled/offline cameras appear as a visibly disabled option labeled `- disabled/offline`; they are never silently hidden from the list. Options are also tinted by health status (active/stale/offline/disabled) as a lightweight visual hint.
+
+Default camera auto-selection always prefers a selectable camera and never lands on a disabled/offline option. If zero cameras are currently selectable (or none are configured), the dropdown shows a single disabled placeholder option and the live panel reports that no camera is available, without erroring.
+
+### makmal_cam_13 WebRTC Hint
+
+Because `makmal_cam_13` has a known H.265 sub-stream issue (see Codec Requirements below), the TV dashboard shows a prominent amber "may need MJPEG Fallback" notice directly in the live panel whenever `makmal_cam_13` is selected in WebRTC Smooth mode. This is a simple frontend flag hard-coded to that `camera_id`, with a `TODO` note in the source to remove it once the camera's channel `102` is confirmed re-encoded to H.264.
+
+### WebRTC Fallback Advisory Banner
+
+If the WebRTC player iframe has not finished loading within roughly 9 seconds, the dashboard shows a dismissible banner: "Smooth live unavailable for this camera. Switch to MJPEG fallback." with a one-click button to switch the live mode to MJPEG Fallback.
+
+This banner is an advisory heuristic only, not a definitive stream-health check, and it has an important limitation: the WebRTC view is a cross-origin iframe into the MediaMTX player page. The iframe's `onload` event fires once that player page's HTML has loaded, which is not the same as the video track actually playing. This means the timeout banner can catch a genuinely unconfigured or unreachable MediaMTX path (the shell never loads), but it **cannot** detect the case where the player loads successfully and the video stays blank due to a codec mismatch — for example the `makmal_cam_13` H.265 sub-stream issue. That gap is why the per-camera `makmal_cam_13` hint above exists as a separate, independent notice.
 
 ## Audio
 

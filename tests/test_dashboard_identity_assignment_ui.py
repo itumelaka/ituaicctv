@@ -56,6 +56,64 @@ class DashboardIdentityAssignmentUiTests(unittest.TestCase):
         self.assertNotIn("TELEGRAM" + "_BOT_TOKEN", dashboard_ui)
         self.assertNotIn("http://192.168.1.254:8889", dashboard_ui)
 
+    def test_tv_dashboard_mode_badge_and_hd_tags(self):
+        dashboard_ui = DASHBOARD_UI_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('id="liveModeBadge"', dashboard_ui)
+        self.assertIn('id="liveCameraIdentity"', dashboard_ui)
+        self.assertIn("function updateModeBadge(camera)", dashboard_ui)
+        self.assertIn("WebRTC smooth", dashboard_ui)
+        self.assertIn("MJPEG fallback", dashboard_ui)
+        self.assertIn("Snapshot (HD)", dashboard_ui)
+        self.assertIn("Latest AI Evidence", dashboard_ui)
+
+    def test_tv_dashboard_shows_disabled_camera_in_selector_not_hidden(self):
+        dashboard_ui = DASHBOARD_UI_PATH.read_text(encoding="utf-8")
+
+        # The dropdown must always be built from the full camera list, not a
+        # selectable-only subset, so disabled/offline cameras (eg block_f_cam_8)
+        # still appear as a visibly disabled option instead of being dropped.
+        self.assertNotIn(
+            "const dropdownCameras = selectableCameras.length ? selectableCameras : cameras;",
+            dashboard_ui,
+        )
+        self.assertIn("cameras.forEach((camera) => {", dashboard_ui)
+        self.assertIn("- disabled/offline`", dashboard_ui)
+        self.assertIn("option.disabled = !selectable;", dashboard_ui)
+
+    def test_tv_dashboard_degrades_gracefully_with_zero_selectable_cameras(self):
+        dashboard_ui = DASHBOARD_UI_PATH.read_text(encoding="utf-8")
+
+        self.assertIn("const anySelectable = cameras.some((camera) => cameraIsSelectable(camera));", dashboard_ui)
+        self.assertIn("No camera available (all disabled/offline)", dashboard_ui)
+        self.assertIn("No cameras configured", dashboard_ui)
+        self.assertIn("selector.disabled = true;", dashboard_ui)
+
+    def test_tv_dashboard_makmal_cam_13_hint(self):
+        dashboard_ui = DASHBOARD_UI_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('id="makmalHint"', dashboard_ui)
+        self.assertIn("makmal_cam_13", dashboard_ui)
+        self.assertIn("may need MJPEG Fallback", dashboard_ui)
+        self.assertIn('camera.camera_id === "makmal_cam_13"', dashboard_ui)
+        self.assertIn("TODO: remove this hint once makmal_cam_13", dashboard_ui)
+
+    def test_tv_dashboard_webrtc_fallback_banner(self):
+        dashboard_ui = DASHBOARD_UI_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('id="webrtcFallbackBanner"', dashboard_ui)
+        self.assertIn('id="webrtcFallbackSwitchButton"', dashboard_ui)
+        self.assertIn('id="webrtcFallbackDismissButton"', dashboard_ui)
+        self.assertIn("Smooth live unavailable for this camera. Switch to MJPEG fallback.", dashboard_ui)
+        self.assertIn("function hideWebrtcFallbackBanner()", dashboard_ui)
+        self.assertIn("}, 9000);", dashboard_ui)
+        self.assertNotIn("rtsp" + "://", dashboard_ui)
+
+    def test_tv_dashboard_footer_hint(self):
+        dashboard_ui = DASHBOARD_UI_PATH.read_text(encoding="utf-8")
+
+        self.assertIn("Smooth live via MediaMTX (port 8889)", dashboard_ui)
+
 
 if __name__ == "__main__":
     unittest.main()
