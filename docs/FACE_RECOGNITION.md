@@ -82,6 +82,12 @@ Optional backend helpers:
 
 These endpoints do not upload face images, copy private image paths, or call any cloud recognition service.
 
+## Dashboard Identity Assignment
+
+The backend dashboard can show a compact `Assign Identity` action for evidence events that are unknown or not yet recognized. Operators can enter an approved local label, display name, reviewer name, note, and whether the event may be considered for future training.
+
+This dashboard action only records/validates the operator assignment payload through `/faces/enrollment/identity-assignment`. It does not train OpenCV LBPH, update the face model, change Telegram alerts, or add new reference images.
+
 ## Future Work
 
 - reviewer audit logs

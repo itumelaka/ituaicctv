@@ -208,16 +208,24 @@ def _reject(row_number: int, row: dict, reason: str) -> dict:
 
 
 def validate_identity_assignment(payload: dict) -> dict:
-    label = safe_label(str(payload.get("label", "")))
+    label = safe_label(str(payload.get("assigned_label") or payload.get("label", "")))
     if not label:
         raise ValueError("label is required")
 
     return {
         "label": label,
+        "assigned_label": label,
         "identity_id": str(payload.get("identity_id", "")).strip(),
-        "display_name": str(payload.get("display_name", "")).strip(),
+        "display_name": str(payload.get("assigned_display_name") or payload.get("display_name", "")).strip(),
+        "assigned_display_name": str(payload.get("assigned_display_name") or payload.get("display_name", "")).strip(),
+        "assigned_by": str(payload.get("assigned_by", "")).strip(),
+        "event_id": str(payload.get("event_id", "")).strip(),
+        "review_id": str(payload.get("review_id", "")).strip(),
+        "evidence_filename": str(payload.get("evidence_filename", "")).strip(),
+        "approved_for_training": _truthy(payload.get("approved_for_training", "")),
         "approved_for_face_recognition": _truthy(payload.get("approved_for_face_recognition", "")),
-        "notes": str(payload.get("notes", "")).strip(),
+        "note": str(payload.get("note", "")).strip(),
+        "notes": str(payload.get("note") or payload.get("notes", "")).strip(),
     }
 
 

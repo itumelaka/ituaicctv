@@ -162,6 +162,30 @@ class FaceEnrollmentTests(unittest.TestCase):
         self.assertEqual(assignment["label"], "PERSON_ONE")
         self.assertTrue(assignment["approved_for_face_recognition"])
 
+    def test_dashboard_identity_assignment_payload_is_accepted(self):
+        assignment = face_enrollment.validate_identity_assignment(
+            {
+                "event_id": "person_detected_cam_1.jpg",
+                "review_id": "person_detected_cam_1.jpg",
+                "evidence_filename": "person_detected_cam_1.jpg",
+                "assigned_label": "Person Two",
+                "assigned_display_name": "Person Two",
+                "assigned_by": "operator",
+                "note": "Reviewed from dashboard.",
+                "approved_for_training": True,
+            }
+        )
+
+        self.assertEqual(assignment["label"], "PERSON_TWO")
+        self.assertEqual(assignment["assigned_label"], "PERSON_TWO")
+        self.assertEqual(assignment["assigned_display_name"], "Person Two")
+        self.assertEqual(assignment["assigned_by"], "operator")
+        self.assertEqual(assignment["event_id"], "person_detected_cam_1.jpg")
+        self.assertEqual(assignment["review_id"], "person_detected_cam_1.jpg")
+        self.assertEqual(assignment["evidence_filename"], "person_detected_cam_1.jpg")
+        self.assertTrue(assignment["approved_for_training"])
+        self.assertEqual(assignment["note"], "Reviewed from dashboard.")
+
 
 if __name__ == "__main__":
     unittest.main()

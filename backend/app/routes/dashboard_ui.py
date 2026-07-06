@@ -553,6 +553,96 @@ def dashboard_ui():
       box-shadow: none;
     }
 
+    .identity-status {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .identity-status.ok {
+      color: var(--ok);
+    }
+
+    .identity-status.error {
+      color: var(--danger);
+    }
+
+    .identity-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(3, 7, 12, 0.76);
+      backdrop-filter: blur(10px);
+    }
+
+    .identity-modal.open {
+      display: flex;
+    }
+
+    .identity-dialog {
+      width: min(520px, 100%);
+      border: 1px solid var(--line-bright);
+      border-radius: 8px;
+      padding: 14px;
+      background: linear-gradient(180deg, #142031, #0d141f);
+      box-shadow: var(--shadow);
+    }
+
+    .identity-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .identity-form label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .identity-form input,
+    .identity-form textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: rgba(255,255,255,0.055);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .identity-form textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .identity-check {
+      display: flex !important;
+      grid-template-columns: none !important;
+      gap: 8px !important;
+      align-items: center;
+      text-transform: none !important;
+    }
+
+    .identity-check input {
+      width: auto;
+    }
+
+    .identity-modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
     .thumb {
       width: 120px;
       height: 82px;
@@ -925,18 +1015,60 @@ def dashboard_ui():
     </div>
   </main>
 
+  <div id="identityModal" class="identity-modal" role="dialog" aria-modal="true" aria-labelledby="identityModalTitle">
+    <div class="identity-dialog">
+      <div class="section-title">
+        <h2 id="identityModalTitle">Assign Identity</h2>
+        <button type="button" id="identityCloseButton" class="review-button">Close</button>
+      </div>
+      <form id="identityForm" class="identity-form">
+        <input type="hidden" id="identityEventId">
+        <input type="hidden" id="identityReviewId">
+        <input type="hidden" id="identityEvidenceFilename">
+        <label>
+          assigned_label
+          <input id="assignedLabel" name="assigned_label" autocomplete="off" required>
+        </label>
+        <label>
+          assigned_display_name
+          <input id="assignedDisplayName" name="assigned_display_name" autocomplete="off">
+        </label>
+        <label>
+          assigned_by
+          <input id="assignedBy" name="assigned_by" autocomplete="off" required>
+        </label>
+        <label>
+          note
+          <textarea id="assignmentNote" name="note"></textarea>
+        </label>
+        <label class="identity-check">
+          <input id="approvedForTraining" name="approved_for_training" type="checkbox">
+          approved_for_training
+        </label>
+        <div id="identityModalStatus" class="identity-status"></div>
+        <div class="identity-modal-actions">
+          <button type="button" id="identityCancelButton" class="review-button">Cancel</button>
+          <button type="submit" id="identitySaveButton" class="review-button primary-button">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const endpoints = {
       summary: "/dashboard/summary",
       cameras: "/dashboard/cameras",
       latestEvents: "/dashboard/events/latest?limit=10",
       evidence: "/dashboard/evidence?limit=8",
-      health: "/dashboard/health"
+      health: "/dashboard/health",
+      identityAssignment: "/faces/enrollment/identity-assignment"
     };
     const evidenceFolderPath = "\\\\\\\\192.168.1.254\\\\ituaicctv-evidence";
     const refreshIntervalSeconds = 30;
     let nextRefreshAt = Date.now() + refreshIntervalSeconds * 1000;
     let isLoading = false;
+    let activeIdentityEvent = null;
+    const identityAssignmentStatus = new Map();
 
     const el = (id) => document.getElementById(id);
 
@@ -1173,6 +1305,108 @@ def dashboard_ui():
       await loadDashboard();
     }
 
+    function evidenceFilenameFromEvent(event) {
+      if (event?.evidence_filename) {
+        return event.evidence_filename;
+      }
+
+      const evidencePath = event?.evidence_path || "";
+      if (evidencePath) {
+        return evidencePath.replaceAll("\\\\", "/").split("/").pop();
+      }
+
+      const evidenceUrl = event?.evidence_url || "";
+      if (evidenceUrl) {
+        return evidenceUrl.split("/").pop();
+      }
+
+      return "";
+    }
+
+    function eventAssignmentId(event) {
+      return event?.review_id
+        || evidenceFilenameFromEvent(event)
+        || event?.event_id
+        || event?.timestamp
+        || "";
+    }
+
+    function canAssignIdentity(event) {
+      const recognizedLabel = String(event?.recognized_label || "").toUpperCase();
+      const recognitionAttempted = event?.recognition_attempted === true;
+      const unrecognized = !recognizedLabel || recognizedLabel === "UNKNOWN" || recognitionAttempted === false;
+      return Boolean(evidenceFilenameFromEvent(event)) && unrecognized;
+    }
+
+    function closeIdentityModal() {
+      el("identityModal").classList.remove("open");
+      activeIdentityEvent = null;
+    }
+
+    function openIdentityModal(event) {
+      activeIdentityEvent = event;
+      el("identityEventId").value = eventAssignmentId(event);
+      el("identityReviewId").value = event?.review_id || eventAssignmentId(event);
+      el("identityEvidenceFilename").value = evidenceFilenameFromEvent(event);
+      el("assignedLabel").value = "";
+      el("assignedDisplayName").value = "";
+      el("assignedBy").value = "";
+      el("assignmentNote").value = "";
+      el("approvedForTraining").checked = false;
+      el("identityModalStatus").className = "identity-status";
+      el("identityModalStatus").textContent = `Evidence: ${evidenceFilenameFromEvent(event)}`;
+      el("identitySaveButton").disabled = false;
+      el("identityModal").classList.add("open");
+      el("assignedLabel").focus();
+    }
+
+    async function submitIdentityAssignment(event) {
+      event.preventDefault();
+
+      if (!activeIdentityEvent) {
+        return;
+      }
+
+      const statusNode = el("identityModalStatus");
+      const payload = {
+        event_id: el("identityEventId").value,
+        review_id: el("identityReviewId").value,
+        evidence_filename: el("identityEvidenceFilename").value,
+        assigned_label: el("assignedLabel").value,
+        assigned_display_name: el("assignedDisplayName").value,
+        assigned_by: el("assignedBy").value,
+        note: el("assignmentNote").value,
+        approved_for_training: el("approvedForTraining").checked
+      };
+
+      el("identitySaveButton").disabled = true;
+      statusNode.className = "identity-status";
+      statusNode.textContent = "Saving assignment...";
+
+      try {
+        const response = await fetch(endpoints.identityAssignment, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`identity assignment returned ${response.status}`);
+        }
+
+        await response.json();
+        identityAssignmentStatus.set(payload.event_id || payload.evidence_filename, "Saved identity assignment");
+        statusNode.className = "identity-status ok";
+        statusNode.textContent = "Saved identity assignment";
+        setTimeout(closeIdentityModal, 700);
+        await loadDashboard();
+      } catch (error) {
+        el("identitySaveButton").disabled = false;
+        statusNode.className = "identity-status error";
+        statusNode.textContent = `Save failed: ${error.message}`;
+      }
+    }
+
     function addField(container, label, value) {
       const field = document.createElement("div");
       field.className = "field";
@@ -1331,7 +1565,22 @@ def dashboard_ui():
           reviewActions.appendChild(button);
         });
 
-        details.append(head, meta, message, reviewMeta, reviewActions);
+        if (canAssignIdentity(event)) {
+          const assignButton = document.createElement("button");
+          assignButton.type = "button";
+          assignButton.className = "review-button";
+          assignButton.textContent = "Assign Identity";
+          assignButton.title = "Assign operator-approved identity for this evidence";
+          assignButton.addEventListener("click", () => openIdentityModal(event));
+          reviewActions.appendChild(assignButton);
+        }
+
+        const identityStatus = document.createElement("div");
+        identityStatus.className = "identity-status";
+        const assignmentId = eventAssignmentId(event);
+        identityStatus.textContent = identityAssignmentStatus.get(assignmentId) || "";
+
+        details.append(head, meta, message, reviewMeta, reviewActions, identityStatus);
         item.append(dot, details);
 
         if (event.evidence_url) {
@@ -1633,6 +1882,19 @@ def dashboard_ui():
     });
     el("refreshEvidenceButton").addEventListener("click", refreshEvidence);
     el("copyEvidencePathButton").addEventListener("click", copyEvidenceFolderPath);
+    el("identityCloseButton").addEventListener("click", closeIdentityModal);
+    el("identityCancelButton").addEventListener("click", closeIdentityModal);
+    el("identityForm").addEventListener("submit", submitIdentityAssignment);
+    el("identityModal").addEventListener("click", (event) => {
+      if (event.target === el("identityModal")) {
+        closeIdentityModal();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && el("identityModal").classList.contains("open")) {
+        closeIdentityModal();
+      }
+    });
     setInterval(() => {
       updateRefreshStatus();
 
